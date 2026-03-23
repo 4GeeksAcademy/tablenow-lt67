@@ -1,8 +1,8 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User
+from flask import request, jsonify, url_for, Blueprint
+from api.models import db, User, Gerente
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 
@@ -12,11 +12,79 @@ api = Blueprint('api', __name__)
 CORS(api)
 
 
-@api.route('/hello', methods=['POST', 'GET'])
+@api.route('/hello', methods=['GET'])
 def handle_hello():
+    return jsonify({
+        "message": "API funcionando "
+    }), 200
 
-    response_body = {
-        "message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
-    }
 
-    return jsonify(response_body), 200
+# =========================
+# CRUD GERENTE
+# =========================
+
+# 🔹 GET todos
+@api.route('/gerentes', methods=['GET'])
+def get_gerentes():
+    gerentes = Gerente.query.all()
+    return jsonify([g.serialize() for g in gerentes]), 200
+
+
+# 🔹 GET uno
+@api.route('/gerentes/<int:id>', methods=['GET'])
+def get_gerente(id):
+    gerente = Gerente.query.get(id)
+    if not gerente:
+        return jsonify({"msg": "No encontrado"}), 404
+    return jsonify(gerente.serialize()), 200
+
+
+# 🔹 POST (crear)
+@api.route('/gerentes', methods=['POST'])
+def create_gerente():
+    data = request.json
+
+    nuevo = Gerente(
+        nombre=data.get("nombre"),
+        apellido=data.get("apellido"),
+        telefono=data.get("telefono"),
+        email=data.get("email"),
+        clave=data.get("clave")
+    )
+
+    db.session.add(nuevo)
+    db.session.commit()
+
+    return jsonify(nuevo.serialize()), 201
+
+
+# 🔹 PUT (actualizar)
+@api.route('/gerentes/<int:id>', methods=['PUT'])
+def update_gerente(id):
+    gerente = Gerente.query.get(id)
+    if not gerente:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    data = request.json
+
+    gerente.nombre = data.get("nombre", gerente.nombre)
+    gerente.apellido = data.get("apellido", gerente.apellido)
+    gerente.telefono = data.get("telefono", gerente.telefono)
+    gerente.email = data.get("email", gerente.email)
+
+    db.session.commit()
+
+    return jsonify(gerente.serialize()), 200
+
+
+# 🔹 DELETE
+@api.route('/gerentes/<int:id>', methods=['DELETE'])
+def delete_gerente(id):
+    gerente = Gerente.query.get(id)
+    if not gerente:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    db.session.delete(gerente)
+    db.session.commit()
+
+    return jsonify({"msg": "Eliminado"}), 200
