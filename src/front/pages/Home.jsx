@@ -4,7 +4,7 @@ export const Home = () => {
   const [restaurantes, setRestaurantes] = useState([]);
   const [mensaje, setMensaje] = useState("");
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = "https://vigilant-trout-pjq44465qqvq377j5-3001.app.github.dev";
 
   //  cargar mensaje test
   const loadMessage = async () => {
