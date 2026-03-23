@@ -12,6 +12,7 @@ import { Demo } from "./pages/Demo";
 import Clients from "./pages/Clients";
 import NewClient from "./pages/NewClient";
 import UpdateClient from "./pages/UpdateClient";
+import Client from "./pages/Client";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -31,6 +32,7 @@ export const router = createBrowserRouter(
         <Route path="/clients" element={<Clients />} />
         <Route path="/new_client" element={<NewClient />} />
         <Route path="/edit_client" element={<UpdateClient />} />
+        <Route path="/client/:clientId" element={ <Client />} />  {/* Dynamic route for single items */}
       </Route>
     )
 );

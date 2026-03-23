@@ -87,6 +87,7 @@ def update_info_client(client_id):
         }), 404
     client.name = body.get('name',client.name)
     client.email = body.get('email',client.email)
+    client.phone = body.get('phone',client.phone)
     client.password = body.get('password',client.password)
    
     

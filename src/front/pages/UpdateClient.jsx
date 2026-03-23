@@ -9,6 +9,7 @@ function UpdateClient() {
 
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
+    const [phone, setPhone] = useState('')
     const [password, setPassword] = useState('')
 
     function sendData(e) {
@@ -20,6 +21,7 @@ function UpdateClient() {
                 {
                     "name": name,
                     "email": email,
+                    "phone": phone,
                     "password": password
                 }
             )
@@ -46,6 +48,10 @@ function UpdateClient() {
                 <div className="mb-3">
                     <label htmlFor="InputEmail" className="form-label">Email address</label>
                     <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="form-control" />
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="InputPhone" className="form-label">Phone number</label>
+                    <input value={phone} onChange={(e) => setPhone(e.target.value)} type="phone" className="form-control" />
                 </div>
                 <div className="mb-3">
                     <label htmlFor="InputPassword" className="form-label">Password</label>
