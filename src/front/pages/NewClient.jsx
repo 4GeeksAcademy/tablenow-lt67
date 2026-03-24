@@ -58,6 +58,7 @@ function NewClient() {
                 </div>
                 <button type="submit" className="btn btn-primary">Create</button>
             </form>
+            <button onClick={()=> navigate("/clients")} className="btn btn-primary">Back home</button>
         </div>
     )
 }

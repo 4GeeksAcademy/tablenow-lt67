@@ -9,14 +9,22 @@ function Clients() {
     const navigate = useNavigate()
     const [clients, setClients] = useState([])
 
-    function getClients() {
-        fetch(import.meta.env.VITE_BACKEND_URL + "/api/clients")
-            .then((response) => response.json())
-            .then((data) => setClients(data))
+    async function getClients() {
+        try{
+            const response = await
+            fetch(import.meta.env.VITE_BACKEND_URL + "/api/clients")
+            const data = await response.json()
+            setClients(data)
+            
+        } catch(error){
+            console.log(error)
+        }
+        
     }
 
     useEffect(() => {
         getClients()
+        console.log("la pagina cargo")
     }, [])
 
     function deleteClient(id) {
@@ -42,14 +50,10 @@ function Clients() {
                         email: {client.email} <br />
                         phone: {client.phone} <br />
                         <button className="btn btn-primary" onClick={()=>{
-                            navigate('/edit_client')
-                            dispatch({
-                                type: 'set_id',
-                                payload: client.id
-                            })
+                            navigate('/edit_client/'+client.id)
                             }}>Edit</button>
                         <Link to={"/client/"+client.id} className="btn btn-primary">See details</Link>
-                        <button className="btn btn-primary" onClick={()=>deleteClient(client.id)}>Delete</button>
+                        <button className="btn btn-danger" onClick={()=>deleteClient(client.id)}>Delete</button>
                     </li>)
                 })}
             </ul>

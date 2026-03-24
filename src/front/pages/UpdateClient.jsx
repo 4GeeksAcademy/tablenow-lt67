@@ -1,16 +1,29 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import useGlobalReducer from "../hooks/useGlobalReducer";
+import { useNavigate,  useParams } from "react-router-dom";
+
 
 function UpdateClient() {
-    const {store, dispatch} = useGlobalReducer()
+    const { clientId } = useParams()
     const navigate = useNavigate()
 
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [password, setPassword] = useState('')
+
+
+    useEffect(()=>{
+            fetch(import.meta.env.VITE_BACKEND_URL + "/api/client/"+clientId)
+            .then(response=> response.json())
+            .then(data=> {
+                setName(data.name)
+                setEmail(data.email)
+                setPhone(data.phone)
+                setPassword(data.password)
+            })
+            .catch((error) => console.log(error))
+    },[])
 
     function sendData(e) {
         e.preventDefault()
@@ -26,7 +39,7 @@ function UpdateClient() {
                 }
             )
         }
-        fetch(import.meta.env.VITE_BACKEND_URL + "/api/client/" + store.id, requestOptions)
+        fetch(import.meta.env.VITE_BACKEND_URL + "/api/client/" + clientId, requestOptions)
             .then((response) => response.text())
             .then((result) => {
                 console.log(result)
@@ -53,12 +66,9 @@ function UpdateClient() {
                     <label htmlFor="InputPhone" className="form-label">Phone number</label>
                     <input value={phone} onChange={(e) => setPhone(e.target.value)} type="phone" className="form-control" />
                 </div>
-                <div className="mb-3">
-                    <label htmlFor="InputPassword" className="form-label">Password</label>
-                    <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" className="form-control" />
-                </div>
                 <button type="submit" className="btn btn-primary">Update</button>
             </form>
+            <button onClick={()=> navigate("/clients")} className="btn btn-primary">Back home</button>
         </div>
     )
 }

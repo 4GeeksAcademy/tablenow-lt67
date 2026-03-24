@@ -1,9 +1,11 @@
 import React from "react";
-import { Link, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 
 function Client (){
+
+    const navigate = useNavigate()
 
     const [client, setClient] = useState({})
 
@@ -29,6 +31,7 @@ function Client (){
                 <li>Email: {client.email}</li>
                 <li>Phone: {client.phone}</li>
             </ul>
+            <button onClick={()=> navigate("/clients")} className="btn btn-primary">Back home</button>
         </>
     )
 }
