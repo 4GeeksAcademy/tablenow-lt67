@@ -44,12 +44,16 @@ def get_gerente(id):
 def create_gerente():
     data = request.json
 
+    usuario = Gerente.query.filter_by(email=data.get("email")).first()
+    if usuario:
+        return jsonify({"msg": "ya existe el usuario"}), 400
+
     nuevo = Gerente(
-        nombre=data.get("nombre"),
-        apellido=data.get("apellido"),
-        telefono=data.get("telefono"),
+        name=data.get("name"),
+        lastname=data.get("lastname"),
+        phone=data.get("phone"),
         email=data.get("email"),
-        clave=data.get("clave")
+        password=data.get("password")
     )
 
     db.session.add(nuevo)
@@ -67,9 +71,9 @@ def update_gerente(id):
 
     data = request.json
 
-    gerente.nombre = data.get("nombre", gerente.nombre)
-    gerente.apellido = data.get("apellido", gerente.apellido)
-    gerente.telefono = data.get("telefono", gerente.telefono)
+    gerente.name = data.get("name", gerente.name)
+    gerente.lastname = data.get("lastname", gerente.lastname)
+    gerente.phone = data.get("phone", gerente.phone)
     gerente.email = data.get("email", gerente.email)
 
     db.session.commit()

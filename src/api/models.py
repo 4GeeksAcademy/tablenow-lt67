@@ -20,20 +20,19 @@ class User(db.Model):
 
 class Gerente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100))
-    apellido = db.Column(db.String(100))
-    telefono = db.Column(db.String(20))
-    email = db.Column(db.String(120))
-    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
-    clave = db.Column(db.String(100))
+    name = db.Column(db.String(100))
+    lastname = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(120), unique=True)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    password = db.Column(db.String(100))
 
     def serialize(self):
         return {
             "id": self.id,
-            "nombre": self.nombre,
-            "apellido": self.apellido,
-            "telefono": self.telefono,
+            "name": self.name,
+            "lastname": self.lastname,
+            "phone": self.phone,
             "email": self.email,
-            "fecha_registro": self.fecha_registro,
-            "clave":self.clave
+            "date": self.date,
         }
