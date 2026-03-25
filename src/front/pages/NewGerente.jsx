@@ -31,11 +31,13 @@ function NewGerente() {
             .then((response) => response.text())
             .then((result) => {
                 console.log(result)
+                navigate("/gerentes")
             })
             .catch((error) => console.error(error));
 
         console.log("sending data")
-        navigate("/gerentes")
+
+        
     }
 
     return (<div>
