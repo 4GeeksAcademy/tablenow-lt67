@@ -14,11 +14,12 @@ function GerenteDetail() {
     if (!gerente) return <p>Loading...</p>
 
     return (
-        <div>
+        <div className="container mt-2">
             <h2>{gerente.name}</h2>
             <p>{gerente.lastname}</p>
             <p>{gerente.phone}</p>
             <p>{gerente.email}</p>
+            <p>{gerente.date}</p>
         </div>
     )
 }

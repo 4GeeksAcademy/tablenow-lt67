@@ -7,6 +7,7 @@ function NewGerente() {
     const navigate = useNavigate()
 
     const [name, setName] = useState('')
+    const [lastname,setlastname] = useState('')
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [password, setPassword] = useState('')
@@ -19,6 +20,7 @@ function NewGerente() {
             body: JSON.stringify(
                 {
                     "name": name,
+                    "lastname": lastname,
                     "email": email,
                     "phone": phone,
                     "password": password
@@ -42,6 +44,10 @@ function NewGerente() {
             <div className="mb-3">
                 <label htmlFor="InputName" className="form-label">Your name</label>
                 <input value={name} onChange={(e) => setName(e.target.value)} type="text" className="form-control" />
+            </div>
+            <div className="mb-3">
+                <label htmlFor="InputLastname" className="form-label">Your Lastname</label>
+                <input value={lastname} onChange={(e) => setlastname(e.target.value)} type="text" className="form-control" />
             </div>
             <div className="mb-3">
                 <label htmlFor="InputEmail" className="form-label">Email address</label>
