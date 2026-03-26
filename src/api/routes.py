@@ -1,14 +1,9 @@
-"""
-This module takes care of starting the API Server, Loading the DB and Adding the endpoints
-"""
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Clients, Gerente 
-from api.utils import generate_sitemap, APIException
+from api.models import db, User, Clients, Owner, Gerente
 from flask_cors import CORS
 from datetime import datetime
 
 api = Blueprint('api', __name__)
-
 CORS(api)
 
 @api.route('/hello', methods=['GET'])
@@ -24,102 +19,247 @@ def get_gerentes():
     gerentes = Gerente.query.all()
     return jsonify([g.serialize() for g in gerentes]), 200
 
+
 @api.route('/gerentes/<int:id>', methods=['GET'])
 def get_gerente(id):
     gerente = Gerente.query.get(id)
-    if not gerente: return jsonify({"msg": "No encontrado"}), 404
+    if not gerente:
+        return jsonify({"msg": "No encontrado"}), 404
     return jsonify(gerente.serialize()), 200
+
 
 @api.route('/gerentes', methods=['POST'])
 def create_gerente():
     data = request.json
-    # Verificamos que lleguen los datos mínimos para evitar errores 500
+
     if not data:
-        return jsonify({"msg": "Faltan datos en el cuerpo de la solicitud"}), 400
-        
-    nuevo = Gerente(
-        name=data.get("name"),
-        lastname=data.get("lastname"),
-        phone=data.get("phone"),
-        email=data.get("email"),
-        password=data.get("password"),
-        date=datetime.utcnow() # <--- SOLUCIÓN: Agregamos la fecha actual obligatoria
-    )
-    
+        return jsonify({"msg": "Faltan datos"}), 400
+
     try:
+        existing = Gerente.query.filter_by(email=data.get("email")).first()
+        if existing:
+            return jsonify({"msg": "Email ya existe"}), 400
+
+        nuevo = Gerente(
+            name=data.get("name"),
+            lastname=data.get("lastname"),
+            phone=data.get("phone"),
+            email=data.get("email"),
+            password=data.get("password"),
+            date=datetime.utcnow()
+        )
+
         db.session.add(nuevo)
         db.session.commit()
+
         return jsonify(nuevo.serialize()), 201
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": "Error al crear gerente", "error": str(e)}), 500
 
+
 @api.route('/gerentes/<int:id>', methods=['PUT'])
 def update_gerente(id):
     gerente = Gerente.query.get(id)
-    if not gerente: return jsonify({"msg": "No encontrado"}), 404
-    data = request.json
-    gerente.name = data.get("name", gerente.name)
-    gerente.lastname = data.get("lastname", gerente.lastname)
-    gerente.phone = data.get("phone", gerente.phone)
-    gerente.email = data.get("email", gerente.email)
-    db.session.commit()
-    return jsonify(gerente.serialize()), 200
+
+    if not gerente:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    try:
+        data = request.json
+
+        gerente.name = data.get("name", gerente.name)
+        gerente.lastname = data.get("lastname", gerente.lastname)
+        gerente.phone = data.get("phone", gerente.phone)
+        gerente.email = data.get("email", gerente.email)
+
+        db.session.commit()
+        return jsonify(gerente.serialize()), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
+
 
 @api.route('/gerentes/<int:id>', methods=['DELETE'])
 def delete_gerente(id):
     gerente = Gerente.query.get(id)
-    if not gerente: return jsonify({"msg": "No encontrado"}), 404
-    db.session.delete(gerente)
-    db.session.commit()
-    return jsonify({"msg": "Eliminado"}), 200
+
+    if not gerente:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    try:
+        db.session.delete(gerente)
+        db.session.commit()
+        return jsonify({"msg": "Eliminado"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
+
 
 # =========================
-# CRUD CLIENTS
+# CRUD CLIENTS 
 # =========================
 
 @api.route('/clients', methods=['GET'])
 def get_clients():
-    all_clients = Clients.query.all()
-    results = [client.serialize() for client in all_clients]
-    return jsonify(results), 200
+    clients = Clients.query.all()
+    return jsonify([c.serialize() for c in clients]), 200
 
-@api.route('/client/<int:client_id>', methods=['GET'])
-def get_client(client_id):
-    client = Clients.query.get(client_id)
-    if not client: return jsonify({"error": "Client not found"}), 404
+
+@api.route('/client/<int:id>', methods=['GET'])
+def get_client(id):
+    client = Clients.query.get(id)
+    if not client:
+        return jsonify({"msg": "No encontrado"}), 404
     return jsonify(client.serialize()), 200
+
 
 @api.route('/clients', methods=['POST'])
 def create_client():
-    body = request.get_json()
-    new_client = Clients(
-        name=body.get("name"),
-        email=body.get("email"),
-        phone=body.get("phone"),
-        password=body.get("password"),
-        is_active=True
-    )
-    db.session.add(new_client)
-    db.session.commit()
-    return jsonify(new_client.serialize()), 201
+    data = request.json
 
-@api.route('/client/<int:client_id>', methods=['PUT'])
-def update_client(client_id):
-    client = Clients.query.get(client_id)
-    if not client: return jsonify({"error": "Client not found"}), 404
-    body = request.get_json()
-    client.name = body.get('name', client.name)
-    client.email = body.get('email', client.email)
-    client.phone = body.get('phone', client.phone)
-    client.password = body.get('password', client.password)
-    db.session.commit()
-    return jsonify(client.serialize()), 200
+    if not data:
+        return jsonify({"msg": "Faltan datos"}), 400
 
-@api.route('/client/<int:client_id>', methods=['DELETE'])
-def delete_client(client_id):
-    client = Clients.query.get(client_id)
-    if not client: return jsonify({"error": "Client not found"}), 404
-    db.session.delete(client)
-    db.session.commit()
-    return jsonify({"message": "Client deleted successfully"}), 200
+    try:
+        existing = Clients.query.filter_by(email=data.get("email")).first()
+        if existing:
+            return jsonify({"msg": "Email ya existe"}), 400
+
+        client = Clients(
+            name=data.get("name"),
+            email=data.get("email"),
+            phone=data.get("phone"),
+            password=data.get("password"),
+            is_active=True
+        )
+
+        db.session.add(client)
+        db.session.commit()
+
+        return jsonify(client.serialize()), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al crear", "error": str(e)}), 500
+
+
+@api.route('/client/<int:id>', methods=['PUT'])
+def update_client(id):
+    client = Clients.query.get(id)
+
+    if not client:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    try:
+        data = request.json
+
+        client.name = data.get("name", client.name)
+        client.email = data.get("email", client.email)
+        client.phone = data.get("phone", client.phone)
+        client.password = data.get("password", client.password)
+
+        db.session.commit()
+        return jsonify(client.serialize()), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
+
+
+@api.route('/client/<int:id>', methods=['DELETE'])
+def delete_client(id):
+    client = Clients.query.get(id)
+
+    if not client:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    try:
+        db.session.delete(client)
+        db.session.commit()
+        return jsonify({"msg": "Eliminado"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
+
+
+# =========================
+# CRUD OWNER
+# =========================
+
+@api.route('/owners', methods=['GET'])
+def get_owners():
+    owners = Owner.query.all()
+    return jsonify([o.serialize() for o in owners]), 200
+
+
+@api.route('/owner/<int:id>', methods=['GET'])
+def get_owner(id):
+    owner = Owner.query.get(id)
+    if not owner:
+        return jsonify({"msg": "No encontrado"}), 404
+    return jsonify(owner.serialize()), 200
+
+
+@api.route('/owners', methods=['POST'])
+def create_owner():
+    data = request.json
+
+    try:
+        existing = Owner.query.filter_by(email=data.get("email")).first()
+        if existing:
+            return jsonify({"msg": "Email ya existe"}), 400
+
+        owner = Owner(**data, is_active=True)
+        db.session.add(owner)
+        db.session.commit()
+
+        return jsonify(owner.serialize()), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al crear", "error": str(e)}), 500
+
+
+@api.route('/owner/<int:id>', methods=['PUT'])
+def update_owner(id):
+    owner = Owner.query.get(id)
+
+    if not owner:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    try:
+        data = request.json
+
+        owner.name = data.get("name", owner.name)
+        owner.email = data.get("email", owner.email)
+        owner.phone = data.get("phone", owner.phone)
+        owner.password = data.get("password", owner.password)
+
+        db.session.commit()
+        return jsonify(owner.serialize()), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
+
+
+@api.route('/owner/<int:id>', methods=['DELETE'])
+def delete_owner(id):
+    owner = Owner.query.get(id)
+
+    if not owner:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    try:
+        db.session.delete(owner)
+        db.session.commit()
+        return jsonify({"msg": "Eliminado"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500

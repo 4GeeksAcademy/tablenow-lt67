@@ -21,12 +21,18 @@ import NewClient from "./pages/NewClient";
 import UpdateClient from "./pages/UpdateClient";
 import Client from "./pages/Client";
 
+// OWNERS
+import Owners from "./pages/Owners";
+import NewOwner from "./pages/NewOwner";
+import Owner from "./pages/Owner";
+import UpdateOwner from "./pages/UpdateOwner";
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
 
       {/* HOME */}
-      <Route path="/" element={<Home />} />
+      <Route index element={<Home />} />
 
       {/* GENERALES */}
       <Route path="/single/:theId" element={<Single />} />
@@ -43,6 +49,12 @@ export const router = createBrowserRouter(
       <Route path="/new_client" element={<NewClient />} />
       <Route path="/client/:clientId" element={<Client />} />
       <Route path="/edit_client/:clientId" element={<UpdateClient />} />
+
+      {/* OWNERS */}
+      <Route path="/owners" element={<Owners />} />
+      <Route path="/new_owner" element={<NewOwner />} />
+      <Route path="/owner/:ownerId" element={<Owner />} />
+      <Route path="/edit_owner/:ownerId" element={<UpdateOwner />} />
 
     </Route>
   )

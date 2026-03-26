@@ -17,6 +17,7 @@ class User(db.Model):
             "email": self.email,
         }
 
+
 class Gerente(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
@@ -36,6 +37,7 @@ class Gerente(db.Model):
             "date": self.date.isoformat() if self.date else None
         }
 
+
 class Clients(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -44,7 +46,24 @@ class Clients(db.Model):
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
 
-    def serialize(self):    
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone
+        }
+
+
+class Owner(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    phone: Mapped[str] = mapped_column(String(20), nullable=False)
+    password: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
+
+    def serialize(self):
         return {
             "id": self.id,
             "name": self.name,

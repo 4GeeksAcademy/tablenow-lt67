@@ -59,6 +59,7 @@ export const Home = () => {
 				)}
 			</div>
 			<button className="btn btn-primary" onClick={()=>navigate("/clients")}>Clients</button>
+			<button className="btn btn-primary" onClick={()=>navigate("/owners")}>Owners</button>
 		</div>
 	);
 };
