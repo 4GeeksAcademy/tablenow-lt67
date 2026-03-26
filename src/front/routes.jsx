@@ -13,6 +13,10 @@ import Clients from "./pages/Clients";
 import NewClient from "./pages/NewClient";
 import UpdateClient from "./pages/UpdateClient";
 import Client from "./pages/Client";
+import Owners from "./pages/Owners";
+import NewOwner from "./pages/NewOwner";
+import Owner from "./pages/Owner";
+import UpdateOwner from "./pages/UpdateOwner";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -33,6 +37,12 @@ export const router = createBrowserRouter(
         <Route path="/new_client" element={<NewClient />} />
         <Route path="/client/:clientId" element={ <Client />} />  {/* Dynamic route for single items */}
         <Route path="/edit_client/:clientId" element={ <UpdateClient />} />  {/* Dynamic route for single items */}
+
+
+        <Route path="/owners" element={<Owners />} />
+        <Route path="/new_owner" element={<NewOwner />} />
+        <Route path="/edit_owner/:ownerId" element={<UpdateOwner />} />
+        <Route path="/owner/:ownerId" element={ <Owner />} />  {/* Dynamic route for single items */}
       </Route>
     )
 );
