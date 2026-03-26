@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import { useNavigate } from "react-router-dom"; // ✅ Importado
+import { useNavigate } from "react-router-dom";
 
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
-  const navigate = useNavigate(); // ✅ Hook declarado dentro de la función
+	const navigate = useNavigate()
 
   const loadMessage = async () => {
     try {
@@ -32,12 +32,11 @@ export const Home = () => {
   useEffect(() => {
     loadMessage();
   }, []);
+	return (
+		<div className="text-center mt-5">
+			<h1 className="display-4">Hello Rigo!!</h1>
 
-  return (
-    <div className="text-center mt-5">
-      <h1 className="display-4">Hello Rigo!!</h1>
-      
-      {/*BOTÓN DE GERENTES*/}
+{/*BOTÓN DE GERENTES*/}
       <div className="my-4">
         <button 
           className="btn btn-success btn-lg shadow" 
@@ -47,19 +46,19 @@ export const Home = () => {
         </button>
       </div>
 
-      <p className="lead">
-        <img src={rigoImageUrl} className="img-fluid rounded-circle mb-3" alt="Rigo Baby" />
-      </p>
-
-      <div className="alert alert-info">
-        {store.message ? (
-          <span>{store.message}</span>
-        ) : (
-          <span className="text-danger">
-            Loading message from the backend (make sure your python 🐍 backend is running)...
-          </span>
-        )}
-      </div>
-    </div>
-  );
+			<p className="lead">
+				<img src={rigoImageUrl} className="img-fluid rounded-circle mb-3" alt="Rigo Baby" />
+			</p>
+			<div className="alert alert-info">
+				{store.message ? (
+					<span>{store.message}</span>
+				) : (
+					<span className="text-danger">
+						Loading message from the backend (make sure your python 🐍 backend is running)...
+					</span>
+				)}
+			</div>
+			<button className="btn btn-primary" onClick={()=>navigate("/clients")}>Clients</button>
+		</div>
+	);
 };

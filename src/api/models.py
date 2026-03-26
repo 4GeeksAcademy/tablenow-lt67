@@ -17,15 +17,14 @@ class User(db.Model):
             "email": self.email,
         }
 
-
 class Gerente(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    lastname = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    email = db.Column(db.String(120), unique=True)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-    password = db.Column(db.String(100))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    lastname: Mapped[str] = mapped_column(String(100))
+    phone: Mapped[str] = mapped_column(String(20))
+    email: Mapped[str] = mapped_column(String(120), unique=True)
+    password: Mapped[str] = mapped_column(String(100))
+    date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     def serialize(self):
         return {
@@ -34,5 +33,21 @@ class Gerente(db.Model):
             "lastname": self.lastname,
             "phone": self.phone,
             "email": self.email,
-            "date": self.date,
+            "date": self.date.isoformat() if self.date else None
+        }
+
+class Clients(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    phone: Mapped[str] = mapped_column(String(20), nullable=False)
+    password: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
+
+    def serialize(self):    
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone
         }
