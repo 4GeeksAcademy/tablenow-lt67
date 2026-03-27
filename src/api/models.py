@@ -1,7 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
+from typing import List
 
 db = SQLAlchemy()
 
@@ -63,10 +64,32 @@ class Owner(db.Model):
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
+    restaurant: Mapped[List["Restaurant"]] = relationship(back_populates="owner")
+
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
             "email": self.email,
             "phone": self.phone
+        }
+    
+class Restaurant(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id_owner: Mapped[int] = mapped_column(ForeignKey("owner.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    address: Mapped[str] = mapped_column(String(20), nullable=False)
+    phone: Mapped[str] = mapped_column(String(100), nullable=False)
+    total_capacity: Mapped[int] = mapped_column( nullable=False)
+
+    owner_id: Mapped[int] = mapped_column(ForeignKey("owner.id"))
+    owner: Mapped["Owner"] = relationship(back_populates="restaurant")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "id_owner": self.id_owner,
+            "name": self.name,
+            "phone": self.phone,
+            "total_capacity": self.total_capacity
         }
