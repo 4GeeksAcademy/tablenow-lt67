@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Clients, Owner, Gerente
+from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu 
 from flask_cors import CORS
 from datetime import datetime
 
@@ -260,6 +260,58 @@ def delete_owner(id):
         db.session.commit()
         return jsonify({"msg": "Eliminado"}), 200
 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
+
+# =========================
+# CRUD MENU & RESTAURANTE
+# =========================
+
+@api.route('/restaurantes', methods=['POST'])
+def create_restaurante():
+    data = request.json
+    try:
+        nuevo = Restaurante(nombre=data.get("nombre"))
+        db.session.add(nuevo)
+        db.session.commit()
+        return jsonify(nuevo.serialize()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error", "error": str(e)}), 500
+
+@api.route('/menus', methods=['GET'])
+def get_menus():
+    menus = Menu.query.all()
+    return jsonify([m.serialize() for m in menus]), 200
+
+@api.route('/menus', methods=['POST'])
+def create_menu():
+    data = request.json
+    try:
+        nuevo_menu = Menu(
+            nombre=data.get("nombre"),
+            categoria=data.get("categoria"),
+            precio=data.get("precio"),
+            restaurante_id=data.get("restaurante_id"),
+            disponible=data.get("disponible", True)
+        )
+        db.session.add(nuevo_menu)
+        db.session.commit()
+        return jsonify(nuevo_menu.serialize()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al crear menu", "error": str(e)}), 500
+
+@api.route('/menus/<int:id>', methods=['DELETE'])
+def delete_menu(id):
+    menu = Menu.query.get(id)
+    if not menu:
+        return jsonify({"msg": "Plato no encontrado"}), 404
+    try:
+        db.session.delete(menu)
+        db.session.commit()
+        return jsonify({"msg": "Plato eliminado correctamente"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500

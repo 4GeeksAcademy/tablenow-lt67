@@ -27,6 +27,9 @@ import NewOwner from "./pages/NewOwner";
 import Owner from "./pages/Owner";
 import UpdateOwner from "./pages/UpdateOwner";
 
+// RESTAURANT & MENUS
+import { Menu } from "./pages/Menu";
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
@@ -55,6 +58,9 @@ export const router = createBrowserRouter(
       <Route path="/new_owner" element={<NewOwner />} />
       <Route path="/owner/:ownerId" element={<Owner />} />
       <Route path="/edit_owner/:ownerId" element={<UpdateOwner />} />
+
+      {/* RESTAURANT */}
+      <Route path="/menus" element={<Menu />} />
 
     </Route>
   )

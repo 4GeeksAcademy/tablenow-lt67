@@ -70,3 +70,42 @@ class Owner(db.Model):
             "email": self.email,
             "phone": self.phone
         }
+
+
+class Restaurante(db.Model):
+    __tablename__ = "restaurante"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(120), nullable=False)
+    
+    # Esto permite que desde un restaurante veas sus platos: restaurante.menus
+    menus = db.relationship("Menu", backref="restaurante", lazy=True, cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<Restaurante: {self.nombre}>'
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre
+        }
+
+class Menu(db.Model):
+    __tablename__ = "menu"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(120), nullable=False)
+    categoria: Mapped[str] = mapped_column(String(80))
+    precio: Mapped[float] = mapped_column(db.Float, nullable=False)
+    disponible: Mapped[bool] = mapped_column(Boolean(), default=True)
+    
+    # Relación con restaurante
+    restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id", ondelete="CASCADE"))
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "categoria": self.categoria,
+            "precio": self.precio,
+            "disponible": self.disponible,
+            "restaurante_id": self.restaurante_id
+        }
