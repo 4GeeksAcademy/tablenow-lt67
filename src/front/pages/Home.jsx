@@ -9,7 +9,6 @@ export const Home = () => {
 
   const loadMessage = async () => {
     try {
-      // Usamos la variable de entorno que ya tienes configurada en tu .env
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
       
       if (!backendUrl) throw new Error("VITE_BACKEND_URL is not defined in .env file");
@@ -29,8 +28,20 @@ export const Home = () => {
     }
   };
 
+  const loadSales = async () => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      const response = await fetch(backendUrl + "/api/sales");
+      const data = await response.json();
+      if (response.ok) dispatch({ type: "set_sales", payload: data });
+    } catch (error) {
+      console.error("Error loading sales", error);
+    }
+  };
+
   useEffect(() => {
     loadMessage();
+    loadSales();
   }, []);
 	return (
 		<div className="text-center mt-5">
@@ -60,6 +71,7 @@ export const Home = () => {
 			</div>
 			<button className="btn btn-primary" onClick={()=>navigate("/clients")}>Clients</button>
 			<button className="btn btn-primary" onClick={()=>navigate("/owners")}>Owners</button>
-		</div>
+		  <button className="btn btn-success" onClick={() => navigate("/new-sale")}>New Sale</button>
+    </div>
 	);
 };

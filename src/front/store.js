@@ -13,7 +13,10 @@ export const initialStore=()=>{
         background: null,
       }
     ],
-    id: 0
+    gerentes: [],
+        clients: [],
+        owners: [],
+        sales: [],
   }
 }
 
@@ -24,6 +27,8 @@ export default function storeReducer(store, action = {}) {
         ...store,
         message: action.payload
       };
+
+      
       
     case 'add_task':
 
@@ -34,7 +39,19 @@ export default function storeReducer(store, action = {}) {
         todos: store.todos.map((todo) => (todo.id === id ? { ...todo, background: color } : todo))
       };
 
+      case 'set_sales':
+      return {
+        ...store,
+        sales: action.payload
+      };
+
+    case 'add_sale':
+      return {
+        ...store,
+        sales: [...store.sales, action.payload]
+      };
+
     default:
-      throw Error('Unknown action.');
+      return store;
   }    
 }
