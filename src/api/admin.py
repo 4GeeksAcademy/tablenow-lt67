@@ -1,18 +1,41 @@
 import os
-import inspect
 from flask_admin import Admin
-from . import models
-from .models import db
-from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
+from api.models import db, User, Gerente, Clients, Owner, Restaurante, Menu, Reserva, Sale
+from flask_admin.contrib.sqla import ModelView
 
+class ReservaModelView(ModelView):
+    column_list = ['id', 'fecha', 'cliente', 'restaurante']
+    form_columns = ['fecha', 'cliente', 'restaurante']
+
+    column_formatters = {
+        'cliente': lambda v, c, m, p: m.cliente.name if m.cliente else "Sin Nombre"
+    }
+
+class SaleModelView(ModelView):
+    column_list = ['id', 'total', 'payment_method', 'status', 'reserva', 'restaurante']
+    form_columns = ['total', 'payment_method', 'status', 'reserva', 'restaurante']
+    
+    form_args = {
+        'reserva': {
+            'label': 'Reserva del Cliente',
+            'get_label': lambda m: f"CLIENTE: {m.cliente.name if m.cliente else 'N/A'} - ID: {m.id}"
+        },
+        'restaurante': {
+            'label': 'Restaurante Seleccionado',
+            'get_label': lambda m: f"REST: {m.nombre}"
+        }
+    }
 
 def setup_admin(app):
     app.secret_key = os.environ.get('FLASK_APP_KEY', 'sample key')
     admin = Admin(app, name='4Geeks Admin', theme=Bootstrap4Theme(swatch='cerulean'))
 
-    # Dynamically add all models to the admin interface
-    for name, obj in inspect.getmembers(models):
-        # Verify that the object is a SQLAlchemy model before adding it to the admin. 
-        if inspect.isclass(obj) and issubclass(obj, db.Model):
-            admin.add_view(ModelView(obj, db.session))
+    admin.add_view(ModelView(User, db.session))
+    admin.add_view(ModelView(Gerente, db.session))
+    admin.add_view(ModelView(Clients, db.session))
+    admin.add_view(ModelView(Owner, db.session))
+    admin.add_view(ModelView(Menu, db.session))
+    admin.add_view(ModelView(Restaurante, db.session)) 
+    admin.add_view(ReservaModelView(Reserva, db.session)) 
+    admin.add_view(SaleModelView(Sale, db.session))

@@ -17,6 +17,8 @@ export const initialStore=()=>{
         clients: [],
         owners: [],
         sales: [],
+        restaurants: [],
+    bookings: []
   }
 }
 
@@ -49,6 +51,18 @@ export default function storeReducer(store, action = {}) {
       return {
         ...store,
         sales: [...store.sales, action.payload]
+      };
+
+      case 'set_restaurants':
+      return {
+        ...store,
+        restaurants: action.payload
+      };
+
+    case 'set_bookings':
+      return {
+        ...store,
+        bookings: action.payload
       };
 
     default:

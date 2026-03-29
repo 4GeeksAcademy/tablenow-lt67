@@ -265,7 +265,7 @@ def delete_owner(id):
         return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
     
 # =========================
-# CRUD SALE
+# CRUD SALES, RESTAURANT & BOOKING
 # =========================
 
 @api.route('/sales', methods=['GET'])
@@ -276,25 +276,31 @@ def get_sales():
 @api.route('/sales', methods=['POST'])
 def create_sale():
     data = request.json
-    
-    
-    if not data:
-        return jsonify({"msg": "Missing JSON in request"}), 400
-
+    if not data: 
+        return jsonify({"msg": "Faltan datos"}), 400
     try:
-        
         new_sale = Sale(
             total=data.get("total"),
             payment_method=data.get("payment_method"),
             status=data.get("status", "pending"), 
-            booking_id=data.get("booking_id"),
-            restaurant_id=data.get("restaurant_id")
+            reserva_id=data.get("booking_id"),
+            restaurante_id=data.get("restaurant_id")
         )
-        
         db.session.add(new_sale)
         db.session.commit()
         return jsonify(new_sale.serialize()), 201
-
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@api.route('/restaurant', methods=['GET'])
+def get_restaurants():
+    from api.models import Restaurante 
+    all_restaurants = Restaurante.query.all()
+    return jsonify([r.serialize() for r in all_restaurants]), 200
+
+@api.route('/booking', methods=['GET'])
+def get_bookings():
+    from api.models import Reserva
+    all_bookings = Reserva.query.all()
+    return jsonify([b.serialize() for b in all_bookings]), 200
