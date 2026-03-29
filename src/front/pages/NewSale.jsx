@@ -15,7 +15,6 @@ export const NewSale = () => {
         restaurant_id: ""
     });
 
-    // 1. Definimos las cabeceras reutilizables para Codespaces
     const headers = {
         "Content-Type": "application/json",
         "Bypass-Tunnel-Reminder": "true" 
@@ -54,7 +53,7 @@ export const NewSale = () => {
         try {
             const resp = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/sales", {
                 method: "POST",
-                headers: headers, // <--- IMPORTANTE: Usamos los mismos headers aquí
+                headers: headers, 
                 body: JSON.stringify(formData)
             });
 

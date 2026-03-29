@@ -104,7 +104,7 @@ class Sale(db.Model):
             "payment_method": self.payment_method,
             "status": self.status,
             "reserva_id": self.reserva_id,
-            "restaurante_id": self.restaurante_id
+            "restaurante_id": self.restaurante_id,
         }
 
 class Restaurante(db.Model):

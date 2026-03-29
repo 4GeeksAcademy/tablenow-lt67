@@ -61,7 +61,9 @@ export const SalesList = () => {
                                     </div>
                                     <div className="d-flex justify-content-between my-2">
                                         <span>Booking:</span>
-                                        <span>ID {sale.booking_id}</span>
+                                        <span className="fw-bold text-capitalize">
+                                            {sale.cliente_nombre ? sale.cliente_nombre : `ID ${sale.reserva_id}`}
+                                        </span>
                                     </div>
 
                                     <hr className="border-secondary border-1 opacity-25" />
@@ -74,7 +76,9 @@ export const SalesList = () => {
                                     </div>
                                     
                                     <div className="text-center mt-4 pt-2 border-top border-dashed">
-                                        <p className="small text-muted mb-0">Restaurant ID: {sale.restaurant_id}</p>
+                                        <p className="small text-muted mb-0">
+                                            {sale.restaurante_nombre ? sale.restaurante_nombre : "TableNow Central"}
+                                        </p>
                                         <p className="small text-muted">Thank you for your visit!</p>
                                     </div>
                                 </div>
