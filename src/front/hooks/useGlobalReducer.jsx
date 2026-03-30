@@ -16,7 +16,6 @@ export default function useGlobalReducer() {
     const { dispatch, store } = useContext(StoreContext);
 
     const actions = {
-        // 1. Crear un item en la venta
         createItemVenta: async (itemData) => {
             try {
                 const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas", {
@@ -42,7 +41,6 @@ getMenus: async () => {
         const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/menu");
         if (response.ok) {
             const data = await response.json();
-            // ¡OJO AQUÍ! El type debe ser "set_menus" para que coincida con store.js
             dispatch({ type: "set_menus", payload: data });
         }
     } catch (error) {
@@ -68,11 +66,10 @@ getMenus: async () => {
 finalizarVenta: async (saleId) => {
     try {
         const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sales/${saleId}/checkout`, {
-            method: "PUT" // O POST, según como lo definas en tu API
+            method: "PUT" 
         });
         if (response.ok) {
             const updatedSale = await response.json();
-            // Actualizamos la venta en el store para que el total se vea reflejado
             dispatch({ type: "update_sale", payload: updatedSale });
             return true;
         }
@@ -82,7 +79,6 @@ finalizarVenta: async (saleId) => {
     return false;
 },
 
-        // 3. Traer los items de una venta específica
         getItemsBySale: async (saleId) => {
             try {
                 const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas/" + saleId);

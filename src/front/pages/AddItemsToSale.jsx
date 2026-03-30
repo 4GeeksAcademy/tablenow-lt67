@@ -47,7 +47,6 @@ const handleAdd = async () => {
         subtotal: subtotalCorrecto
     };
 
-    // 4. Ejecutamos la acción
     const success = await actions.createItemVenta(newItem);
     if (success) {
         setItemId("");

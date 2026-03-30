@@ -112,7 +112,6 @@ class Sale(db.Model):
             "status": self.status,
             "reserva_id": self.reserva_id,
             "restaurante_id": self.restaurante_id,
-            # AGREGA ESTAS LÍNEAS:
             "cliente_nombre": self.reserva.cliente.name if self.reserva and self.reserva.cliente else "N/A",
             "restaurante_nombre": self.restaurante.nombre if self.restaurante else "N/A"
         }

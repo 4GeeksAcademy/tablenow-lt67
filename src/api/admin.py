@@ -29,7 +29,6 @@ class SaleModelView(ModelView):
 
 class ItemVentaModelView(ModelView):
     column_list = ['id', 'id_venta', 'menu', 'cantidad', 'precio_unitario', 'subtotal']
-    # Esto hará que en el admin veas el nombre del plato en vez del ID
     column_formatters = {
         'menu': lambda v, c, m, p: m.menu.nombre if m.menu else "N/A"
     }
