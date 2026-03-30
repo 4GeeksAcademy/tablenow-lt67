@@ -27,9 +27,8 @@ import NewOwner from "./pages/NewOwner";
 import Owner from "./pages/Owner";
 import UpdateOwner from "./pages/UpdateOwner";
 
-//SALES
-import { NewSale } from "./pages/NewSale";
-import { SalesList } from "./pages/SalesList";
+// RESTAURANT & MENUS
+import { Menu } from "./pages/Menu";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -60,10 +59,11 @@ export const router = createBrowserRouter(
       <Route path="/owner/:ownerId" element={<Owner />} />
       <Route path="/edit_owner/:ownerId" element={<UpdateOwner />} />
 
-      {/* SALES */}
-      <Route element={<NewSale />} path="/new-sale" />
-      <Route element={<SalesList />} path="/sales" />
+      {/* RESTAURANT */}
+      <Route path="/menus" element={<Menu />} />
 
+      {/* SALES */}
+      <Route path="/sales" element={<SalesList />} />
     </Route>
   )
 );
