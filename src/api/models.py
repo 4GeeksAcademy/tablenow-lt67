@@ -159,3 +159,28 @@ class Reserva(db.Model):
             "cliente_nombre": self.cliente.name if self.cliente else "Sin Nombre",
             "restaurante_id": self.restaurante_id
         }
+    
+class ItemVenta(db.Model):
+    __tablename__ = "item_venta"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    id_venta: Mapped[int] = mapped_column(db.ForeignKey('sale.id', ondelete="CASCADE"), nullable=False)
+    id_menu: Mapped[int] = mapped_column(db.ForeignKey('menu.id', ondelete="CASCADE"), nullable=False)
+    
+    cantidad: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    precio_unitario: Mapped[float] = mapped_column(db.Float, nullable=False)
+    subtotal: Mapped[float] = mapped_column(db.Float, nullable=False)
+
+    sale = db.relationship("Sale")
+    menu = db.relationship("Menu")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "id_venta": self.id_venta,
+            "id_menu": self.id_menu,
+            "plato_nombre": self.menu.nombre if self.menu else "N/A",
+            "cantidad": self.cantidad,
+            "precio_unitario": self.precio_unitario,
+            "subtotal": self.subtotal
+        }

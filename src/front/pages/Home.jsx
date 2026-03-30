@@ -3,6 +3,7 @@ import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { useNavigate } from "react-router-dom";
 
+
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
 	const navigate = useNavigate()
@@ -72,6 +73,7 @@ export const Home = () => {
 			<button className="btn btn-primary" onClick={()=>navigate("/clients")}>Clients</button>
 			<button className="btn btn-primary" onClick={()=>navigate("/owners")}>Owners</button>
 		  <button className="btn btn-success" onClick={() => navigate("/new-sale")}>New Sale</button>
+      <button className="btn btn-primary" onClick={() => navigate("/sales")}>Ventas</button>
     </div>
 	);
 };

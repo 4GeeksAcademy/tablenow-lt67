@@ -1,24 +1,100 @@
-// Import necessary hooks and functions from React.
 import { useContext, useReducer, createContext } from "react";
-import storeReducer, { initialStore } from "../store"  // Import the reducer and the initial state.
+import storeReducer, { initialStore } from "../store";
 
-// Create a context to hold the global state of the application
-// We will call this global state the "store" to avoid confusion while using local states
-const StoreContext = createContext()
+const StoreContext = createContext();
 
-// Define a provider component that encapsulates the store and warps it in a context provider to 
-// broadcast the information throught all the app pages and components.
 export function StoreProvider({ children }) {
-    // Initialize reducer with the initial state.
-    const [store, dispatch] = useReducer(storeReducer, initialStore())
-    // Provide the store and dispatch method to all child components.
-    return <StoreContext.Provider value={{ store, dispatch }}>
-        {children}
-    </StoreContext.Provider>
+    const [store, dispatch] = useReducer(storeReducer, initialStore());
+    return (
+        <StoreContext.Provider value={{ store, dispatch }}>
+            {children}
+        </StoreContext.Provider>
+    );
 }
 
-// Custom hook to access the global state and dispatch function.
 export default function useGlobalReducer() {
-    const { dispatch, store } = useContext(StoreContext)
-    return { dispatch, store };
+    const { dispatch, store } = useContext(StoreContext);
+
+    const actions = {
+        // 1. Crear un item en la venta
+        createItemVenta: async (itemData) => {
+            try {
+                const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(itemData)
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    dispatch({ type: "add_item_venta", payload: data });
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error("Error en createItemVenta:", error);
+                return false;
+            }
+        },
+
+        
+getMenus: async () => {
+    try {
+        const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/restaurant");
+        if (response.ok) {
+            const data = await response.json();
+            // Guardamos en el espacio de restaurantes que ya funciona
+            dispatch({ type: "set_restaurants", payload: data });
+        }
+    } catch (error) {
+        console.error("Error cargando datos de prueba:", error);
+    }
+},
+
+        deleteItemVenta: async (itemId) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/item_ventas/${itemId}`, {
+            method: "DELETE"
+        });
+        if (response.ok) {
+            dispatch({ type: "remove_item_venta", payload: itemId });
+            return true;
+        }
+    } catch (error) {
+        console.error("Error eliminando item:", error);
+    }
+    return false;
+},
+
+finalizarVenta: async (saleId) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sales/${saleId}/checkout`, {
+            method: "PUT" // O POST, según como lo definas en tu API
+        });
+        if (response.ok) {
+            const updatedSale = await response.json();
+            // Actualizamos la venta en el store para que el total se vea reflejado
+            dispatch({ type: "update_sale", payload: updatedSale });
+            return true;
+        }
+    } catch (error) {
+        console.error("Error al finalizar venta:", error);
+    }
+    return false;
+},
+
+        // 3. Traer los items de una venta específica
+        getItemsBySale: async (saleId) => {
+            try {
+                const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas/" + saleId);
+                if (response.ok) {
+                    const data = await response.json();
+                    dispatch({ type: "set_item_ventas", payload: data });
+                }
+            } catch (error) {
+                console.error("Error cargando items:", error);
+            }
+        }
+    };
+
+    return { dispatch, store, actions };
 }

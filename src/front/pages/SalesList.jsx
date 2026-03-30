@@ -1,16 +1,17 @@
 import React, { useEffect } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Importación corregida
 
 export const SalesList = () => {
     const { store, dispatch } = useGlobalReducer();
     const navigate = useNavigate();
 
-    // Importante: Cargar las ventas al entrar si no están
     useEffect(() => {
         const fetchSales = async () => {
             try {
-                const resp = await fetch(process.env.BACKEND_URL + "/api/sales");
+                const backendUrl = import.meta.env.VITE_BACKEND_URL;
+                const resp = await fetch(backendUrl + "/api/sales");
+                
                 if (resp.ok) {
                     const data = await resp.json();
                     dispatch({ type: "set_sales", payload: data });
@@ -73,6 +74,12 @@ export const SalesList = () => {
                                         <span className="h4 mb-0 fw-bold text-success">
                                             ${sale.total.toFixed(2)}
                                         </span>
+                                    </div>
+
+                                    <div className="mt-3">
+                                        <Link to={`/add-items/${sale.id}`} className="btn btn-outline-primary btn-sm w-100 shadow-sm">
+                                            <i className="fas fa-utensils me-2"></i>Manage Items
+                                        </Link>
                                     </div>
                                     
                                     <div className="text-center mt-4 pt-2 border-top border-dashed">

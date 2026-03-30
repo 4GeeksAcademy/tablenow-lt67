@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Clients, Owner, Gerente, Sale
+from api.models import db, User, Clients, Owner, Gerente, Sale, ItemVenta
 from flask_cors import CORS
 from datetime import datetime
 
@@ -304,3 +304,62 @@ def get_bookings():
     from api.models import Reserva
     all_bookings = Reserva.query.all()
     return jsonify([b.serialize() for b in all_bookings]), 200
+
+# =========================
+# CRUD Item_ventas
+# =========================
+
+@api.route('/item_ventas', methods=['POST'])
+def create_item_venta():
+    data = request.json
+    if not data:
+        return jsonify({"msg": "Faltan datos"}), 400
+        
+    try:
+        nuevo_item = ItemVenta(
+            id_venta=data.get("id_venta"),
+            id_menu=data.get("id_menu"),
+            cantidad=data.get("cantidad"),
+            precio_unitario=data.get("precio_unitario"),
+            subtotal=data.get("subtotal")
+        )
+        db.session.add(nuevo_item)
+        db.session.commit()
+        return jsonify(nuevo_item.serialize()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/item_ventas/<int:sale_id>', methods=['GET'])
+def get_items_by_sale(sale_id):
+    # Esto servirá para mostrar el detalle de una venta específica
+    items = ItemVenta.query.filter_by(id_venta=sale_id).all()
+    return jsonify([item.serialize() for item in items]), 200
+
+# =========================
+# FINALIZAR VENTA (CHECKOUT)
+# =========================
+
+@api.route('/sales/<int:sale_id>/checkout', methods=['PUT'])
+def checkout_sale(sale_id):
+    # 1. Buscar la venta (usamos Sale porque así está en tus imports)
+    sale = Sale.query.get(sale_id)
+    if not sale:
+        return jsonify({"msg": "Venta no encontrada"}), 404
+
+    items = ItemVenta.query.filter_by(id_venta=sale_id).all()
+    
+    if not items:
+        return jsonify({"msg": "No se pueden finalizar ventas sin productos"}), 400
+
+    total_real = sum(item.subtotal for item in items)
+
+    sale.total = total_real
+    sale.status = 'paid' 
+
+    try:
+        db.session.commit()
+        return jsonify(sale.serialize()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al procesar el pago", "error": str(e)}), 500

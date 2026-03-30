@@ -31,6 +31,9 @@ import UpdateOwner from "./pages/UpdateOwner";
 import { NewSale } from "./pages/NewSale";
 import { SalesList } from "./pages/SalesList";
 
+//ItemSales
+import { AddItemsToSale } from "./pages/AddItemsToSale.jsx";
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
@@ -63,6 +66,9 @@ export const router = createBrowserRouter(
       {/* SALES */}
       <Route element={<NewSale />} path="/new-sale" />
       <Route element={<SalesList />} path="/sales" />
+
+      {/* ITEMSALES */}
+      <Route element={<AddItemsToSale/>} path="/add-items/:saleId" />
 
     </Route>
   )
