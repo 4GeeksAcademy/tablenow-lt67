@@ -28,29 +28,35 @@ export const AddItemsToSale = () => {
         }
     };
 
-  const handleAdd = async () => {
-        if (!itemId) return alert("Por favor, selecciona un plato");
+const handleAdd = async () => {
+    if (!itemId) return alert("Por favor, selecciona un plato del menú");
 
-        const listaPlatos = store.menus || store.menu; 
-        const selectedMenu = listaPlatos.find(m => m.id == parseInt(itemId));
-        
-        if (!selectedMenu) return alert("No se encontró el plato");
+    const selectedMenu = store.menus.find(m => m.id == parseInt(itemId));
+    
+    if (!selectedMenu) return alert("No se encontró la información del plato");
 
-        const newItem = {
-            id_venta: parseInt(saleId),
-            id_menu: parseInt(itemId),
-            cantidad: parseInt(quantity),
-            precio_unitario: parseFloat(selectedMenu.precio),
-            subtotal: parseFloat(selectedMenu.precio) * parseInt(quantity)
-        };
+    const cantidadNumero = parseInt(quantity);
+    const precioReal = parseFloat(selectedMenu.precio);
+    const subtotalCorrecto = cantidadNumero * precioReal;
 
-        const success = await actions.createItemVenta(newItem);
-        if (success) {
-            setItemId("");
-            setQuantity(1);
-            actions.getItemsBySale(saleId);
-        }
+    const newItem = {
+        id_venta: parseInt(saleId),
+        id_menu: selectedMenu.id, 
+        cantidad: cantidadNumero,
+        precio_unitario: precioReal,
+        subtotal: subtotalCorrecto
     };
+
+    // 4. Ejecutamos la acción
+    const success = await actions.createItemVenta(newItem);
+    if (success) {
+        setItemId("");
+        setQuantity(1);
+        actions.getItemsBySale(saleId); 
+    } else {
+        alert("Error al añadir al ticket. Revisa la consola.");
+    }
+};
 
     const handleDelete = async (id) => {
         if (confirm("¿Estás seguro de quitar este plato del pedido?")) {
@@ -69,32 +75,39 @@ export const AddItemsToSale = () => {
 
             {/* FORMULARIO DE AGREGAR */}
             <div className="card p-4 shadow-sm mb-4 bg-light">
-                <div className="row g-3 align-items-end">
-                   <div className="col-md-6">
-    <label className="form-label fw-bold">Seleccionar Restaurante</label>
-    <select 
-        className="form-select" 
-        value={itemId} 
-        onChange={(e) => setItemId(e.target.value)}
-    >
-        <option value="">Selecciona un local...</option>
-                {store.restaurants && store.restaurants.map((rest) => (
-                    <option key={rest.id} value={rest.id}>
-                {rest.nombre} 
-                    </option>
-                    ))}
-            </select>
-                </div>
-                    <div className="col-md-2">
-                        <label className="form-label fw-bold">Cant.</label>
-                        <input type="number" className="form-control" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-                    </div>
-                    <div className="col-md-4">
-                        <button className="btn btn-success w-100" onClick={handleAdd}>
-                            <i className="fas fa-plus me-2"></i>Añadir al Ticket
-                        </button>
-                    </div>
-                </div>
+               <div className="row g-3 align-items-end">
+    <div className="col-md-6">
+        <label className="form-label fw-bold">Seleccionar Plato (Menú)</label>
+        <select 
+            className="form-select" 
+            value={itemId} 
+            onChange={(e) => setItemId(e.target.value)}
+        >
+            <option value="">Selecciona un plato...</option>
+            {/* Aquí usamos store.menus para que salgan la Hamburguesa, Tequeños, etc. */}
+            {store.menus && store.menus.map((m) => (
+                <option key={m.id} value={m.id}>
+                    {m.nombre} - ${parseFloat(m.precio).toFixed(2)}
+                </option>
+            ))}
+        </select>
+    </div>
+    <div className="col-md-2">
+        <label className="form-label fw-bold">Cant.</label>
+        <input 
+            type="number" 
+            className="form-control" 
+            min="1" 
+            value={quantity} 
+            onChange={(e) => setQuantity(e.target.value)} 
+        />
+    </div>
+    <div className="col-md-4">
+        <button className="btn btn-success w-100" onClick={handleAdd}>
+            <i className="fas fa-plus me-2"></i>Añadir al Ticket
+        </button>
+    </div>
+</div>
             </div>
 
             {/* TABLA DE PRODUCTOS AGREGADOS */}

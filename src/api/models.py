@@ -96,6 +96,13 @@ class Sale(db.Model):
         self.reserva_id = reserva_id
         self.restaurante_id = restaurante_id
 
+    def __repr__(self):
+        try:
+            nombre_cliente = self.reserva.cliente.name
+            return f"Venta #{self.id} - {nombre_cliente}"
+        except:
+            return f"Venta #{self.id}"
+
     def serialize(self):
         return {
             "id": self.id,
@@ -105,6 +112,9 @@ class Sale(db.Model):
             "status": self.status,
             "reserva_id": self.reserva_id,
             "restaurante_id": self.restaurante_id,
+            # AGREGA ESTAS LÍNEAS:
+            "cliente_nombre": self.reserva.cliente.name if self.reserva and self.reserva.cliente else "N/A",
+            "restaurante_nombre": self.restaurante.nombre if self.restaurante else "N/A"
         }
 
 class Restaurante(db.Model):
@@ -127,13 +137,16 @@ class Menu(db.Model):
     disponible: Mapped[bool] = mapped_column(Boolean(), default=True)
     restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id", ondelete="CASCADE"))
 
+    def __repr__(self):
+        return f"{self.nombre}"
+
     def serialize(self):
         return {
-            "id": self.id,
+       "id": self.id,
             "nombre": self.nombre,
             "precio": self.precio,
             "restaurante_id": self.restaurante_id
-        }
+    }
 
 class Reserva(db.Model):
     __tablename__ = "reserva"
@@ -155,7 +168,6 @@ class Reserva(db.Model):
             "id": self.id,
             "fecha": self.fecha.isoformat(),
             "cliente_id": self.cliente_id,
-    
             "cliente_nombre": self.cliente.name if self.cliente else "Sin Nombre",
             "restaurante_id": self.restaurante_id
         }

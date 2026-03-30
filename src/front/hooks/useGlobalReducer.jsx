@@ -39,14 +39,14 @@ export default function useGlobalReducer() {
         
 getMenus: async () => {
     try {
-        const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/restaurant");
+        const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/menu");
         if (response.ok) {
             const data = await response.json();
-            // Guardamos en el espacio de restaurantes que ya funciona
-            dispatch({ type: "set_restaurants", payload: data });
+            // ¡OJO AQUÍ! El type debe ser "set_menus" para que coincida con store.js
+            dispatch({ type: "set_menus", payload: data });
         }
     } catch (error) {
-        console.error("Error cargando datos de prueba:", error);
+        console.error("Error cargando menús:", error);
     }
 },
 

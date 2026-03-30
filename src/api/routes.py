@@ -332,7 +332,6 @@ def create_item_venta():
 
 @api.route('/item_ventas/<int:sale_id>', methods=['GET'])
 def get_items_by_sale(sale_id):
-    # Esto servirá para mostrar el detalle de una venta específica
     items = ItemVenta.query.filter_by(id_venta=sale_id).all()
     return jsonify([item.serialize() for item in items]), 200
 
@@ -363,3 +362,22 @@ def checkout_sale(sale_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": "Error al procesar el pago", "error": str(e)}), 500
+
+@api.route('/item_ventas/<int:id>', methods=['DELETE'])
+def delete_item_venta(id):
+    item = ItemVenta.query.get(id)
+    if not item:
+        return jsonify({"msg": "Item no encontrado"}), 404
+    try:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({"msg": "Item eliminado correctamente"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+@api.route('/menu', methods=['GET'])
+def get_all_menus():
+    from api.models import Menu
+    menus = Menu.query.all()
+    return jsonify([m.serialize() for m in menus]), 200

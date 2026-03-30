@@ -10,7 +10,7 @@ export const initialStore = () => {
         owners: [],
         sales: [],
         restaurants: [],
-        menus: [], // <-- Aquí ya lo tenías, está perfecto
+        menus: [], 
         bookings: [],
         item_ventas: []
     }
@@ -73,6 +73,12 @@ export default function storeReducer(store, action = {}) {
             return {
                 ...store,
                 item_ventas: action.payload
+            };
+
+        case 'set_menus':
+            return {
+                ...store,
+                menus: action.payload
             };
 
         case 'add_item_venta':
