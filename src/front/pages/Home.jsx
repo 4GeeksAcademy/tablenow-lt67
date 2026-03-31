@@ -31,7 +31,7 @@ export const Home = () => {
   const loadSales = async () => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
-      const response = await fetch(backendUrl + "/api/sales");
+      const response = await fetch(backendUrl + "/api/ventas");
       const data = await response.json();
       if (response.ok) dispatch({ type: "set_sales", payload: data });
     } catch (error) {
@@ -71,7 +71,7 @@ export const Home = () => {
 			</div>
 			<button className="btn btn-primary" onClick={()=>navigate("/clients")}>Clients</button>
 			<button className="btn btn-primary" onClick={()=>navigate("/owners")}>Owners</button>
-		  <button className="btn btn-success" onClick={() => navigate("/new-sale")}>New Sale</button>
+      <button className="btn btn-success" onClick={() => navigate("/sales")}>Ver Ventas</button>
     </div>
 	);
 };

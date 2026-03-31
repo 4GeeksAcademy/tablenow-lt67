@@ -6,14 +6,23 @@ export const SalesList = () => {
     const { store, dispatch } = useGlobalReducer();
     const navigate = useNavigate();
 
-    // Importante: Cargar las ventas al entrar si no están
     useEffect(() => {
         const fetchSales = async () => {
             try {
-                const resp = await fetch(process.env.BACKEND_URL + "/api/sales");
-                if (resp.ok) {
-                    const data = await resp.json();
+                const backendUrl = import.meta.env.VITE_BACKEND_URL;
+                
+                const response = await fetch(backendUrl + "/api/ventas", {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Bypass-Tunnel-Reminder": "true"
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
                     dispatch({ type: "set_sales", payload: data });
+                } else {
+                    console.error("Error en la respuesta del servidor");
                 }
             } catch (error) {
                 console.error("Error cargando ventas:", error);
@@ -53,19 +62,18 @@ export const SalesList = () => {
                                     
                                     <div className="d-flex justify-content-between my-2">
                                         <span>Date:</span>
-                                        <span className="fw-medium">{new Date(sale.date).toLocaleDateString()}</span>
+                                        <span className="fw-medium">{sale.date}</span>
                                     </div>
                                     <div className="d-flex justify-content-between my-2">
                                         <span>Method:</span>
                                         <span className="text-capitalize">{sale.payment_method}</span>
                                     </div>
                                     <div className="d-flex justify-content-between my-2">
-                                        <span>Booking:</span>
-                                        <span className="fw-bold text-capitalize">
-                                            {sale.cliente_nombre ? sale.cliente_nombre : `ID ${sale.reserva_id}`}
-                                        </span>
+                                <span>Booking:</span> 
+                                    <span className="fw-bold text-capitalize">
+                                            {sale.customer_name ? sale.customer_name : "Walk-in Customer"}
+                                    </span>
                                     </div>
-
                                     <hr className="border-secondary border-1 opacity-25" />
 
                                     <div className="d-flex justify-content-between align-items-center mt-3">

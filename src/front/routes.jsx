@@ -30,6 +30,10 @@ import UpdateOwner from "./pages/UpdateOwner";
 // RESTAURANT & MENUS
 import { Menu } from "./pages/Menu";
 
+// SALES
+import { SalesList } from "./pages/SalesList"; 
+import { NewSale } from "./pages/NewSale";
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
@@ -64,6 +68,7 @@ export const router = createBrowserRouter(
 
       {/* SALES */}
       <Route path="/sales" element={<SalesList />} />
+      <Route path="/new-sale" element={<NewSale />} />
     </Route>
   )
 );

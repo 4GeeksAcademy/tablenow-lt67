@@ -48,6 +48,9 @@ export default function storeReducer(store, action = {}) {
 
     case 'set_bookings':
       return { ...store, bookings: action.payload };
+    
+    case 'set_clients':
+      return { ...store, clients: action.payload };
 
     default:
       return store;
