@@ -8,10 +8,10 @@ function UpdateRestaurant() {
     const navigate = useNavigate()
 
     const [idOwner, setIdOwner] = useState(0)
-        const [name, setName] = useState('')
-        const [address, setAddress] = useState('')
-        const [phone, setPhone] = useState('')
-        const [totalCapacity, setTotalCapacity] = useState(0)
+    const [name, setName] = useState('')
+    const [address, setAddress] = useState('')
+    const [phone, setPhone] = useState('')
+    const [totalCapacity, setTotalCapacity] = useState(0)
 
 
     useEffect(()=>{
@@ -22,7 +22,7 @@ function UpdateRestaurant() {
                 setName(data.name)
                 setAddress(data.address)
                 setPhone(data.phone)
-                setTotalCapacity(data.totalCapacity)
+                setTotalCapacity(data.total_capacity)
             })
             .catch((error) => console.log(error))
     },[])
@@ -38,7 +38,7 @@ function UpdateRestaurant() {
                     "name": name,
                     "address": address,
                     "phone": phone,
-                    "totalCapacity": totalCapacity
+                    "total_capacity": totalCapacity
                 }
             )
         }
@@ -50,7 +50,7 @@ function UpdateRestaurant() {
             .catch((error) => console.error(error));
 
         
-        navigate("/owners")
+        navigate("/restaurants")
     }
 
     return (
@@ -62,7 +62,7 @@ function UpdateRestaurant() {
                     <input value={idOwner} onChange={(e) => setIdOwner(e.target.value)} type="number" className="form-control" />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="InputName" className="form-label">Your name</label>
+                    <label htmlFor="InputName" className="form-label">Your restaurant name</label>
                     <input value={name} onChange={(e) => setName(e.target.value)} type="text" className="form-control" />
                 </div>
                 <div className="mb-3">
@@ -79,7 +79,7 @@ function UpdateRestaurant() {
                 </div>
                 <button type="submit" className="btn btn-primary">Update</button>
             </form>
-            <button onClick={()=> navigate("/owners")} className="btn btn-primary">Back home</button>
+            <button onClick={()=> navigate("/restaurants")} className="btn btn-primary">Back to restaurants</button>
         </div>
     )
 }

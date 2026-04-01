@@ -1,16 +1,17 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function NewRestaurant() {
 
     const navigate = useNavigate()
 
-    const [idOwner, setIdOwner] = useState(0)
+    const [ownerId, setOwnerId] = useState(0)
     const [name, setName] = useState('')
     const [address, setAddress] = useState('')
     const [phone, setPhone] = useState('')
     const [totalCapacity, setTotalCapacity] = useState(0)
+
 
     function sendData(e) {
         e.preventDefault()
@@ -19,11 +20,11 @@ function NewRestaurant() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(
                 {
-                    "id_owner": idOwner,
+                    "id_owner": ownerId,
                     "name": name,
                     "address": address,
                     "phone": phone,
-                    "totalCapacity": totalCapacity
+                    "total_capacity": totalCapacity
                 }
             )
         }
@@ -43,8 +44,8 @@ function NewRestaurant() {
             <h1 className="">Create your restaurant</h1>
             <form className="w-50 mx-auto" onSubmit={sendData}>
                 <div className="mb-3">
-                    <label htmlFor="InputIdOwner" className="form-label">Your ID Owner</label>
-                    <input value={idOwner} onChange={(e) => setIdOwner(e.target.value)} type="number" className="form-control" />
+                    <label htmlFor="InputName" className="form-label">Owner ID</label>
+                    <input value={ownerId} onChange={(e) => setOwnerId(e.target.value)} type="number" className="form-control" />
                 </div>
                 <div className="mb-3">
                     <label htmlFor="InputName" className="form-label">Your name</label>
@@ -64,7 +65,7 @@ function NewRestaurant() {
                 </div>
                 <button type="submit" className="btn btn-primary">Create</button>
             </form>
-            <button onClick={()=> navigate("/restaurants")} className="btn btn-primary">Back to restaurants</button>
+            <button onClick={() => navigate("/restaurants")} className="btn btn-primary">Back to restaurants</button>
         </div>
     )
 }

@@ -64,7 +64,10 @@ class Owner(db.Model):
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
-    restaurant: Mapped[List["Restaurant"]] = relationship(back_populates="owner")
+    restaurant = relationship("Restaurant", back_populates="owner")
+
+    def __repr__(self):
+        return f'<Owner {self.name}>'
 
     def serialize(self):
         return {
@@ -78,18 +81,22 @@ class Restaurant(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     id_owner: Mapped[int] = mapped_column(ForeignKey("owner.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
-    address: Mapped[str] = mapped_column(String(20), nullable=False)
+    address: Mapped[str] = mapped_column(String(100), nullable=False)
     phone: Mapped[str] = mapped_column(String(100), nullable=False)
     total_capacity: Mapped[int] = mapped_column( nullable=False)
 
-    owner_id: Mapped[int] = mapped_column(ForeignKey("owner.id"))
-    owner: Mapped["Owner"] = relationship(back_populates="restaurant")
+    
+    owner = relationship("Owner", back_populates="restaurant")
+
+    def __repr__(self):
+        return f'{self.name}'
 
     def serialize(self):
         return {
             "id": self.id,
             "id_owner": self.id_owner,
             "name": self.name,
+            "address": self.address,
             "phone": self.phone,
             "total_capacity": self.total_capacity
         }

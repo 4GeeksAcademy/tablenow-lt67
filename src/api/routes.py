@@ -335,6 +335,7 @@ def update_info_restaurant(restaurant_id):
         return jsonify({
             "error": "Restaurant not found"
         }), 404
+    restaurant.id_owner = body.get('id_owner',restaurant.id_owner)
     restaurant.name = body.get('name',restaurant.name)
     restaurant.address = body.get('address',restaurant.address)
     restaurant.phone = body.get('phone',restaurant.phone)

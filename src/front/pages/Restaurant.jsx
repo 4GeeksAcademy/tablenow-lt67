@@ -28,8 +28,9 @@ function Restaurant (){
         <>
             <h1>Restaurant Details</h1>
             <ul>
+                <li>Owner ID: {restaurant.id_owner}</li>
                 <li>Name: {restaurant.name}</li>
-                <li>Email: {restaurant.email}</li>
+                <li>Address: {restaurant.address}</li>
                 <li>Phone: {restaurant.phone}</li>
             </ul>
             <button onClick={()=> navigate("/restaurants")} className="btn btn-primary">Back to restaurants</button>

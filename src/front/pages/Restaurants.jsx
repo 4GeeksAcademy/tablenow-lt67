@@ -42,12 +42,15 @@ function Restaurants() {
 
     return (
         <>
-            <ul>
+            <ol>
                 {restaurants.map((restaurant) => {
                     return (<li key={restaurant.id}>
+                        Id: {restaurant.id} <br />
+                        Owner ID: {restaurant.id_owner} <br />
                         name: {restaurant.name} <br />
-                        email: {restaurant.email} <br />
+                        address: {restaurant.address} <br />
                         phone: {restaurant.phone} <br />
+                        total capacity: {restaurant.total_capacity} <br />
                         <button className="btn btn-primary" onClick={()=>{
                             navigate('/edit_restaurant/'+restaurant.id)
                             }}>Edit</button>
@@ -55,7 +58,7 @@ function Restaurants() {
                         <button className="btn btn-danger" onClick={()=>deleteRestaurant(restaurant.id)}>Delete</button>
                     </li>)
                 })}
-            </ul>
+            </ol>
             <button className="btn btn-primary" onClick={()=>navigate('/new_restaurant')}>Create a new restaurant</button>
         </>
     )
