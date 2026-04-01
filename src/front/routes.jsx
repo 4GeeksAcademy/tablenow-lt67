@@ -27,11 +27,12 @@ import NewOwner from "./pages/NewOwner";
 import Owner from "./pages/Owner";
 import UpdateOwner from "./pages/UpdateOwner";
 
-//SALES
-import { NewSale } from "./pages/NewSale";
-import { SalesList } from "./pages/SalesList";
+// RESTAURANT & MENUS
+import { Menu } from "./pages/Menu";
 
-//ItemSales
+// SALES & ITEM SALES
+import { SalesList } from "./pages/SalesList"; 
+import { NewSale } from "./pages/NewSale";
 import { AddItemsToSale } from "./pages/AddItemsToSale.jsx";
 
 export const router = createBrowserRouter(
@@ -63,13 +64,13 @@ export const router = createBrowserRouter(
       <Route path="/owner/:ownerId" element={<Owner />} />
       <Route path="/edit_owner/:ownerId" element={<UpdateOwner />} />
 
+      {/* RESTAURANT */}
+      <Route path="/menus" element={<Menu />} />
+
       {/* SALES */}
-      <Route element={<NewSale />} path="/new-sale" />
-      <Route element={<SalesList />} path="/sales" />
-
-      {/* ITEMSALES */}
-      <Route element={<AddItemsToSale/>} path="/add-items/:saleId" />
-
+      <Route path="/sales" element={<SalesList />} />
+      <Route path="/new-sale" element={<NewSale />} />
+      <Route path="/add-items/:saleId" element={<AddItemsToSale />} />
     </Route>
   )
 );
