@@ -78,5 +78,10 @@ dist/*
 .venv
 database.database
 database.db
+# test.db
 diagram.png
 __pycache__/
+
+!instance/
+!instance/*.db
+!test.db

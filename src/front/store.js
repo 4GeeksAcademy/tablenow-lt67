@@ -29,7 +29,6 @@ export default function storeReducer(store, action = {}) {
         todos: store.todos.map((todo) => (todo.id === id ? { ...todo, background: color } : todo))
       };
 
-    // --- MANTENIMIENTO DE MENUS ---
     case 'set_menus':
       return { ...store, menus: action.payload };
 
@@ -39,7 +38,6 @@ export default function storeReducer(store, action = {}) {
         menus: store.menus.filter((item) => item.id !== action.payload)
       };
 
-    // --- GESTIÓN DE VENTAS ---
     case 'set_sales':
       return { ...store, sales: action.payload };
 
@@ -52,7 +50,6 @@ export default function storeReducer(store, action = {}) {
         sales: store.sales.map(sale => sale.id === action.payload.id ? action.payload : sale)
       };
 
-    // --- GESTIÓN DE ITEMS DE VENTA ---
     case 'set_item_ventas':
       return { ...store, item_ventas: action.payload };
 
@@ -65,7 +62,6 @@ export default function storeReducer(store, action = {}) {
         item_ventas: store.item_ventas.filter(item => item.id !== action.payload)
       };
 
-    // --- OTROS ---
     case 'set_restaurants':
       return { ...store, restaurants: action.payload };
 

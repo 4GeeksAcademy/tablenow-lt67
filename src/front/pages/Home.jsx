@@ -32,14 +32,19 @@ export const Home = () => {
   const loadSales = async () => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
-      const response = await fetch(backendUrl + "/api/ventas", {
+      
+      // Aquí es donde cambiamos "/api/ventas" por "/api/sales"
+      const response = await fetch(backendUrl + "/api/sales", {
         headers: {
           "Content-Type": "application/json",
-          "Bypass-Tunnel-Reminder": "true" // Esto ayuda mucho en desarrollo
+          "Bypass-Tunnel-Reminder": "true" 
         }
       });
+      
       const data = await response.json();
-      if (response.ok) dispatch({ type: "set_sales", payload: data });
+      if (response.ok) {
+        dispatch({ type: "set_sales", payload: data });
+      }
     } catch (error) {
       console.error("Error loading sales", error);
     }

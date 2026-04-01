@@ -1,7 +1,7 @@
 from flask import request, jsonify, Blueprint
 from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva
 from flask_cors import CORS
-from datetime import datetime
+from datetime import datetime, timedelta
 
 api = Blueprint('api', __name__)
 CORS(api)
@@ -289,7 +289,7 @@ def get_restaurantes():
         return jsonify({"msg": "Error al obtener restaurantes", "error": str(e)}), 500
 
 @api.route('/menus', methods=['GET'])
-@api.route('/menu', methods=['GET']) # Doble ruta para evitar errores en el front
+@api.route('/menu', methods=['GET']) 
 def get_menus():
     menus = Menu.query.all()
     return jsonify([m.serialize() for m in menus]), 200
@@ -297,20 +297,28 @@ def get_menus():
 @api.route('/menus', methods=['POST'])
 def create_menu():
     data = request.json
+    print(f"DEBUG: Datos recibidos -> {data}") 
+    
     try:
+        if not data.get("nombre") or not data.get("precio") or not data.get("restaurante_id"):
+            return jsonify({"error": "Faltan campos obligatorios (nombre, precio o restaurante_id)"}), 400
+
         nuevo_menu = Menu(
             nombre=data.get("nombre"),
             categoria=data.get("categoria"),
-            precio=data.get("precio"),
+            precio=float(data.get("precio")), 
             restaurante_id=data.get("restaurante_id"),
             disponible=data.get("disponible", True)
         )
+        
         db.session.add(nuevo_menu)
         db.session.commit()
         return jsonify(nuevo_menu.serialize()), 201
+
     except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Error al crear menu", "error": str(e)}), 500
+        db.session.rollback() 
+        print(f"ERROR EN POST /MENUS: {str(e)}") 
+        return jsonify({"error": str(e)}), 500
 
 @api.route('/menus/<int:id>', methods=['DELETE'])
 def delete_menu(id):
@@ -328,6 +336,38 @@ def delete_menu(id):
 # ==========================================
 # MIS RUTAS: GESTIÓN DE VENTAS 
 # ==========================================
+@api.route('/sales', methods=['GET'])
+def get_all_sales():
+    ventas = Venta.query.all()
+    return jsonify([v.serialize() for v in ventas]), 200
+
+@api.route('/sales/<int:venta_id>/checkout', methods=['PUT'])
+def finalizar_venta(venta_id):
+    venta = Venta.query.get(venta_id)
+    if not venta:
+        return jsonify({"msg": "Venta no encontrada"}), 404
+
+    try:
+        items = ItemVenta.query.filter_by(venta_id=venta_id).all()
+        total_real = sum(item.cantidad * item.precio_unitario for item in items)
+
+        venta.total = total_real
+        venta.status = "paid"  
+        
+        db.session.commit()
+        return jsonify(venta.serialize()), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al finalizar venta", "error": str(e)}), 500
+
+@api.route('/item_ventas/<int:venta_id>', methods=['GET'])
+def get_items_by_sale(venta_id):
+    try:
+        items = ItemVenta.query.filter_by(venta_id=venta_id).all()
+        return jsonify([item.serialize() for item in items]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @api.route('/ventas', methods=['POST'])
 def create_venta():
@@ -336,9 +376,10 @@ def create_venta():
         nueva_venta = Venta(
             total=data.get("total", 0.0),
             payment_method=data.get("payment_method", "cash"),
-            status=data.get("status", "paid"),
+            status=data.get("status", "pending"), 
             cliente_id=data.get("cliente_id"),
-            restaurante_id=data.get("restaurante_id")
+            restaurante_id=data.get("restaurante_id"),
+            fecha=datetime.utcnow() 
         )
         db.session.add(nueva_venta)
         db.session.commit()
@@ -350,12 +391,21 @@ def create_venta():
 @api.route('/item_ventas', methods=['POST'])
 def create_item_venta():
     data = request.json
+    
+    venta_id = data.get("id_venta")  
+    menu_id = data.get("id_menu")    
+    cantidad = data.get("cantidad")
+    precio_unitario = data.get("precio_unitario")
+
+    if venta_id is None or menu_id is None or cantidad is None or precio_unitario is None:
+        return jsonify({"error": "Faltan datos", "recibido": data}), 400
+
     try:
         nuevo_item = ItemVenta(
-            venta_id=data.get("venta_id"), 
-            menu_id=data.get("menu_id"),   
-            cantidad=data.get("cantidad"),
-            precio_unitario=data.get("precio_unitario")
+            venta_id=int(venta_id), 
+            menu_id=int(menu_id),   
+            cantidad=int(cantidad),
+            precio_unitario=float(precio_unitario)
         )
         db.session.add(nuevo_item)
         db.session.commit()
@@ -364,26 +414,22 @@ def create_item_venta():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@api.route('/ventas', methods=['GET'])
-def get_ventas():
-    ventas = Venta.query.all()
-    return jsonify([v.serialize() for v in ventas]), 200
+@api.route('/item_ventas/<int:item_id>', methods=['DELETE'])
+def delete_item_venta(item_id):
+    item = ItemVenta.query.get(item_id)
+    if not item:
+        return jsonify({"msg": "Item no encontrado"}), 404
     
-@api.route('/ventas/<int:id>', methods=['DELETE'])
-def delete_venta(id):
-    venta = Venta.query.get(id)
-    if not venta:
-        return jsonify({"msg": "Venta no encontrada"}), 404
     try:
-        db.session.delete(venta)
+        db.session.delete(item)
         db.session.commit()
-        return jsonify({"msg": "Venta eliminada"}), 200
+        return jsonify({"msg": "Item eliminado correctamente"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
     
 # =========================
-# RESERVAS (Para Julián)
+# RESERVAS 
 # =========================
 @api.route('/booking', methods=['GET'])
 def get_bookings():

@@ -63,10 +63,13 @@ getMenus: async () => {
     return false;
 },
 
-finalizarVenta: async (saleId) => {
+    finalizarVenta: async (saleId) => {
     try {
         const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sales/${saleId}/checkout`, {
-            method: "PUT" 
+            method: "PUT", 
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
         if (response.ok) {
             const updatedSale = await response.json();
@@ -74,7 +77,7 @@ finalizarVenta: async (saleId) => {
             return true;
         }
     } catch (error) {
-        console.error("Error al finalizar venta:", error);
+        console.error("Error al finalizar:", error);
     }
     return false;
 },

@@ -9,7 +9,7 @@ export const NewSale = () => {
     const [formData, setFormData] = useState({
         total: "",
         payment_method: "cash",
-        status: "paid", 
+        status: "pending", 
         cliente_id: "", 
         restaurant_id: ""
     });

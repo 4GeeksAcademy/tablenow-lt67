@@ -72,7 +72,6 @@ class Restaurante(db.Model):
     def __repr__(self): return f'<Restaurante: {self.nombre}>'
     def serialize(self): return {"id": self.id, "nombre": self.nombre}
 
-# --- TU RAMA 8: MENÚ ---
 
 class Menu(db.Model):
     __tablename__ = "menu"
@@ -94,19 +93,21 @@ class Menu(db.Model):
 
 class Venta(db.Model):
     __tablename__ = "venta"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    total: Mapped[float] = mapped_column(db.Float, default=0.0)
-    fecha: Mapped[datetime] = mapped_column(db.DateTime, default=datetime.utcnow)
-    payment_method: Mapped[str] = mapped_column(db.String(50), default="cash")
-    status: Mapped[str] = mapped_column(db.String(50), default="paid")
     
-    # Relaciones
+    id = db.Column(db.Integer, primary_key=True)
+    total = db.Column(db.Float, default=0.0)
+    
+    fecha = db.Column(db.DateTime, default=datetime.now) 
+    
+    payment_method = db.Column(db.String(50), default="not_set")
+    status = db.Column(db.String(50), default="pending")
+    
     items = db.relationship('ItemVenta', backref='venta', cascade="all, delete-orphan")
     
     restaurante_id = db.Column(db.Integer, db.ForeignKey('restaurante.id'), nullable=True)
     restaurante = db.relationship("Restaurante")
 
-    cliente_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=True)  
+    cliente_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=True)
     cliente = db.relationship("Clients")
 
     def __repr__(self):
@@ -119,8 +120,7 @@ class Venta(db.Model):
             "payment_method": self.payment_method,
             "status": self.status,
             "customer_name": self.cliente.name if self.cliente else "Walk-in Customer",
-            "date": self.fecha.strftime("%d/%m/%Y") if self.fecha else "No Date",
-            # CAMBIO AQUÍ: Usamos .nombre porque así está en la clase Restaurante
+            "date": self.fecha.isoformat() if self.fecha else "No Date",
             "restaurante_nombre": self.restaurante.nombre if self.restaurante else "TableNow Central"
         }
 
@@ -137,13 +137,14 @@ class ItemVenta(db.Model):
 
     def serialize(self):
         return {
-            "id": self.id, 
-            "venta_id": self.venta_id, 
-            "menu_id": self.menu_id,
-            "cantidad": self.cantidad, 
-            "precio_unitario": self.precio_unitario,
-            "nombre_plato": self.plato.nombre if self.plato else "Plato eliminado"
-        }
+        "id": self.id,
+        "id_venta": self.venta_id,
+        "id_menu": self.menu_id,
+        "cantidad": self.cantidad,
+        "precio_unitario": float(self.precio_unitario),
+        "subtotal": float(self.cantidad * self.precio_unitario),
+        "plato_nombre": self.plato.nombre if self.plato else "Plato desconocido"
+    }
 
 
 class Reserva(db.Model):

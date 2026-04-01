@@ -11,7 +11,7 @@ export const SalesList = () => {
             try {
                 const backendUrl = import.meta.env.VITE_BACKEND_URL;
                 
-                const response = await fetch(backendUrl + "/api/ventas", {
+                const response = await fetch(backendUrl + "/api/sales", {
                     headers: {
                         "Content-Type": "application/json",
                         "Bypass-Tunnel-Reminder": "true"
@@ -62,7 +62,13 @@ export const SalesList = () => {
                                     
                                     <div className="d-flex justify-content-between my-2">
                                         <span>Date:</span>
-                                        <span className="fw-medium">{sale.date}</span>
+                                            <span className="fw-medium">
+                                                {new Date(sale.date + "Z").toLocaleDateString("es-VE", {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric'
+                                                })}
+                                            </span>
                                     </div>
                                     <div className="d-flex justify-content-between my-2">
                                         <span>Method:</span>
