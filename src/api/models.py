@@ -67,10 +67,21 @@ class Restaurante(db.Model):
     __tablename__ = "restaurante"
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(120), nullable=False)
+    owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
+    
+    owner = db.relationship("Owner", backref="restaurantes")
+    
     menus = db.relationship("Menu", backref="restaurante",
                             lazy=True, cascade="all, delete-orphan")
+    
     def __repr__(self): return f'<Restaurante: {self.nombre}>'
-    def serialize(self): return {"id": self.id, "nombre": self.nombre}
+    def serialize(self): 
+        return {
+            "id": self.id, 
+            "nombre": self.nombre,
+            "owner_id": self.owner_id
+        }
+
 
 
 class Menu(db.Model):

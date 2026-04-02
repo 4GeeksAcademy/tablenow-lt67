@@ -1,7 +1,7 @@
 import { useContext, useReducer, createContext } from "react";
 import storeReducer, { initialStore } from "../store";
 
-const StoreContext = createContext();
+export const StoreContext = createContext();
 
 export function StoreProvider({ children }) {
     const [store, dispatch] = useReducer(storeReducer, initialStore());
@@ -16,6 +16,10 @@ export default function useGlobalReducer() {
     const { dispatch, store } = useContext(StoreContext);
 
     const actions = {
+        logout_owner: () => {
+            dispatch({ type: "logout_owner" });
+        },
+
         createItemVenta: async (itemData) => {
             try {
                 const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas", {
@@ -33,6 +37,8 @@ export default function useGlobalReducer() {
                 console.error("Error en createItemVenta:", error);
                 return false;
             }
+
+        
         },
 
         

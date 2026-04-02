@@ -31,9 +31,7 @@ export const Home = () => {
 
   const loadSales = async () => {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL;
-      
-      // Aquí es donde cambiamos "/api/ventas" por "/api/sales"
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;     
       const response = await fetch(backendUrl + "/api/sales", {
         headers: {
           "Content-Type": "application/json",

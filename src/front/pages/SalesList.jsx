@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer";
-import { useNavigate, Link } from "react-router-dom"; // Importación corregida
+import { useNavigate, Link } from "react-router-dom"; 
 
 export const SalesList = () => {
     const { store, dispatch } = useGlobalReducer();

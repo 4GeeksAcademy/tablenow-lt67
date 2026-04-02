@@ -1,23 +1,40 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx"; 
 
 export const Navbar = () => {
-    return (
-        <nav className="navbar navbar-light bg-light">
-            <div className="container">
-                <Link to="/">
-                    <span className="navbar-brand mb-0 h1">TableNow</span>
-                </Link>
-                <div className="ml-auto d-flex">
-                    
-                    <Link to="/menus">
-                        <button className="btn btn-success me-2">Gestionar Menú</button>
-                    </Link>
+    const { store, actions } = useGlobalReducer();
+    const navigate = useNavigate();
 
-                    <Link to="/demo">
-                        <button className="btn btn-primary">Check the Context</button>
+    return (
+        <nav className="navbar navbar-light bg-light mb-3 px-3">
+            <Link to="/">
+                <span className="navbar-brand mb-0 h1">TableNow</span>
+            </Link>
+
+            <div className="ml-auto">
+                {!store.authOwner ? (
+                    <Link to="/login-owner">
+                        <button className="btn btn-primary">Login Owner</button>
                     </Link>
-                </div>
+                ) : (
+                    <div className="d-flex align-items-center gap-3">
+                    
+                        <span className="text-muted">
+                                Hola, {store.ownerInfo?.name || store.ownerInfo?.email}
+                                </span>
+                            <Link to="/owner-dashboard" className="btn btn-outline-primary">Dashboard</Link>
+                        <button 
+                            className="btn btn-danger" 
+                            onClick={() => {
+                                actions.logout_owner(); 
+                                navigate("/");
+                            }}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                )}
             </div>
         </nav>
     );

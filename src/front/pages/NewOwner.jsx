@@ -12,29 +12,30 @@ function NewOwner() {
     const [password, setPassword] = useState('')
 
     function sendData(e) {
-        e.preventDefault()
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(
-                {
-                    "name": name,
-                    "email": email,
-                    "phone": phone,
-                    "password": password
-                }
-            )
-        }
-        fetch(import.meta.env.VITE_BACKEND_URL + "/api/owners", requestOptions)
-            .then((response) => response.text())
-            .then((result) => {
-                console.log(result)
-            })
-            .catch((error) => console.error(error));
-
-        console.log("sending data")
-        navigate("/owners")
+    e.preventDefault()
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "password": password
+        })
     }
+        fetch(import.meta.env.VITE_BACKEND_URL + "/api/owners", requestOptions)
+        .then((response) => {
+            if (response.ok) {
+                alert("¡Cuenta creada con éxito! Por favor, inicia sesión.");
+                navigate("/login-owner"); 
+            } else {
+                alert("Error al crear la cuenta");
+            }
+        })
+        .catch((error) => console.error(error));
+
+    console.log("sending data")
+}
 
     return (
         <div>

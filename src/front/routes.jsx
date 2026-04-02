@@ -4,7 +4,7 @@ import {
   Route,
 } from "react-router-dom";
 
-import { Layout } from "./pages/Layout";
+import Layout from "./pages/Layout";
 import { Home } from "./pages/Home";
 import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
@@ -34,6 +34,11 @@ import { Menu } from "./pages/Menu";
 import { SalesList } from "./pages/SalesList"; 
 import { NewSale } from "./pages/NewSale";
 import { AddItemsToSale } from "./pages/AddItemsToSale.jsx";
+
+// LOGIN-OWNER
+import { LoginOwner } from "./pages/LoginOwner"; 
+import { OwnerDashboard } from "./pages/OwnerDashboard";
+import { CrearRestaurante } from "./pages/CrearRestaurante";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -65,12 +70,20 @@ export const router = createBrowserRouter(
       <Route path="/edit_owner/:ownerId" element={<UpdateOwner />} />
 
       {/* RESTAURANT */}
-      <Route path="/menus" element={<Menu />} />
+      <Route path="/menu" element={<Menu />} />
 
       {/* SALES */}
       <Route path="/sales" element={<SalesList />} />
       <Route path="/new-sale" element={<NewSale />} />
       <Route path="/add-items/:saleId" element={<AddItemsToSale />} />
+
+      {/* LOGIN OWNER */}
+      <Route path="/login-owner" element={<LoginOwner />} />
+      <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+      
+      <Route path="/crear-restaurante" element={<CrearRestaurante />} />
+      <Route path="/crear-host" element={<h1>Página Crear Hostess</h1>} />
+      <Route path="/booking" element={<h1>Lista de Reservas</h1>} />
     </Route>
   )
 );

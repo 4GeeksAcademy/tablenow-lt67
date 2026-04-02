@@ -2,10 +2,13 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
+from datetime import timedelta 
 from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager 
+
 from api.utils import APIException, generate_sitemap
 from api.models import db
 from api.routes import api
@@ -18,7 +21,10 @@ static_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-# Database configuration
+app.config["JWT_SECRET_KEY"] = "super-secret-key" 
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24) 
+jwt = JWTManager(app)
+
 # Database configuration
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
@@ -29,7 +35,7 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Setup CORS - Una sola vez es suficiente
+# Setup CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 MIGRATE = Migrate(app, db, compare_type=True)

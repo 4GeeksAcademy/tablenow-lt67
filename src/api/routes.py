@@ -2,6 +2,9 @@ from flask import request, jsonify, Blueprint
 from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva
 from flask_cors import CORS
 from datetime import datetime, timedelta
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
 
 api = Blueprint('api', __name__)
 CORS(api)
@@ -234,7 +237,6 @@ def update_owner(id):
 
     try:
         data = request.json
-
         owner.name = data.get("name", owner.name)
         owner.email = data.get("email", owner.email)
         owner.phone = data.get("phone", owner.phone)
@@ -267,18 +269,35 @@ def delete_owner(id):
 # =========================
 # CRUD MENU & RESTAURANTE
 # =========================
-
 @api.route('/restaurantes', methods=['POST'])
-def create_restaurante():
-    data = request.json
+@jwt_required()
+def crear_restaurante():
+    identity = get_jwt_identity()
+    print(f"--> DEBUG RECIBIDO: {identity} (Tipo: {type(identity)})") # Veremos si es string o int
+
+    if not identity:
+        return jsonify({"msg": "Token inválido o vacío"}), 401
+
+    body = request.get_json()
+    if not body or "nombre" not in body:
+        return jsonify({"msg": "Falta el nombre"}), 400
+
     try:
-        nuevo = Restaurante(nombre=data.get("nombre"))
-        db.session.add(nuevo)
+        owner_id_int = int(identity)
+        
+        nuevo_restaurante = Restaurante(
+            nombre=body["nombre"],
+            owner_id=owner_id_int 
+        )
+        
+        db.session.add(nuevo_restaurante)
         db.session.commit()
-        return jsonify(nuevo.serialize()), 201
+        return jsonify(nuevo_restaurante.serialize()), 201
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error", "error": str(e)}), 500
+        print(f"--> ERROR CRÍTICO: {str(e)}")
+        return jsonify({"msg": "Error interno", "error": str(e)}), 500
 
 @api.route('/restaurant', methods=['GET'])
 def get_restaurantes():
@@ -317,8 +336,8 @@ def create_menu():
 
     except Exception as e:
         db.session.rollback() 
-        print(f"ERROR EN POST /MENUS: {str(e)}") 
-        return jsonify({"error": str(e)}), 500
+        print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") # Esto es vital para debuguear
+        return jsonify({"error": "No se pudo crear el plato. Revisa si el restaurante_id existe.", "details": str(e)}), 500
 
 @api.route('/menus/<int:id>', methods=['DELETE'])
 def delete_menu(id):
@@ -435,3 +454,42 @@ def delete_item_venta(item_id):
 def get_bookings():
     all_bookings = Reserva.query.all()
     return jsonify([b.serialize() for b in all_bookings]), 200
+
+# =========================
+# LOGIN-OWNER
+# =========================
+
+@api.route('/owner/restaurants', methods=['GET'])
+@jwt_required()
+def get_owner_restaurants():
+    current_owner_id = get_jwt_identity()
+    restaurantes = Restaurante.query.filter_by(owner_id=current_owner_id).all()
+    return jsonify([r.serialize() for r in restaurantes]), 200
+
+@api.route('/login-owner', methods=['POST'])
+def login_owner():
+    body = request.get_json()
+    
+    if body is None:
+        return jsonify({"msg": "Body must be a JSON"}), 400
+        
+    email = body.get("email")
+    password = body.get("password")
+
+    owner = Owner.query.filter_by(email=email).first()
+    
+    if owner is None:
+        return jsonify({"msg": "Owner not found"}), 404
+        
+    if owner.password != password:
+        return jsonify({"msg": "Invalid credentials"}), 401
+    
+    access_token = create_access_token(identity=str(owner.id))
+    return jsonify({
+        "token": access_token,
+        "email": owner.email,
+        "name": owner.name,  
+        "id": owner.id
+    }), 200
+
+
