@@ -16,7 +16,7 @@ export const CrearRestaurante = () => {
         return;
     }
 
-        const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/restaurantes",{
+        const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/restaurants",{
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

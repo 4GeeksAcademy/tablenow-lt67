@@ -71,10 +71,10 @@ export default function storeReducer(store, action = {}) {
       return { ...store, restaurants: action.payload };
     
 
-    case 'set_bookings': 
+    case "set_bookings":
     return {
         ...store,
-        bookings: action.payload 
+        bookings: action.payload
     };
     
     case 'set_clients':

@@ -67,18 +67,26 @@ class Restaurante(db.Model):
     __tablename__ = "restaurante"
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(120), nullable=False)
+    direccion: Mapped[str] = mapped_column(String(250), nullable=True) # Nueva
+    telefono: Mapped[str] = mapped_column(String(20), nullable=True)    # Nueva
+    capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True) # Nueva
     owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
     
     owner = db.relationship("Owner", backref="restaurantes")
     
-    menus = db.relationship("Menu", backref="restaurante",
-                            lazy=True, cascade="all, delete-orphan")
+    # Relación con menús y reservas
+    menus = db.relationship("Menu", backref="restaurante", lazy=True, cascade="all, delete-orphan")
+    reservas = db.relationship("Reserva", backref="restaurante", lazy=True, cascade="all, delete-orphan") # Nueva conexión
     
     def __repr__(self): return f'<Restaurante: {self.nombre}>'
+
     def serialize(self): 
         return {
             "id": self.id, 
             "nombre": self.nombre,
+            "direccion": self.direccion,
+            "telefono": self.telefono,
+            "capacidad_total": self.capacidad_total,
             "owner_id": self.owner_id
         }
 
@@ -130,7 +138,7 @@ class Venta(db.Model):
             "total": self.total,
             "payment_method": self.payment_method,
             "status": self.status,
-            "customer_name": self.cliente.name if self.cliente else "Walk-in Customer",
+            "customer_name": self.cliente.name if self.cliente else None,
             "date": self.fecha.isoformat() if self.fecha else "No Date",
             "restaurante_nombre": self.restaurante.nombre if self.restaurante else "TableNow Central"
         }
@@ -161,18 +169,42 @@ class ItemVenta(db.Model):
 class Reserva(db.Model):
     __tablename__ = "reserva"
     id: Mapped[int] = mapped_column(primary_key=True)
-    fecha_reserva: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    cliente_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=True) 
+    
+    # Datos de Identificación (Los IDs que preguntaste)
+    cliente_id: Mapped[int] = mapped_column(db.ForeignKey('clients.id'), nullable=False) 
+    restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id"), nullable=False)
+    id_mesa: Mapped[int] = mapped_column(db.Integer, nullable=True) # El número de mesa del Excel
+    
+    # Datos de la Reserva (Planificación)
+    fecha: Mapped[str] = mapped_column(String(20), nullable=False) # 2026-03-20
+    hora: Mapped[str] = mapped_column(String(10), nullable=False)  # 19:00
+    num_personas: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    
+    # Datos de Control (Gestión)
+    estado: Mapped[str] = mapped_column(String(50), default="confirmada") # confirmada, cancelada
+    origen: Mapped[str] = mapped_column(String(50), default="online") # online, telefono
+    notas: Mapped[str] = mapped_column(String(250), nullable=True)
+    fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Relación con el modelo Clients
     cliente = db.relationship("Clients")
 
     def __repr__(self):
-        return f"Reserva #{self.id} - {self.cliente.name if self.cliente else 'Sin Cliente'}"
+        return f"Reserva #{self.id} - Cliente ID: {self.cliente_id} - Mesa: {self.id_mesa}"
 
     def serialize(self):
         return {
             "id": self.id,
-            "fecha": self.fecha_reserva.isoformat() if self.fecha_reserva else None,
+            "id_cliente": self.cliente_id,
             "nombre_cliente": self.cliente.name if self.cliente else "Desconocido",
-            "cliente_id": self.cliente_id
+            "id_mesa": self.id_mesa,
+            "fecha": self.fecha,
+            "hora": self.hora,
+            "num_personas": self.num_personas,
+            "estado": self.estado,
+            "origen": self.origen,
+            "notas": self.notas,
+            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            "id_restaurante": self.restaurante_id,
+            "nombre_restaurante": self.restaurante.nombre if self.restaurante else "No asignado"
         }

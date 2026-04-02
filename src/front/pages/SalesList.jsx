@@ -19,9 +19,10 @@ export const SalesList = () => {
                 });
                 
                 if (response.ok) {
-                    const data = await response.json();
-                    dispatch({ type: "set_sales", payload: data });
-                } else {
+    const data = await response.json();
+    console.log("Ventas recibidas del server:", data); // <--- MIRA ESTO EN LA CONSOLA
+    dispatch({ type: "set_sales", payload: data });
+} else {
                     console.error("Error en la respuesta del servidor");
                 }
             } catch (error) {
