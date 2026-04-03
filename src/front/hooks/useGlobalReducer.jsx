@@ -20,10 +20,6 @@ export default function useGlobalReducer() {
             dispatch({ type: "logout_owner" });
         },
 
-        // ==========================================
-        // ACCIONES DE RESTAURANTES Y RESERVAS
-        // ==========================================
-
        getOwnerRestaurants: async () => {
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/owner/restaurants`, {
@@ -41,6 +37,49 @@ export default function useGlobalReducer() {
             console.error("Error cargando restaurantes:", error);
         }
     },
+
+        deleteRestaurant: async (id) => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurants/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${store.tokenOwner}`
+                    }
+                });
+                if (response.ok) {
+                    const actuales = store.restaurants || [];
+                    const filtrados = actuales.filter(r => r.id !== id);
+                    dispatch({ type: "set_restaurants", payload: filtrados });
+                    return true;
+                }
+            } catch (error) {
+                console.error("Error eliminando restaurante:", error);
+            }
+            return false;
+        },
+
+        updateRestaurant: async (id, nuevoNombre) => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurants/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${store.tokenOwner}`
+                    },
+                    body: JSON.stringify({ nombre: nuevoNombre })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const actuales = store.restaurants || [];
+                    const actualizados = actuales.map(r => r.id === id ? { ...r, name: nuevoNombre, nombre: nuevoNombre } : r);
+                    dispatch({ type: "set_restaurants", payload: actualizados });
+                    return true;
+                }
+            } catch (error) {
+                console.error("Error actualizando restaurante:", error);
+            }
+            return false;
+        },
 
     getOwnerClients: async () => {
         try {
@@ -100,7 +139,7 @@ export default function useGlobalReducer() {
                 "Authorization": `Bearer ${store.tokenOwner}`,
                 "Bypass-Tunnel-Reminder": "true"
             },
-            body: JSON.stringify(dataConEstado) // Enviamos el objeto con el estado forzado
+            body: JSON.stringify(dataConEstado) 
         });
 
         if (resp.ok) {
@@ -164,9 +203,7 @@ export default function useGlobalReducer() {
     }
     return false;
 },
-        // ==========================================
-        // TUS ACCIONES EXISTENTES (VENTAS Y MENÚS)
-        // ==========================================
+        
 
         createItemVenta: async (itemData) => {
             try {

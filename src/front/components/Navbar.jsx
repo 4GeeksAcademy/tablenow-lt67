@@ -1,10 +1,14 @@
 import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom"; 
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx"; 
 
 export const Navbar = () => {
     const { store, actions } = useGlobalReducer();
     const navigate = useNavigate();
+    const location = useLocation(); 
+
+    const isHome = location.pathname === "/";
+    const isLoginPage = location.pathname === "/login-owner";
 
     return (
         <nav className="navbar navbar-light bg-light mb-3 px-3 shadow-sm">
@@ -13,10 +17,12 @@ export const Navbar = () => {
             </Link>
 
             <div className="ml-auto">
-                {!store.authOwner ? (
-                    <Link to="/login-owner">
-                        <button className="btn btn-primary shadow-sm">Login Owner</button>
-                    </Link>
+                {!store.authOwner || isHome || isLoginPage ? (
+                    !isLoginPage && (
+                        <Link to="/login-owner">
+                            <button className="btn btn-primary shadow-sm">Login Owner</button>
+                        </Link>
+                    )
                 ) : (
                     <div className="d-flex align-items-center gap-2">
                         <Link to="/sales" className="btn btn-outline-secondary btn-sm">
@@ -24,8 +30,8 @@ export const Navbar = () => {
                         </Link>
 
                         <Link to="/new-booking" className="btn btn-outline-success btn-sm shadow-sm">
-    <i className="fas fa-plus me-1"></i> Nueva Reserva
-</Link>
+                            <i className="fas fa-plus me-1"></i> Nueva Reserva
+                        </Link>
                         
                         <div className="border-start ms-2 ps-2 d-flex align-items-center gap-3">
                             <span className="text-muted small d-none d-md-inline">

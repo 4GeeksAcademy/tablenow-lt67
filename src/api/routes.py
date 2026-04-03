@@ -371,6 +371,27 @@ def create_menu():
         print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") # Esto es vital para debuguear
         return jsonify({"error": "No se pudo crear el plato. Revisa si el restaurante_id existe.", "details": str(e)}), 500
 
+@api.route('/menus/<int:id>', methods=['PUT'])
+def update_menu(id):
+    menu = Menu.query.get(id)
+    if not menu:
+        return jsonify({"msg": "Plato no encontrado"}), 404
+
+    try:
+        data = request.json
+        menu.nombre = data.get("nombre", menu.nombre)
+        menu.categoria = data.get("categoria", menu.categoria)
+        menu.precio = float(data.get("precio", menu.precio))
+        menu.disponible = data.get("disponible", menu.disponible)
+        
+        menu.restaurante_id = data.get("restaurante_id", menu.restaurante_id)
+
+        db.session.commit()
+        return jsonify(menu.serialize()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error al actualizar el plato", "error": str(e)}), 500
+
 @api.route('/menus/<int:id>', methods=['DELETE'])
 def delete_menu(id):
     menu = Menu.query.get(id)
@@ -515,7 +536,7 @@ def crear_reserva():
         nueva_reserva = Reserva(
             fecha=data.get("fecha"),
             hora=data.get("hora"),
-            num_personas=data.get("num_personas"), # <--- OJO AQUÍ
+            num_personas=data.get("num_personas"),
             id_mesa=data.get("id_mesa"),
             restaurante_id=data.get("restaurante_id"),
             cliente_id=data.get("cliente_id"),
