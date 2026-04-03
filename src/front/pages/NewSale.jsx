@@ -20,36 +20,33 @@ export const NewSale = () => {
     };
 
     useEffect(() => {
-    const loadInitialData = async () => {
-        const endpoints = [
-            { name: "restaurants", url: "/api/restaurants", action: "set_restaurants" },
-            { name: "clients", url: "/api/clients", action: "set_clients" },
-            { name: "bookings", url: "/api/bookings", action: "set_bookings" } // <--- Revisa si esta existe en Flask
-        ];
+        const loadInitialData = async () => {
+            const endpoints = [
+                { name: "restaurants", url: "/api/restaurants", action: "set_restaurants" },
+                { name: "clients", url: "/api/clients", action: "set_clients" }
+            ];
 
-        for (let endpoint of endpoints) {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}${endpoint.url}`, { headers });
-                
-                // Si la respuesta no es JSON, fetch suele fallar en el .json()
-                // Verificamos el Content-Type
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    console.error(`ERROR: El endpoint ${endpoint.url} devolvió HTML en lugar de JSON. Revisa tu ruta en Flask.`);
-                    continue; // Salta este endpoint para que no rompa el resto
-                }
+            for (let endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}${endpoint.url}`, { headers });
+                    
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        console.error(`ERROR: El endpoint ${endpoint.url} devolvió HTML.`);
+                        continue; 
+                    }
 
-                if (response.ok) {
-                    const data = await response.json();
-                    dispatch({ type: endpoint.action, payload: data });
+                    if (response.ok) {
+                        const data = await response.json();
+                        dispatch({ type: endpoint.action, payload: data });
+                    }
+                } catch (error) {
+                    console.error(`Error cargando ${endpoint.name}:`, error);
                 }
-            } catch (error) {
-                console.error(`Error cargando ${endpoint.name}:`, error);
             }
-        }
-    };
-    loadInitialData();
-}, []);
+        };
+        loadInitialData();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,7 +59,7 @@ export const NewSale = () => {
                 total: parseFloat(formData.total),
                 payment_method: formData.payment_method,
                 status: formData.status,
-                cliente_id: formData.cliente_id ? Number(formData.cliente_id) : null, // <-- ESTO
+                cliente_id: formData.cliente_id ? Number(formData.cliente_id) : null,
                 restaurante_id: formData.restaurant_id ? Number(formData.restaurant_id) : null
             };
 
@@ -114,25 +111,16 @@ export const NewSale = () => {
                 </div>
 
                 <div className="mb-4">
-    <label className="form-label fw-medium">Booking (Reserva)</label>
-    <select name="cliente_id" className="form-select" onChange={handleChange} required value={formData.cliente_id}>
-    <option value="">Select a Booking</option>
-    {store.bookings?.map((booking) => {
-        // Validamos si la fecha existe antes de formatear
-        const fechaFormateada = booking.fecha ? new Date(booking.fecha).toLocaleDateString() : "No date";
-        
-        return (
-            <option key={booking.id} value={booking.cliente_id}>
-                {/* AQUÍ EL TRUCO: 
-                   Si 'booking.client' sale vacío, prueba con 'booking.cliente_id' 
-                   o el nombre que definas en tu serialize de Python 
-                */}
-                ID: {booking.id} - {booking.nombre_cliente || 'Reserva'} - {fechaFormateada} ({booking.hora || 'No time'})
-            </option>
-        );
-    })}
-</select>
-</div>
+                    <label className="form-label fw-medium">Client</label>
+                    <select name="cliente_id" className="form-select" onChange={handleChange} required value={formData.cliente_id}>
+                        <option value="">Select a Client</option>
+                        {store.clients?.map((client) => (
+    <option key={client.id} value={client.id}>
+        ID: {client.id} - {client.name} ({client.email})
+    </option>
+))}
+                    </select>
+                </div>
 
                 <button type="submit" className="btn btn-primary w-100 py-2 fw-bold shadow-sm">
                     Save Sale

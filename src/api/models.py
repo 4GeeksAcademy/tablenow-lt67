@@ -74,7 +74,6 @@ class Restaurante(db.Model):
     
     owner = db.relationship("Owner", backref="restaurantes")
     
-    # Relación con menús y reservas
     menus = db.relationship("Menu", backref="restaurante", lazy=True, cascade="all, delete-orphan")
     reservas = db.relationship("Reserva", backref="restaurante", lazy=True, cascade="all, delete-orphan") # Nueva conexión
     
@@ -170,23 +169,19 @@ class Reserva(db.Model):
     __tablename__ = "reserva"
     id: Mapped[int] = mapped_column(primary_key=True)
     
-    # Datos de Identificación (Los IDs que preguntaste)
     cliente_id: Mapped[int] = mapped_column(db.ForeignKey('clients.id'), nullable=False) 
     restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id"), nullable=False)
     id_mesa: Mapped[int] = mapped_column(db.Integer, nullable=True) # El número de mesa del Excel
     
-    # Datos de la Reserva (Planificación)
     fecha: Mapped[str] = mapped_column(String(20), nullable=False) # 2026-03-20
     hora: Mapped[str] = mapped_column(String(10), nullable=False)  # 19:00
     num_personas: Mapped[int] = mapped_column(db.Integer, nullable=False)
     
-    # Datos de Control (Gestión)
-    estado: Mapped[str] = mapped_column(String(50), default="confirmada") # confirmada, cancelada
+    estado: Mapped[str] = mapped_column(String(50), default="pendiente") # confirmada, cancelada
     origen: Mapped[str] = mapped_column(String(50), default="online") # online, telefono
     notas: Mapped[str] = mapped_column(String(250), nullable=True)
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Relación con el modelo Clients
     cliente = db.relationship("Clients")
 
     def __repr__(self):
@@ -194,17 +189,20 @@ class Reserva(db.Model):
 
     def serialize(self):
         return {
-            "id": self.id,
-            "id_cliente": self.cliente_id,
-            "nombre_cliente": self.cliente.name if self.cliente else "Desconocido",
-            "id_mesa": self.id_mesa,
-            "fecha": self.fecha,
-            "hora": self.hora,
-            "num_personas": self.num_personas,
-            "estado": self.estado,
-            "origen": self.origen,
-            "notas": self.notas,
-            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None,
-            "id_restaurante": self.restaurante_id,
-            "nombre_restaurante": self.restaurante.nombre if self.restaurante else "No asignado"
-        }
+        "id": self.id,
+        "id_mesa": self.id_mesa,
+        "fecha": self.fecha,
+        "hora": self.hora,
+        "num_personas": self.num_personas,
+        "estado": self.estado,
+        "origen": self.origen,
+        "notas": self.notas,
+        "id_restaurante": self.restaurante_id,
+        "nombre_restaurante": self.restaurante.nombre if self.restaurante else "No asignado",
+        "cliente": {
+            "id": self.cliente.id,
+            "name": self.cliente.name,
+            "email": self.cliente.email,
+            "phone": self.cliente.phone
+        } if self.cliente else None
+    }

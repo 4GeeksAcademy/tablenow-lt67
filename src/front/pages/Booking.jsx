@@ -1,119 +1,132 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 export const Booking = () => {
     const { store, actions } = useGlobalReducer();
-    const [selectedRes, setSelectedRes] = useState("");
+    const [selectedRestaurantId, setSelectedRestaurantId] = useState("");
 
     useEffect(() => {
-        // Al cargar, nos aseguramos de tener los restaurantes
-        if (store.tokenOwner && store.restaurants.length === 0) {
-            actions.getOwnerRestaurants();
-        }
-    }, []);
+        const cargarRestaurantes = async () => {
+            if (store.tokenOwner && (!store.restaurants || store.restaurants.length === 0)) {
+                await actions.getOwnerRestaurants();
+            }
+        };
+        cargarRestaurantes();
+    }, [store.tokenOwner]);
 
-    const handleSelectRestaurant = (e) => {
-        const resId = e.target.value;
-        setSelectedRes(resId);
-        if (resId) {
-            actions.getRestaurantBookings(resId);
+    useEffect(() => {
+        if (store.restaurants && store.restaurants.length > 0 && !selectedRestaurantId) {
+            setSelectedRestaurantId(store.restaurants[0].id);
         }
-    };
+    }, [store.restaurants]);
 
-    const changeStatus = async (bookingId, status) => {
-        const success = await actions.updateBookingStatus(bookingId, status);
-        if (success && selectedRes) {
-            actions.getRestaurantBookings(selectedRes); // Refrescar lista
+    useEffect(() => {
+        if (selectedRestaurantId) {
+            actions.getBookings(selectedRestaurantId);
+        }
+    }, [selectedRestaurantId]);
+
+    const handleDelete = async (id) => {
+        if (window.confirm("¿Estás seguro de que deseas eliminar esta reserva?")) {
+            await actions.deleteBooking(id);
         }
     };
 
     return (
-        <div className="container-fluid py-5 bg-light" style={{ minHeight: "100vh" }}>
-            <div className="container">
-                <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-                    <div>
-                        <h2 className="fw-bold text-dark">📅 Gestión de Reservas</h2>
-                        <p className="text-muted">Administra las llegadas de tus clientes en tiempo real.</p>
-                    </div>
-                    
-                    {/* SELECTOR DE RESTAURANTE */}
-                    <div className="col-12 col-md-4">
-                        <label className="form-label small fw-bold">Selecciona un local:</label>
+        <div className="container mt-5 py-4">
+            {/* HEADER */}
+            <div className="row mb-4 align-items-center">
+                <div className="col-md-6">
+                    <h2 className="fw-bold text-dark mb-1">
+                        <i className="fas fa-calendar-check me-2 text-success"></i>Agenda de Reservas
+                    </h2>
+                    <p className="text-muted small">Gestiona las confirmaciones y asistencia de hoy.</p>
+                </div>
+                
+                {/* SELECTOR DE RESTAURANTE */}
+                <div className="col-md-4">
+                    <div className="input-group shadow-sm">
+                        <span className="input-group-text bg-white border-end-0">
+                            <i className="fas fa-utensils text-primary"></i>
+                        </span>
                         <select 
-                            className="form-select shadow-sm border-0" 
-                            value={selectedRes} 
-                            onChange={handleSelectRestaurant}
+                            className="form-select border-start-0 fw-bold text-secondary"
+                            value={selectedRestaurantId}
+                            onChange={(e) => setSelectedRestaurantId(e.target.value)}
                         >
-                            <option value="">Elegir restaurante...</option>
-                            {store.restaurants.map(res => (
-                                <option key={res.id} value={res.id}>{res.nombre}</option>
+                            <option value="" disabled>Selecciona un restaurante...</option>
+                            {store.restaurants.map((rest) => (
+                                <option key={rest.id} value={rest.id}>
+                                    {rest.name || rest.nombre}
+                                </option>
                             ))}
                         </select>
                     </div>
                 </div>
 
-                {/* TABLA DE RESERVAS */}
-                <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div className="col-md-2 text-end">
+                    <span className="badge rounded-pill bg-primary px-3 py-2 shadow-sm">
+                        {store.bookings?.length || 0} Reservas
+                    </span>
+                </div>
+            </div>
+
+            {/* TABLA DE RESERVAS */}
+            <div className="card shadow-sm border-0 overflow-hidden hover-shadow transition">
+                <div className="card-body p-0">
                     <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0">
-                            <thead className="bg-dark text-white">
+                        <table className="table table-hover mb-0">
+                            <thead className="bg-light text-secondary">
                                 <tr>
-                                    <th className="ps-4">Cliente</th>
-                                    <th>Fecha y Hora</th>
-                                    <th>Personas</th>
-                                    <th>Estado</th>
-                                    <th className="text-end pe-4">Acciones</th>
+                                    <th className="ps-4 py-3 border-0">CLIENTE</th>
+                                    <th className="py-3 border-0">FECHA Y HORA</th>
+                                    <th className="py-3 border-0 text-center">PAX</th>
+                                    <th className="py-3 border-0">ESTADO</th>
+                                    <th className="text-end pe-4 py-3 border-0">ACCIONES</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {store.bookings.length > 0 ? (
-                                    store.bookings.map((booking) => (
-                                        <tr key={booking.id}>
-                                            <td className="ps-4">
-                                                <div className="fw-bold">{booking.client}</div>
-                                                <div className="text-muted small">{booking.client_phone || "Sin teléfono"}</div>
+                                {store.bookings && store.bookings.length > 0 ? (
+                                    store.bookings.map((reserva) => (
+                                        <tr key={reserva.id} className="align-middle border-bottom">
+                                            <td className="ps-4 py-3">
+                                                <div className="fw-bold text-dark">{reserva.cliente?.name || "Sin nombre"}</div>
+                                                <small className="text-muted">{reserva.cliente?.email || "Sin email"}</small>
                                             </td>
-                                            <td>
-                                                <div>{new Date(booking.date).toLocaleDateString()}</div>
-                                                <div className="badge bg-light text-dark border">{booking.time}</div>
+                                            <td className="py-3">
+                                                <div className="text-dark fw-medium">{reserva.fecha || reserva.date}</div>
+                                                <div className="badge bg-info-subtle text-info small fw-bold" style={{fontSize: '10px'}}>
+                                                    {reserva.hora || reserva.time}
+                                                </div>
                                             </td>
-                                            <td>
-                                                <span className="fw-semibold"><i className="fas fa-users me-2"></i>{booking.num_personas}</span>
+                                            <td className="py-3 text-center">
+                                                <span className="fw-bold text-secondary">
+                                                    <i className="fas fa-user-friends me-1 small"></i>
+                                                    {reserva.num_personas || reserva.pax}
+                                                </span>
                                             </td>
-                                            <td>
+                                            <td className="py-3">
                                                 <span className={`badge px-3 py-2 ${
-        booking.estado === 'confirmed' ? 'bg-success-subtle text-success' :
-        booking.estado === 'cancelled' ? 'bg-danger-subtle text-danger' : 
-        'bg-warning-subtle text-warning'
-    }`}>
-        {booking.estado ? booking.estado.toUpperCase() : "PENDIENTE"}
-    </span>
+                                                    (reserva.estado === 'confirmada' || reserva.status === 'confirmed') ? 'bg-success-subtle text-success' :
+                                                    (reserva.estado === 'cancelada' || reserva.status === 'cancelled') ? 'bg-danger-subtle text-danger' : 
+                                                    'bg-warning-subtle text-warning'
+                                                }`}>
+                                                    {reserva.estado?.charAt(0).toUpperCase() + reserva.estado?.slice(1) || "Pendiente"}
+                                                </span>
                                             </td>
-                                            <td className="text-end pe-4">
+                                            <td className="text-end pe-4 py-3">
                                                 <div className="btn-group shadow-sm">
-                                                    <button 
-                                                        className="btn btn-sm btn-outline-success"
-                                                        onClick={() => changeStatus(booking.id, 'confirmed')}
-                                                        title="Confirmar"
-                                                    >
-                                                        <i className="fas fa-check"></i>
-                                                    </button>
-                                                    <button 
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        onClick={() => changeStatus(booking.id, 'cancelled')}
-                                                        title="Cancelar"
-                                                    >
-                                                        <i className="fas fa-times"></i>
-                                                    </button>
+                                                    <button className="btn btn-white btn-sm border text-success" onClick={() => actions.updateBookingStatus(reserva.id, "confirmada")}><i className="fas fa-check"></i></button>
+                                                    <button className="btn btn-white btn-sm border text-warning" onClick={() => actions.updateBookingStatus(reserva.id, "cancelada")}><i className="fas fa-ban"></i></button>
+                                                    <button className="btn btn-white btn-sm border text-danger" onClick={() => handleDelete(reserva.id)}><i className="fas fa-trash-alt"></i></button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="text-center py-5 text-muted">
-                                            <i className="fas fa-calendar-times fa-3x mb-3 d-block"></i>
-                                            {selectedRes ? "No hay reservas para este restaurante." : "Selecciona un restaurante para ver las reservas."}
+                                        <td colSpan="5" className="text-center py-5 border-0">
+                                            <h5 className="text-muted">No hay reservas para este restaurante</h5>
                                         </td>
                                     </tr>
                                 )}
@@ -124,11 +137,13 @@ export const Booking = () => {
             </div>
 
             <style>{`
-                .bg-success-subtle { background-color: #d1e7dd; color: #0f5132; }
-                .bg-danger-subtle { background-color: #f8d7da; color: #842029; }
-                .bg-warning-subtle { background-color: #fff3cd; color: #664d03; }
-                .rounded-4 { border-radius: 1rem; }
-                .table thead th { font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+                .hover-shadow:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08) !important; }
+                .transition { transition: all 0.3s ease; }
+                .bg-success-subtle { background-color: #d1e7dd !important; }
+                .bg-warning-subtle { background-color: #fff3cd !important; }
+                .bg-info-subtle { background-color: #cff4fc !important; }
+                .btn-white { background-color: #fff; }
+                table thead th { letter-spacing: 0.05rem; font-size: 0.75rem; }
             `}</style>
         </div>
     );

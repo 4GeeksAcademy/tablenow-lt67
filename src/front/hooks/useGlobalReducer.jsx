@@ -24,58 +24,146 @@ export default function useGlobalReducer() {
         // ACCIONES DE RESTAURANTES Y RESERVAS
         // ==========================================
 
-        getOwnerRestaurants: async () => {
+       getOwnerRestaurants: async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/owner/restaurants`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${store.tokenOwner}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                dispatch({ type: "set_restaurants", payload: data });
+            }
+        } catch (error) {
+            console.error("Error cargando restaurantes:", error);
+        }
+    },
+
+    getOwnerClients: async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/clients`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${store.tokenOwner}`,
+                    "Bypass-Tunnel-Reminder": "true"
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                dispatch({ type: "set_clients", payload: data });
+            }
+        } catch (error) {
+            console.error("Error cargando clientes:", error);
+        }
+    },
+       getBookings: async (restauranteId) => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/owner/restaurants`, {
+                if (!restauranteId) return;
+                
+                console.log(`🌐 Pidiendo reservas al backend para el Restaurante ID: ${restauranteId}`);
+                
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurant/${restauranteId}/bookings`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${store.tokenOwner}`
                     }
                 });
-                if (response.ok) {
-                    const data = await response.json();
-                    dispatch({ type: "set_restaurants", payload: data });
+                
+                if (resp.ok) {
+                    const data = await resp.json();
+                    console.log("✅ Respuesta de Flask (Reservas):", data); 
+                    dispatch({ type: "set_bookings", payload: data });
+                } else {
+                    console.error("❌ Error del backend. Status:", resp.status);
                 }
             } catch (error) {
-                console.error("Error cargando restaurantes del owner:", error);
+                console.error("💥 Error en fetch de reservas:", error);
             }
         },
 
-        // Dentro de flux.js o donde definas tus actions:
-getRestaurantBookings: async (resId) => {
+       createNewBooking: async (bookingData) => {
     try {
-        const resp = await fetch(`${process.env.BACKEND_URL}/api/restaurants/${resId}/bookings`, {
-            headers: { "Bypass-Tunnel-Reminder": "true" }
+        const dataConEstado = { 
+            ...bookingData, 
+            estado: "pendiente" 
+        };
+
+        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${store.tokenOwner}`,
+                "Bypass-Tunnel-Reminder": "true"
+            },
+            body: JSON.stringify(dataConEstado) // Enviamos el objeto con el estado forzado
         });
+
         if (resp.ok) {
-            const data = await resp.json();
-            dispatch({ type: "set_bookings", payload: data }); 
+            if (bookingData.restaurant_id || bookingData.restaurante_id) {
+                actions.getBookings(bookingData.restaurant_id || bookingData.restaurante_id);
+            }
+            return true;
+        } else {
+            const errorData = await resp.json();
+            console.error("Error del servidor al crear reserva:", errorData);
+            return false;
+        }
+    } catch (error) {
+        console.error("Error en el fetch de createNewBooking:", error);
+        return false;
+    }
+},
+        
+        deleteBooking: async (bookingId) => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking/${bookingId}`, {
+    method: "DELETE",
+    headers: {
+        "Authorization": `Bearer ${store.tokenOwner}`
+    }
+});
+
+                if (response.ok) {
+                    const actuales = store.bookings || [];
+                    const nuevasReservas = actuales.filter(b => b.id !== bookingId);
+                    dispatch({ type: "set_bookings", payload: nuevasReservas });
+                    return true;
+                }
+            } catch (error) {
+                console.error("Error eliminando reserva:", error);
+            }
+            return false;
+        },
+
+       updateBookingStatus: async (bookingId, nuevoEstado) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking/${bookingId}/status`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${store.tokenOwner}`
+            },
+            body: JSON.stringify({ estado: nuevoEstado }) 
+        });
+        
+        if (response.ok) {
+            const actuales = store.bookings || [];
+            const actualizadas = actuales.map(b => 
+                b.id === bookingId ? { ...b, estado: nuevoEstado.toLowerCase(), status: nuevoEstado.toLowerCase() } : b
+            );
+            dispatch({ type: "set_bookings", payload: actualizadas });
             return true;
         }
     } catch (error) {
-        console.error("Error cargando reservas:", error);
+        console.error("Error actualizando estado de reserva:", error);
     }
     return false;
 },
-
-        updateBookingStatus: async (bookingId, nuevoEstado) => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking/${bookingId}/status`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${store.tokenOwner}`
-                    },
-                    body: JSON.stringify({ estado: nuevoEstado })
-                });
-                return response.ok;
-            } catch (error) {
-                console.error("Error actualizando estado de reserva:", error);
-                return false;
-            }
-        },
-
         // ==========================================
         // TUS ACCIONES EXISTENTES (VENTAS Y MENÚS)
         // ==========================================

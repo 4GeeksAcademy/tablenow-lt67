@@ -39,6 +39,8 @@ import { AddItemsToSale } from "./pages/AddItemsToSale.jsx";
 import { LoginOwner } from "./pages/LoginOwner"; 
 import { OwnerDashboard } from "./pages/OwnerDashboard";
 import { CrearRestaurante } from "./pages/CrearRestaurante";
+import { Booking } from "./pages/Booking";
+import { NewBooking } from "./pages/NewBooking.jsx";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -83,7 +85,8 @@ export const router = createBrowserRouter(
       
       <Route path="/crear-restaurante" element={<CrearRestaurante />} />
       <Route path="/crear-host" element={<h1>Página Crear Hostess</h1>} />
-      <Route path="/booking" element={<h1>Lista de Reservas</h1>} />
+      <Route path="/booking" element={<Booking />} />
+      <Route element={<NewBooking />} path="/new-booking" />
     </Route>
   )
 );
