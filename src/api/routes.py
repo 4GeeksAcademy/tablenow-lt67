@@ -350,6 +350,10 @@ def create_menu():
     data = request.json
     print(f"DEBUG: Datos recibidos -> {data}") 
     
+    restaurante = Restaurante.query.get(data.get("restaurante_id"))
+    if not restaurante:
+        return jsonify({"error": f"El restaurante con ID {data.get('restaurante_id')} no existe en la base de datos."}), 404
+    
     try:
         if not data.get("nombre") or not data.get("precio") or not data.get("restaurante_id"):
             return jsonify({"error": "Faltan campos obligatorios (nombre, precio o restaurante_id)"}), 400
@@ -368,7 +372,7 @@ def create_menu():
 
     except Exception as e:
         db.session.rollback() 
-        print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") # Esto es vital para debuguear
+        print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") 
         return jsonify({"error": "No se pudo crear el plato. Revisa si el restaurante_id existe.", "details": str(e)}), 500
 
 @api.route('/menus/<int:id>', methods=['PUT'])

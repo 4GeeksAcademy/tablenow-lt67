@@ -6,7 +6,6 @@ export const OwnerDashboard = () => {
     const { store, actions } = useGlobalReducer();
 
     useEffect(() => {
-        // Usamos la acción global que ya tiene el token y el dispatch configurado
         if (store.tokenOwner) {
             actions.getOwnerRestaurants();
         }
@@ -19,7 +18,7 @@ export const OwnerDashboard = () => {
                 <div className="d-flex justify-content-between align-items-center border-bottom pb-4 mb-5">
                     <div>
                         <h1 className="display-5 fw-bold text-dark">Panel de Control</h1>
-                        <p className="text-muted mb-0">Bienvenido de nuevo, <strong>{store.ownerInfo?.name || "Owner"}</strong></p>
+                        <p className="text-muted mb-0">Bienvenido de nuevo</p>
                     </div>
                     <div className="text-end">
                         <span className="badge rounded-pill bg-success px-3 py-2">

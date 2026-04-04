@@ -10,7 +10,7 @@ export const Menu = () => {
         nombre: "",
         categoria: "",
         precio: "",
-        restaurante_id: 33 
+        restaurante_id: 1 
     });
 
     const getMenus = async () => {
@@ -39,7 +39,7 @@ export const Menu = () => {
                 body: JSON.stringify(formData)
             });
             if (resp.ok) {
-                setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 33 });
+                setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 1 });
                 setEditMode(false);
                 setCurrentId(null);
                 getMenus();
@@ -84,7 +84,6 @@ export const Menu = () => {
             <h1 className="mb-4"><i className="fas fa-utensils text-primary me-2"></i>Gestión de Menú</h1>
             
             <div className="row">
-                {/* FORMULARIO DE CREACIÓN / EDICIÓN */}
                 <div className="col-md-4">
                     <div className={`card p-4 shadow-sm border-0 ${editMode ? 'border-start border-warning border-4' : ''}`}>
                         <h5 className="fw-bold mb-3">{editMode ? 'Editar Plato' : 'Nuevo Plato'}</h5>
@@ -117,14 +116,14 @@ export const Menu = () => {
                             {editMode && (
                                 <button type="button" className="btn btn-link btn-sm w-100 mt-2 text-muted" onClick={() => {
                                     setEditMode(false);
-                                    setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 33 });
+                                    // 3. CAMBIADO DE 33 A 1 EN EL BOTÓN CANCELAR
+                                    setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 1 });
                                 }}>Cancelar</button>
                             )}
                         </form>
                     </div>
                 </div>
 
-                {/* LISTADO DE PLATOS */}
                 <div className="col-md-8">
                     <div className="card shadow-sm border-0">
                         <div className="card-header bg-white py-3">
