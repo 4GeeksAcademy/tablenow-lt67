@@ -16,6 +16,85 @@ export default function useGlobalReducer() {
     const { dispatch, store } = useContext(StoreContext);
 
     const actions = {
+        loginHostess: async (email, password) => {
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/login-hostess`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                if (!resp.ok) return false;
+                
+                const data = await resp.json();
+                dispatch({ type: "set_hostess_auth", payload: data });
+                return true;
+            } catch (error) {
+                console.error("Error en login de Hostess:", error);
+                return false;
+            }
+        },
+
+        getAllRestaurantsPublic: async () => {
+    try {
+        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurants`);
+        if (resp.ok) {
+            const data = await resp.json();
+            dispatch({ type: "set_restaurants", payload: data });
+        }
+    } catch (error) {
+        console.error("Error cargando restaurantes públicos:", error);
+    }
+},
+
+        logoutHostess: () => {
+            dispatch({ type: "logout_hostess" });
+        },
+
+        getTables: async (restauranteId) => {
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurant/${restauranteId}/tables`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    dispatch({ type: "set_tables", payload: data });
+                }
+            } catch (error) {
+                console.error("Error cargando mesas:", error);
+            }
+        },
+
+        updateTableStatus: async (tableId, status) => {
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/table/${tableId}/status`, {
+                    method: "PUT",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${store.tokenHostess}` 
+                    },
+                    body: JSON.stringify({ status })
+                });
+                if (resp.ok) {
+                    const nuevasMesas = store.tables.map(t => t.id === tableId ? { ...t, status } : t);
+                    dispatch({ type: "set_tables", payload: nuevasMesas });
+                    return true;
+                }
+            } catch (error) {
+                console.error("Error actualizando mesa:", error);
+            }
+            return false;
+        },
+
+        getWaitlist: async (restauranteId) => {
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurant/${restauranteId}/waitlist`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    dispatch({ type: "set_waitlist", payload: data });
+                }
+            } catch (error) {
+                console.error("Error cargando lista de espera:", error);
+            }
+        },
+
         getOwnerProfile: async () => {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/owner/profile`, {

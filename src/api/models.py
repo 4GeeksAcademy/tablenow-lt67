@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import DateTime, Float, String, ForeignKey, Boolean
+from sqlalchemy import DateTime, Float, String, ForeignKey, Boolean,Integer,Date
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime, timezone
 
@@ -67,15 +67,19 @@ class Restaurante(db.Model):
     __tablename__ = "restaurante"
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(120), nullable=False)
-    direccion: Mapped[str] = mapped_column(String(250), nullable=True) # Nueva
-    telefono: Mapped[str] = mapped_column(String(20), nullable=True)    # Nueva
-    capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True) # Nueva
+    direccion: Mapped[str] = mapped_column(String(250), nullable=True)
+    telefono: Mapped[str] = mapped_column(String(20), nullable=True)
+    capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True)
     owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
     
     owner = db.relationship("Owner", backref="restaurantes")
     
     menus = db.relationship("Menu", backref="restaurante", lazy=True, cascade="all, delete-orphan")
-    reservas = db.relationship("Reserva", backref="restaurante", lazy=True, cascade="all, delete-orphan") # Nueva conexión
+    reservas = db.relationship("Reserva", backref="restaurante", lazy=True, cascade="all, delete-orphan")
+    
+    staff_hostess = db.relationship("Hostess", backref="restaurante", lazy=True, cascade="all, delete-orphan")
+    tables = db.relationship("Table", backref="restaurante", lazy=True, cascade="all, delete-orphan")
+    waitlist_entries = db.relationship("Waitlist", backref="restaurante", lazy=True, cascade="all, delete-orphan")
     
     def __repr__(self): return f'<Restaurante: {self.nombre}>'
 
@@ -86,9 +90,10 @@ class Restaurante(db.Model):
             "direccion": self.direccion,
             "telefono": self.telefono,
             "capacidad_total": self.capacidad_total,
-            "owner_id": self.owner_id
+            "owner_id": self.owner_id,
+            "count_hostess": len(self.staff_hostess),
+            "count_tables": len(self.tables)
         }
-
 
 
 class Menu(db.Model):
@@ -206,3 +211,75 @@ class Reserva(db.Model):
             "phone": self.cliente.phone
         } if self.cliente else None
     }
+
+class Hostess(db.Model):
+    __tablename__ = "hostess"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    first_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    phone_number: Mapped[str] = mapped_column(String(20), nullable=False)
+    special_notes: Mapped[str] = mapped_column(String(500), nullable=True)
+    
+    total_visits: Mapped[int] = mapped_column(Integer, nullable=True, default=0)
+    last_visit: Mapped[str] = mapped_column(String(50), nullable=True) 
+
+    restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id"), nullable=False)
+    
+    def __repr__(self):
+        return f'<Hostess: {self.first_name} {self.last_name}>'
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "phone_number": self.phone_number,
+            "special_notes": self.special_notes,
+            "total_visits": self.total_visits,
+            "last_visit": self.last_visit,
+            "restaurante_id": self.restaurante_id
+        }
+    
+class Table(db.Model):
+    __tablename__ = "table"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    table_number: Mapped[str] = mapped_column(String(50), nullable=False)
+    capacity: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="available")
+    
+    restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id"), nullable=False)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "table_number": self.table_number,
+            "capacity": self.capacity,
+            "status": self.status,
+            "restaurante_id": self.restaurante_id
+        }
+
+class Waitlist(db.Model):
+    __tablename__ = "waitlist"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    client_id: Mapped[int] = mapped_column(db.ForeignKey("clients.id"), nullable=False)
+    restaurant_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id"), nullable=False)
+    
+    check_in_time: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    estimated_wait: Mapped[int] = mapped_column(Integer, nullable=True) # in minutes
+    status: Mapped[str] = mapped_column(String(50), default="waiting") # waiting, seated, cancelled
+
+    client = db.relationship("Clients")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "client_name": self.client.name if self.client else "Unknown",
+            "check_in_time": self.check_in_time.isoformat(),
+            "estimated_wait": self.estimated_wait,
+            "status": self.status,
+            "restaurant_id": self.restaurant_id
+        }

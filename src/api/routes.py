@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva
+from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Hostess, Table, Waitlist
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token
@@ -634,4 +634,78 @@ def login_owner():
         "id": owner.id
     }), 200
 
+# ==========================================
+# RUTAS (Adaptadas a Hostess)
+# ==========================================
 
+@api.route('/host', methods=['GET'])
+def get_hosts():
+    hosts = Hostess.query.all()
+    respuesta = list(map(lambda host: host.serialize(), hosts))
+    return jsonify(respuesta), 200
+
+@api.route('/host/<int:host_id>', methods=['GET'])
+def get_host(host_id):
+    host = Hostess.query.filter_by(id=host_id).first()
+    if host is None:
+        return jsonify({"message": f"no se encontro el host con el id: {host_id}"}), 404
+    return jsonify(host.serialize()), 200
+
+@api.route('/host', methods=['POST'])
+def create_host():
+    body = request.get_json()
+    
+    new_host = Hostess(
+        first_name=body['first_name'],
+        last_name=body['last_name'],
+        email=body['email'],
+        password=body['password'],  
+        phone_number=body['phone_number'],
+        special_notes=body.get('special_notes'),
+        
+        total_visits=body.get('total_visits', 0), 
+        last_visit=body.get('last_visit'),
+        
+        restaurante_id=body['restaurante_id']
+    )
+    
+    db.session.add(new_host)
+    db.session.commit()
+    
+    return jsonify(new_host.serialize()), 201
+
+@api.route('/host/<int:host_id>', methods=['PUT'])
+def update_host(host_id):
+    host = Hostess.query.get(host_id)
+    if not host:
+        return jsonify({"message": "Host not found"}), 404
+        
+    body = request.get_json()
+    
+    host.first_name = body.get('first_name', host.first_name)
+    host.last_name = body.get('last_name', host.last_name)
+    host.email = body.get('email', host.email)
+    host.phone_number = body.get('phone_number', host.phone_number)
+    host.special_notes = body.get('special_notes', host.special_notes)
+    host.password = body.get('password', host.password) # No olvides el password
+
+    host.total_visits = body.get('total_visits', host.total_visits)
+    host.last_visit = body.get('last_visit', host.last_visit)
+    
+    db.session.commit()
+    return jsonify(host.serialize()), 200
+
+@api.route('/host/<int:host_id>', methods=['DELETE'])
+def delete_host(host_id):
+    host = Hostess.query.get(host_id)
+    
+    if host is None:
+        return jsonify({"message": f"No se encontró el host con el id: {host_id}"}), 404
+    
+    try:
+        db.session.delete(host)
+        db.session.commit()
+        return jsonify({"message": "Host eliminado correctamente"}), 200
+    except Exception as e:
+        db.session.rollback() 
+        return jsonify({"message": "Error al eliminar el host", "error": str(e)}), 500

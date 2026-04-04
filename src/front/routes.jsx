@@ -42,6 +42,13 @@ import { CrearRestaurante } from "./pages/CrearRestaurante";
 import { Booking } from "./pages/Booking";
 import { NewBooking } from "./pages/NewBooking.jsx";
 
+//HOST
+import Host from "./pages/Host";
+import NewHost from "./pages/NewHost";
+import EditHost from "./pages/EditHost";
+import HostDetails from "./pages/HostDetails";
+
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
@@ -87,6 +94,13 @@ export const router = createBrowserRouter(
       <Route path="/crear-host" element={<h1>Página Crear Hostess</h1>} />
       <Route path="/booking" element={<Booking />} />
       <Route element={<NewBooking />} path="/new-booking" />
+
+      {/* Host */}
+      <Route path="/hosts" element={<Host />} />
+      <Route path="/hosts" element={<Host />} />
+      <Route path="/create-host" element={<NewHost />} />
+      <Route path="/view-host/:id" element={<HostDetails />} />
+      <Route path="/edit-host/:id" element={<EditHost />} />
     </Route>
   )
 );
