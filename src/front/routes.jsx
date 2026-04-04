@@ -10,9 +10,9 @@ import { Home } from "./pages/Home";
 import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
 import Host from "./pages/Host";
-import NewHost from "./components/host/NewHost";
+import NewHost from "./pages/NewHost";
 import EditHost from "./pages/EditHost";
-import HostDetail from "./components/host/HostDetail";
+import HostDetail from "./pages/HostDetail";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -31,8 +31,8 @@ export const router = createBrowserRouter(
         <Route path="/demo" element={<Demo />} />
         <Route path="/hosts" element={<Host />} />
         <Route path="/create-host" element={<NewHost />} />
-        <Route path="/edit-host/:id" element={ <EditHost />} />
-        <Route path="/view-host/:id" element={ <HostDetail />} />
+        <Route path="/edit-host/:id" element={<EditHost />} />
+        <Route path="/view-host/:id" element={<HostDetail />} />
       </Route>
     )
 );

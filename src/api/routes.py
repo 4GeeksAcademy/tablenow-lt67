@@ -42,17 +42,11 @@ def get_host(host_id):
 def delete_host(host_id):
     host = Host.query.filter_by(id=host_id).first()
     if host is None:
-        return {
-            "message": "no se encontro el host con el id: " + str(host_id)
-        },400
-    print(host.serialize())
+        return jsonify({"message": "no se encontro el host con el id: " + str(host_id)}), 404
+    
     db.session.delete(host)
     db.session.commit()
-    response_body = {
-        "message": "se elimino el host"
-    }
-
-    return jsonify(response_body), 200
+    return jsonify({"message": "se elimino el host"}), 200
 
 @api.route('/host', methods=['POST'])
 def add_host():
