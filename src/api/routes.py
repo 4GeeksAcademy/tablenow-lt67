@@ -329,18 +329,43 @@ def update_restaurante(id):
 @jwt_required()
 def delete_restaurante(id):
     current_owner_id = get_jwt_identity()
+    # Verificamos que el restaurante exista y pertenezca al dueño actual
     restaurante = Restaurante.query.filter_by(id=id, owner_id=int(current_owner_id)).first()
 
     if not restaurante:
-        return jsonify({"msg": "No se encontró el restaurante"}), 404
+        return jsonify({"msg": "No se encontró el restaurante o no tienes permiso"}), 404
 
     try:
+        # --- LIMPIEZA MANUAL (Como no hay cascade en el modelo) ---
+        
+        # 1. Borrar platos del menú
+        Menu.query.filter_by(restaurante_id=id).delete()
+        
+        # 2. Borrar reservas
+        Reserva.query.filter_by(restaurante_id=id).delete()
+        
+        # 3. Borrar hostess/personal
+        Hostess.query.filter_by(restaurante_id=id).delete()
+
+        # 4. Borrar ventas (OJO: Esto fallará si la venta tiene ItemVenta, pero probemos así primero)
+        Venta.query.filter_by(restaurante_id=id).delete()
+
+        # 5. Borrar mesas (si tienes el modelo Table)
+        Table.query.filter_by(restaurante_id=id).delete()
+
+        # Finalmente, borramos el restaurante
         db.session.delete(restaurante)
         db.session.commit()
-        return jsonify({"msg": "Eliminado correctamente"}), 200
+        
+        return jsonify({"msg": "Restaurante y todos sus datos asociados eliminados"}), 200
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
+        print(f"Error al eliminar: {str(e)}") # Esto saldrá en tu consola de Python
+        return jsonify({
+            "msg": "Error al eliminar el restaurante. Es posible que tenga registros de ventas activos.",
+            "error": str(e)
+        }), 500
 
 @api.route('/menus', methods=['GET'])
 @api.route('/menu', methods=['GET']) 

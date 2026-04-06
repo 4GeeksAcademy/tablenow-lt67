@@ -5,6 +5,9 @@ export const initialStore = () => {
   const ownerInfo = localStorage.getItem("ownerInfo");
   const tokenHostess = localStorage.getItem("tokenHostess");
   const hostessInfo = localStorage.getItem("hostessInfo");
+  // --- NUEVO: RECUPERAR SESIÓN CLIENTE ---
+  const tokenClient = localStorage.getItem("tokenClient");
+  const clientInfo = localStorage.getItem("clientInfo");
 
   return {
     // --- ESTADO OWNER ---
@@ -18,6 +21,12 @@ export const initialStore = () => {
     hostessInfo: (hostessInfo && hostessInfo !== "undefined") ? JSON.parse(hostessInfo) : null,
     tables: [],    
     waitlist: [],  
+
+    // --- NUEVO: ESTADO CLIENTE ---
+    tokenClient: tokenClient || null,
+    authClient: !!tokenClient,
+    clientInfo: (clientInfo && clientInfo !== "undefined") ? JSON.parse(clientInfo) : null,
+
 
     // --- ESTADO GENERAL ---
     message: null,
@@ -115,6 +124,34 @@ export default function storeReducer(store, action = {}) {
           sale.id === action.payload.id ? action.payload : sale,
         ),
       };
+
+      case "login_client":
+      localStorage.setItem("tokenClient", action.payload.token);
+      localStorage.setItem("clientInfo", JSON.stringify(action.payload.user));
+      return {
+        ...store,
+        tokenClient: action.payload.token,
+        authClient: true,
+        clientInfo: action.payload.user,
+      };
+
+    case "logout_client":
+      localStorage.removeItem("tokenClient");
+      localStorage.removeItem("clientInfo");
+      return {
+        ...store,
+        tokenClient: null,
+        authClient: false,
+        clientInfo: null,
+      };
+
+    case "set_client_info":
+    // Guardamos en localStorage para que la imagen persista al recargar
+    localStorage.setItem("clientInfo", JSON.stringify(action.payload));
+    return {
+        ...store, // Cambiado 'state' por 'store'
+        clientInfo: action.payload
+    };
 
     case "set_item_ventas":
       return { ...store, item_ventas: action.payload };

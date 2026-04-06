@@ -343,6 +343,35 @@ export default function useGlobalReducer() {
             return false;
         },
 
+        updateClientImage: async (new_url) => {
+    try {
+        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/update-client-image`, {
+            method: "PUT",
+            headers: { 
+                "Content-Type": "application/json",
+                // CORRECCIÓN: Usar el nombre de token que definiste en el login del cliente
+                "Authorization": "Bearer " + localStorage.getItem("tokenClient") 
+            },
+            body: JSON.stringify({ "image_url": new_url })
+        });
+
+        if (resp.ok) {
+            // Actualizamos el estado global con la nueva imagen
+            dispatch({ 
+                type: "set_client_info", 
+                payload: { ...store.clientInfo, image_url: new_url } 
+            });
+            return true;
+        } else {
+            console.error("Error en la respuesta del servidor:", resp.status);
+            return false;
+        }
+    } catch (error) {
+        console.error("Error al guardar la imagen en el backend", error);
+        return false;
+    }
+},
+
         getItemsBySale: async (saleId) => {
             try {
                 const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas/" + saleId);

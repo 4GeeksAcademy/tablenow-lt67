@@ -92,8 +92,8 @@ class Restaurante(db.Model):
             "capacidad_total": self.capacidad_total,
             "owner_id": self.owner_id,
             "image_url": self.image_url, # Lo agregamos aquí también
-            "count_hostess": len(self.staff_hostess),
-            "count_tables": len(self.tables)
+            "count_hostess": 0,
+            "count_tables": 0
         }
 
 class Menu(db.Model):
@@ -188,30 +188,32 @@ class Reserva(db.Model):
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     cliente = db.relationship("Clients")
+    restaurante = db.relationship("Restaurante")
+    cliente = db.relationship("Clients")
 
     def __repr__(self):
         return f"Reserva #{self.id} - Cliente ID: {self.cliente_id} - Mesa: {self.id_mesa}"
 
     def serialize(self):
         return {
-        "id": self.id,
-        "id_mesa": self.id_mesa,
-        "fecha": self.fecha,
-        "hora": self.hora,
-        "num_personas": self.num_personas,
-        "estado": self.estado,
-        "origen": self.origen,
-        "notas": self.notas,
-        "id_restaurante": self.restaurante_id,
-        "nombre_restaurante": self.restaurante.nombre if self.restaurante else "No asignado",
-        "cliente": {
-            "id": self.cliente.id,
-            "name": self.cliente.name,
-            "email": self.cliente.email,
-            "phone": self.cliente.phone
-        } if self.cliente else None
-    }
-
+            "id": self.id,
+            "id_mesa": self.id_mesa,
+            "fecha": self.fecha,
+            "hora": self.hora,
+            "num_personas": self.num_personas,
+            "estado": self.estado,
+            "origen": self.origen,
+            "notas": self.notas,
+            "restaurante_id": self.restaurante_id, # Usamos el nombre de la columna
+            "nombre_restaurante": self.restaurante.nombre if self.restaurante else "No asignado",
+            "cliente": {
+                "id": self.cliente.id,
+                "name": self.cliente.name,
+                "email": self.cliente.email,
+                "phone": self.cliente.phone
+            } if self.cliente else None
+        }
+    
 class Hostess(db.Model):
     __tablename__ = "hostess"
     id: Mapped[int] = mapped_column(primary_key=True)
