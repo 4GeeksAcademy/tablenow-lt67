@@ -269,13 +269,23 @@ def delete_owner(id):
 # =========================
 # CRUD MENU & RESTAURANTE
 # =========================
+@api.route('/restaurants', methods=['GET'])
+def get_restaurantes():
+    try:
+        # Esta sirve para todos: Dueños y Clientes
+        restaurantes = Restaurante.query.all()
+        return jsonify([r.serialize() for r in restaurantes]), 200
+    except Exception as e:
+        return jsonify({"msg": "Error al obtener restaurantes", "error": str(e)}), 500
+
 @api.route('/restaurants', methods=['POST']) 
 @jwt_required()
 def crear_restaurante():
     identity = get_jwt_identity()
     body = request.get_json()
+    
     if not body or "nombre" not in body:
-        return jsonify({"msg": "Falta el nombre"}), 400
+        return jsonify({"msg": "Falta el nombre del restaurante"}), 400
 
     try:
         nuevo_restaurante = Restaurante(
@@ -283,6 +293,7 @@ def crear_restaurante():
             direccion=body.get("direccion"),
             telefono=body.get("telefono"),
             capacidad_total=body.get("capacidad_total"),
+            image_url=body.get("image_url"), # <--- Importante para el futuro
             owner_id=int(identity) 
         )
         db.session.add(nuevo_restaurante)
@@ -290,15 +301,7 @@ def crear_restaurante():
         return jsonify(nuevo_restaurante.serialize()), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error interno", "error": str(e)}), 500
-
-@api.route('/restaurants', methods=['GET'])
-def get_restaurantes():
-    try:
-        restaurantes = Restaurante.query.all()
-        return jsonify([r.serialize() for r in restaurantes]), 200
-    except Exception as e:
-        return jsonify({"msg": "Error al obtener restaurantes", "error": str(e)}), 500
+        return jsonify({"msg": "Error interno al crear", "error": str(e)}), 500
 
 @api.route('/restaurants/<int:id>', methods=['PUT'])
 @jwt_required()
@@ -536,12 +539,16 @@ def get_all_bookings():
 @api.route('/booking', methods=['POST'])
 def crear_reserva():
     data = request.json
+    if not data:
+        return jsonify({"msg": "Faltan datos"}), 400
+        
     try:
         nueva_reserva = Reserva(
             fecha=data.get("fecha"),
             hora=data.get("hora"),
             num_personas=data.get("num_personas"),
-            id_mesa=data.get("id_mesa"),
+            # Si viene id_mesa (panel owner) se guarda, si no (app cliente) queda en None
+            id_mesa=data.get("id_mesa"), 
             restaurante_id=data.get("restaurante_id"),
             cliente_id=data.get("cliente_id"),
             notas=data.get("notas"),
@@ -611,27 +618,16 @@ def get_owner_restaurants():
 @api.route('/login-owner', methods=['POST'])
 def login_owner():
     body = request.get_json()
-    
-    if body is None:
-        return jsonify({"msg": "Body must be a JSON"}), 400
-        
-    email = body.get("email")
-    password = body.get("password")
-
-    owner = Owner.query.filter_by(email=email).first()
-    
-    if owner is None:
-        return jsonify({"msg": "Owner not found"}), 404
-        
-    if owner.password != password:
-        return jsonify({"msg": "Invalid credentials"}), 401
+    owner = Owner.query.filter_by(email=body.get("email")).first()
+    if owner is None or owner.password != body.get("password"):
+        return jsonify({"msg": "Credenciales inválidas"}), 401
     
     access_token = create_access_token(identity=str(owner.id))
     return jsonify({
         "token": access_token,
-        "email": owner.email,
-        "name": owner.name,  
-        "id": owner.id
+        "role": "owner",
+        "id": owner.id,
+        "name": owner.name
     }), 200
 
 # ==========================================
@@ -709,3 +705,85 @@ def delete_host(host_id):
     except Exception as e:
         db.session.rollback() 
         return jsonify({"message": "Error al eliminar el host", "error": str(e)}), 500
+
+# ======================================================
+# 🚀 FLUJO DE CLIENTE (Basado en Trello Ft-14 & Ft-15)
+# ======================================================
+
+@api.route('/signup-client', methods=['POST'])
+def signup_client():
+    body = request.get_json()
+    if not body: return jsonify({"msg": "Faltan datos"}), 400
+    
+    email = body.get("email")
+    if Clients.query.filter_by(email=email).first():
+        return jsonify({"msg": "El email ya está registrado"}), 400
+
+    new_client = Clients(
+        name=body.get("name"),
+        email=email,
+        phone=body.get("phone"),
+        password=body.get("password"),
+        image_url=body.get("image_url"), # Para la tarea de imágenes
+        is_active=True
+    )
+    db.session.add(new_client)
+    db.session.commit()
+    return jsonify({"msg": "Cliente registrado con éxito", "id": new_client.id}), 201
+
+@api.route('/login-client', methods=['POST'])
+def login_client():
+    body = request.get_json()
+    client = Clients.query.filter_by(email=body.get("email")).first()
+
+    if client is None or client.password != body.get("password"):
+        return jsonify({"msg": "Credenciales inválidas"}), 401
+
+    # Token con identidad de cliente
+    access_token = create_access_token(identity=str(client.id))
+    return jsonify({
+        "token": access_token,
+        "role": "client",
+        "client": client.serialize()
+    }), 200
+
+@api.route('/client/my-bookings', methods=['GET'])
+@jwt_required()
+def get_my_bookings():
+    client_id = get_jwt_identity()
+    reservas = Reserva.query.filter_by(cliente_id=client_id).all()
+    return jsonify([r.serialize() for r in reservas]), 200
+
+@api.route('/client/booking/<int:booking_id>/cancel', methods=['PUT'])
+@jwt_required()
+def cancel_my_booking(booking_id):
+    client_id = get_jwt_identity()
+    reserva = Reserva.query.filter_by(id=booking_id, cliente_id=client_id).first()
+    
+    if not reserva:
+        return jsonify({"msg": "Reserva no encontrada"}), 404
+    
+    reserva.estado = "cancelada"
+    db.session.commit()
+    return jsonify({"msg": "Reserva cancelada correctamente"}), 200
+
+# Ruta para actualizar imagen (Cloudinary Task)
+@api.route('/update-image', methods=['PUT'])
+@jwt_required()
+def update_image():
+    identity = get_jwt_identity()
+    body = request.get_json()
+    image_url = body.get("image_url")
+    user_type = body.get("user_type") # 'client' o 'restaurant'
+
+    if user_type == 'client':
+        user = Clients.query.get(identity)
+        if user: user.image_url = image_url
+    elif user_type == 'restaurant':
+        rest_id = body.get("restaurant_id")
+        # Verificar que el restaurante sea del owner que está logueado
+        rest = Restaurante.query.filter_by(id=rest_id, owner_id=identity).first()
+        if rest: rest.image_url = image_url
+    
+    db.session.commit()
+    return jsonify({"msg": "Imagen actualizada", "url": image_url}), 200

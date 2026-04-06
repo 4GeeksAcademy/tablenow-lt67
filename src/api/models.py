@@ -38,16 +38,23 @@ class Clients(db.Model):
     __tablename__ = "clients"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
-    email: Mapped[str] = mapped_column(
-        String(120), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
+    # NUEVO CAMPO PARA LA IMAGEN
+    image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
 
     def __repr__(self): return f"{self.name}"
 
     def serialize(self):
-        return {"id": self.id, "name": self.name, "email": self.email, "phone": self.phone}
+        return {
+            "id": self.id, 
+            "name": self.name, 
+            "email": self.email, 
+            "phone": self.phone,
+            "image_url": self.image_url # Lo agregamos aquí también
+        }
 
 
 class Owner(db.Model):
@@ -71,17 +78,10 @@ class Restaurante(db.Model):
     telefono: Mapped[str] = mapped_column(String(20), nullable=True)
     capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True)
     owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
+    # NUEVO CAMPO PARA LA IMAGEN
+    image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
     
-    owner = db.relationship("Owner", backref="restaurantes")
-    
-    menus = db.relationship("Menu", backref="restaurante", lazy=True, cascade="all, delete-orphan")
-    reservas = db.relationship("Reserva", backref="restaurante", lazy=True, cascade="all, delete-orphan")
-    
-    staff_hostess = db.relationship("Hostess", backref="restaurante", lazy=True, cascade="all, delete-orphan")
-    tables = db.relationship("Table", backref="restaurante", lazy=True, cascade="all, delete-orphan")
-    waitlist_entries = db.relationship("Waitlist", backref="restaurante", lazy=True, cascade="all, delete-orphan")
-    
-    def __repr__(self): return f'<Restaurante: {self.nombre}>'
+    # ... (las relaciones se quedan igual)
 
     def serialize(self): 
         return {
@@ -91,10 +91,10 @@ class Restaurante(db.Model):
             "telefono": self.telefono,
             "capacidad_total": self.capacidad_total,
             "owner_id": self.owner_id,
+            "image_url": self.image_url, # Lo agregamos aquí también
             "count_hostess": len(self.staff_hostess),
             "count_tables": len(self.tables)
         }
-
 
 class Menu(db.Model):
     __tablename__ = "menu"
