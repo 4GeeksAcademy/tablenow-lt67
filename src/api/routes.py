@@ -375,34 +375,53 @@ def get_menus():
 
 @api.route('/menus', methods=['POST'])
 def create_menu():
-    data = request.json
+    # 1. Obtener datos y verificar que no sea None
+    data = request.get_json()
     print(f"DEBUG: Datos recibidos -> {data}") 
     
-    restaurante = Restaurante.query.get(data.get("restaurante_id"))
+    if not data:
+        return jsonify({"error": "No se recibió información en el cuerpo de la solicitud"}), 400
+
+    # 2. Extraer y validar restaurante_id
+    restaurante_id = data.get("restaurante_id")
+    if not restaurante_id:
+        return jsonify({"error": "Falta el campo obligatorio: restaurante_id"}), 400
+
+    # 3. Verificar si el restaurante existe antes de intentar crear el plato
+    restaurante = Restaurante.query.get(restaurante_id)
     if not restaurante:
-        return jsonify({"error": f"El restaurante con ID {data.get('restaurante_id')} no existe en la base de datos."}), 404
-    
+        return jsonify({
+            "error": f"El restaurante con ID {restaurante_id} no existe. Revisa los IDs disponibles en /api/restaurants"
+        }), 400 # Cambiado a 400 para que la terminal no te confunda con un 404 de ruta
+
+    # 4. Intentar crear el registro
     try:
-        if not data.get("nombre") or not data.get("precio") or not data.get("restaurante_id"):
-            return jsonify({"error": "Faltan campos obligatorios (nombre, precio o restaurante_id)"}), 400
+        nombre = data.get("nombre")
+        precio = data.get("precio")
+
+        if not nombre or not precio:
+            return jsonify({"error": "Faltan campos obligatorios: nombre o precio"}), 400
 
         nuevo_menu = Menu(
-            nombre=data.get("nombre"),
+            nombre=nombre,
             categoria=data.get("categoria"),
-            precio=float(data.get("precio")), 
-            restaurante_id=data.get("restaurante_id"),
+            precio=float(precio), 
+            restaurante_id=int(restaurante_id),
             disponible=data.get("disponible", True)
         )
         
         db.session.add(nuevo_menu)
         db.session.commit()
+        
         return jsonify(nuevo_menu.serialize()), 201
 
+    except ValueError:
+        return jsonify({"error": "El precio debe ser un número válido"}), 400
     except Exception as e:
         db.session.rollback() 
         print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") 
-        return jsonify({"error": "No se pudo crear el plato. Revisa si el restaurante_id existe.", "details": str(e)}), 500
-
+        return jsonify({"error": "Error interno del servidor", "details": str(e)}), 500
+    
 @api.route('/menus/<int:id>', methods=['PUT'])
 def update_menu(id):
     menu = Menu.query.get(id)
@@ -588,46 +607,40 @@ def crear_reserva():
         return jsonify({"msg": "Error al crear reserva", "error": str(e)}), 500
 
 
-@api.route('/booking/<int:id>/status', methods=['PUT'])
+@api.route('/booking/<int:booking_id>/status', methods=['PUT'])
 @jwt_required()
-def cambiar_status_reserva(id):
-    """ Permite al Owner confirmar, cancelar o completar una reserva """
-    reserva = Reserva.query.get(id)
-    if not reserva:
-        return jsonify({"msg": "Reserva no encontrada"}), 404
+def update_booking_status(booking_id):
+    body = request.get_json()
+    # Acepta status o estado para evitar errores 422
+    nuevo_estado = body.get("status") or body.get("estado")
     
-    try:
-        data = request.json
-        reserva.estado = data.get("estado", reserva.estado)
-        db.session.commit()
-        return jsonify(reserva.serialize()), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Error al actualizar estado", "error": str(e)}), 500
+    if not nuevo_estado:
+        return jsonify({"msg": "Debes proporcionar un estado o status"}), 400
 
-
-@api.route('/booking/<int:id>', methods=['DELETE'])
-@jwt_required()
-def eliminar_reserva(id):
-    """ Elimina permanentemente una reserva """
-    current_owner_id = get_jwt_identity()
-    reserva = Reserva.query.get(id)
-
+    reserva = Reserva.query.get(booking_id)
     if not reserva:
         return jsonify({"msg": "Reserva no encontrada"}), 404
 
-    restaurante = Restaurante.query.filter_by(id=reserva.restaurante_id, owner_id=int(current_owner_id)).first()
+    reserva.estado = nuevo_estado
+    db.session.commit()
+    return jsonify(reserva.serialize()), 200
+
+
+@api.route('/booking/<int:booking_id>', methods=['DELETE'])
+@jwt_required()
+def delete_booking(booking_id):
+    reserva = Reserva.query.get(booking_id)
     
-    if not restaurante:
-        return jsonify({"msg": "No tienes permiso para eliminar esta reserva"}), 403
+    if not reserva:
+        return jsonify({"msg": "Reserva no encontrada"}), 404
 
     try:
         db.session.delete(reserva)
         db.session.commit()
-        return jsonify({"msg": "Reserva eliminada correctamente"}), 200
+        return jsonify({"msg": "Reserva eliminada con éxito"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error al eliminar reserva", "error": str(e)}), 500
+        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
 
 # =========================
 # LOGIN-OWNER
@@ -772,17 +785,27 @@ def login_client():
         "client": client.serialize()
     }), 200
 
-@api.route('/client/my-bookings', methods=['GET'])
+# Cambia /client/ por /api/
+@api.route('/my-bookings', methods=['GET'])
 @jwt_required()
 def get_my_bookings():
-    client_id = get_jwt_identity()
-    reservas = Reserva.query.filter_by(cliente_id=client_id).all()
-    return jsonify([r.serialize() for r in reservas]), 200
+    """ Obtiene solo las reservas del cliente que tiene la sesión iniciada """
+    try:
+        # Obtenemos el ID del cliente desde el Token JWT
+        client_id = get_jwt_identity()
+        
+        # Filtramos en la base de datos
+        reservas = Reserva.query.filter_by(cliente_id=client_id).all()
+        
+        # Devolvemos la lista serializada
+        return jsonify([r.serialize() for r in reservas]), 200
+    except Exception as e:
+        return jsonify({"msg": "Error al obtener mis reservas", "error": str(e)}), 500
 
 @api.route('/client/booking/<int:booking_id>/cancel', methods=['PUT'])
 @jwt_required()
 def cancel_my_booking(booking_id):
-    client_id = get_jwt_identity()
+    client_id = int(get_jwt_identity())
     reserva = Reserva.query.filter_by(id=booking_id, cliente_id=client_id).first()
     
     if not reserva:
@@ -792,23 +815,20 @@ def cancel_my_booking(booking_id):
     db.session.commit()
     return jsonify({"msg": "Reserva cancelada correctamente"}), 200
 
-# Ruta para actualizar imagen (Cloudinary Task)
-@api.route('/update-image', methods=['PUT'])
+@api.route('/update-client-image', methods=['PUT']) # <--- Cambia 'update-image' por 'update-client-image'
 @jwt_required()
-def update_image():
+def update_client_image():
     identity = get_jwt_identity()
     body = request.get_json()
     image_url = body.get("image_url")
-    user_type = body.get("user_type") # 'client' o 'restaurant'
-
-    if user_type == 'client':
-        user = Clients.query.get(identity)
-        if user: user.image_url = image_url
-    elif user_type == 'restaurant':
-        rest_id = body.get("restaurant_id")
-        # Verificar que el restaurante sea del owner que está logueado
-        rest = Restaurante.query.filter_by(id=rest_id, owner_id=identity).first()
-        if rest: rest.image_url = image_url
     
-    db.session.commit()
-    return jsonify({"msg": "Imagen actualizada", "url": image_url}), 200
+    # IMPORTANTE: En el frontend no estás enviando 'user_type', 
+    # así que vamos a asegurar que busque al cliente directamente
+    user = Clients.query.get(identity)
+    if user:
+        user.image_url = image_url
+        db.session.commit()
+        return jsonify({"msg": "Imagen actualizada", "url": image_url}), 200
+    
+    return jsonify({"msg": "Usuario no encontrado"}), 404
+

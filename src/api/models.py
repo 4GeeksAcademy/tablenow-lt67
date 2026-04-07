@@ -81,7 +81,6 @@ class Restaurante(db.Model):
     # NUEVO CAMPO PARA LA IMAGEN
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
     
-    # ... (las relaciones se quedan igual)
 
     def serialize(self): 
         return {

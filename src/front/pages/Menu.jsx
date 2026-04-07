@@ -10,8 +10,24 @@ export const Menu = () => {
         nombre: "",
         categoria: "",
         precio: "",
-        restaurante_id: 1 
+        restaurante_id: 1 // Valor inicial por defecto
     });
+
+    // Esta función busca el ID real de tu restaurante sin mostrar nada en el HTML
+    const sincronizarRestaurante = async () => {
+        try {
+            const resp = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/restaurants");
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.length > 0) {
+                    // Actualiza el ID 1 por el ID real (ej: 2, 3 o 4) automáticamente
+                    setFormData(prev => ({ ...prev, restaurante_id: data[0].id }));
+                }
+            }
+        } catch (error) {
+            console.error("Error al sincronizar restaurante", error);
+        }
+    };
 
     const getMenus = async () => {
         try {
@@ -39,7 +55,8 @@ export const Menu = () => {
                 body: JSON.stringify(formData)
             });
             if (resp.ok) {
-                setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 1 });
+                // Al limpiar, mantenemos el restaurante_id que ya sabemos que funciona
+                setFormData(prev => ({ ...prev, nombre: "", categoria: "", precio: "" }));
                 setEditMode(false);
                 setCurrentId(null);
                 getMenus();
@@ -77,6 +94,7 @@ export const Menu = () => {
 
     useEffect(() => {
         getMenus();
+        sincronizarRestaurante(); // Se ejecuta solo al cargar para corregir el ID
     }, []);
 
     return (
@@ -116,8 +134,7 @@ export const Menu = () => {
                             {editMode && (
                                 <button type="button" className="btn btn-link btn-sm w-100 mt-2 text-muted" onClick={() => {
                                     setEditMode(false);
-                                    // 3. CAMBIADO DE 33 A 1 EN EL BOTÓN CANCELAR
-                                    setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 1 });
+                                    setFormData(prev => ({ ...prev, nombre: "", categoria: "", precio: "" }));
                                 }}>Cancelar</button>
                             )}
                         </form>
@@ -139,18 +156,10 @@ export const Menu = () => {
                                             <div className="text-success fw-bold">${item.precio}</div>
                                         </div>
                                         <div className="btn-group">
-                                            <button 
-                                                className="btn btn-outline-secondary btn-sm border-0" 
-                                                onClick={() => handleEditClick(item)}
-                                                title="Editar plato"
-                                            >
+                                            <button className="btn btn-outline-secondary btn-sm border-0" onClick={() => handleEditClick(item)}>
                                                 <i className="fas fa-edit"></i>
                                             </button>
-                                            <button 
-                                                className="btn btn-outline-danger btn-sm border-0" 
-                                                onClick={() => handleDelete(item.id)}
-                                                title="Eliminar plato"
-                                            >
+                                            <button className="btn btn-outline-danger btn-sm border-0" onClick={() => handleDelete(item.id)}>
                                                 <i className="fas fa-trash-alt"></i>
                                             </button>
                                         </div>

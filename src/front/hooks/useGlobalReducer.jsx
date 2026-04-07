@@ -24,27 +24,26 @@ export default function useGlobalReducer() {
                     body: JSON.stringify({ email, password })
                 });
                 if (!resp.ok) return false;
-                
                 const data = await resp.json();
                 dispatch({ type: "set_hostess_auth", payload: data });
                 return true;
             } catch (error) {
-                console.error("Error en login de Hostess:", error);
+                console.error("Error login:", error);
                 return false;
             }
         },
 
         getAllRestaurantsPublic: async () => {
-    try {
-        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurants`);
-        if (resp.ok) {
-            const data = await resp.json();
-            dispatch({ type: "set_restaurants", payload: data });
-        }
-    } catch (error) {
-        console.error("Error cargando restaurantes públicos:", error);
-    }
-},
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurants`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    dispatch({ type: "set_restaurants", payload: data });
+                }
+            } catch (error) {
+                console.error("Error cargando restaurantes públicos:", error);
+            }
+        },
 
         logoutHostess: () => {
             dispatch({ type: "logout_hostess" });
@@ -63,12 +62,15 @@ export default function useGlobalReducer() {
         },
 
         updateTableStatus: async (tableId, status) => {
+            const token = store.tokenHostess || localStorage.getItem("tokenHostess");
+            if (!token) return false;
+
             try {
                 const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/table/${tableId}/status`, {
                     method: "PUT",
                     headers: { 
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${store.tokenHostess}` 
+                        "Authorization": `Bearer ${token}` 
                     },
                     body: JSON.stringify({ status })
                 });
@@ -77,9 +79,7 @@ export default function useGlobalReducer() {
                     dispatch({ type: "set_tables", payload: nuevasMesas });
                     return true;
                 }
-            } catch (error) {
-                console.error("Error actualizando mesa:", error);
-            }
+            } catch (error) { console.error(error); }
             return false;
         },
 
@@ -167,7 +167,7 @@ export default function useGlobalReducer() {
                 });
                 if (response.ok) {
                     const actuales = store.restaurants || [];
-                    const actualizados = actuales.map(r => r.id === id ? { ...r, name: nuevoNombre, nombre: nuevoNombre } : r);
+                    const actualizados = actuales.map(r => r.id === id ? { ...r, nombre: nuevoNombre } : r);
                     dispatch({ type: "set_restaurants", payload: actualizados });
                     return true;
                 }
@@ -199,11 +199,12 @@ export default function useGlobalReducer() {
         getBookings: async (restauranteId) => {
             try {
                 if (!restauranteId) return;
+                const token = store.tokenOwner || store.tokenHostess;
                 const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurant/${restauranteId}/bookings`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${store.tokenOwner}`
+                        "Authorization": `Bearer ${token}`
                     }
                 });
                 if (resp.ok) {
@@ -215,71 +216,164 @@ export default function useGlobalReducer() {
             }
         },
 
-        createNewBooking: async (bookingData) => {
+        getMyBookings: async () => {
+    try {
+        const token = store.tokenClient || localStorage.getItem("tokenClient");
+        if (!token) return false; 
+
+        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/my-bookings`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (resp.ok) {
+            const data = await resp.json();
+            dispatch({ type: "set_client_bookings", payload: data }); 
+            return true;
+        }
+    } catch (error) {
+        console.error("Error:", error);
+    }
+    return false;
+},
+
+        cancelBooking: async (bookingId) => {
+    try {
+        const token = store.tokenClient || localStorage.getItem("tokenClient");
+        if (!token) {
+            console.error("No hay token de cliente para cancelar");
+            return false;
+        }
+
+        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/client/booking/${bookingId}/cancel`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (resp.ok) {
+            await actions.getMyBookings();
+            return true;
+        }
+    } catch (error) {
+        console.error("Error al cancelar la reserva:", error);
+    }
+    return false;
+},
+
+createNewBooking: async (bookingData) => {
             try {
-                const dataConEstado = { ...bookingData, estado: "pendiente" };
+                const token = store.tokenClient || localStorage.getItem("tokenClient") || store.tokenOwner || localStorage.getItem("tokenOwner");
+                
+                if (!token) {
+                    console.error("No hay token disponible para reservar");
+                    return false;
+                }
+
                 const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${store.tokenOwner}`,
+                        "Authorization": `Bearer ${token}`,
                         "Bypass-Tunnel-Reminder": "true"
                     },
-                    body: JSON.stringify(dataConEstado)
+                    body: JSON.stringify(bookingData)
                 });
+
                 if (resp.ok) {
-                    if (bookingData.restaurant_id || bookingData.restaurante_id) {
-                        actions.getBookings(bookingData.restaurant_id || bookingData.restaurante_id);
+                    if (localStorage.getItem("tokenClient")) {
+                        await actions.getMyBookings();
+                    } else {
+                        const restId = bookingData.restaurant_id || bookingData.restaurante_id;
+                        if (restId) await actions.getBookings(restId);
                     }
                     return true;
                 }
-            } catch (error) {
-                console.error("Error en el fetch de createNewBooking:", error);
-            }
+            } catch (error) { console.error(error); }
             return false;
         },
 
         deleteBooking: async (bookingId) => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking/${bookingId}`, {
-                    method: "DELETE",
-                    headers: { "Authorization": `Bearer ${store.tokenOwner}` }
-                });
-                if (response.ok) {
-                    const actuales = store.bookings || [];
-                    const nuevasReservas = actuales.filter(b => b.id !== bookingId);
-                    dispatch({ type: "set_bookings", payload: nuevasReservas });
-                    return true;
-                }
-            } catch (error) {
-                console.error("Error eliminando reserva:", error);
+    try {
+        const token = store.tokenOwner || localStorage.getItem("tokenOwner") || 
+                      store.tokenClient || localStorage.getItem("tokenClient");
+
+        if (!token) return false;
+
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking/${bookingId}`, {
+            method: "DELETE",
+            headers: { 
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
             }
+        });
+
+        if (response.ok) {
+            
+            if (store.clientBookings) {
+                const nuevasClient = store.clientBookings.filter(b => b.id !== bookingId);
+                dispatch({ type: "set_client_bookings", payload: nuevasClient });
+            }
+
+            if (store.bookings) {
+                const nuevasOwner = store.bookings.filter(b => b.id !== bookingId);
+                dispatch({ type: "set_bookings", payload: nuevasOwner });
+            }
+
+            return true;
+        } else {
+            const errorData = await response.json();
+            console.error("Error del servidor:", errorData);
             return false;
-        },
+        }
+    } catch (error) {
+        console.error("Error eliminando reserva:", error);
+        return false;
+    }
+},
 
         updateBookingStatus: async (bookingId, nuevoEstado) => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking/${bookingId}/status`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${store.tokenOwner}`
-                    },
-                    body: JSON.stringify({ estado: nuevoEstado })
-                });
-                if (response.ok) {
-                    const actuales = store.bookings || [];
-                    const actualizadas = actuales.map(b => 
-                        b.id === bookingId ? { ...b, estado: nuevoEstado.toLowerCase(), status: nuevoEstado.toLowerCase() } : b
-                    );
-                    dispatch({ type: "set_bookings", payload: actualizadas });
-                    return true;
-                }
-            } catch (error) {
-                console.error("Error actualizando estado de reserva:", error);
+    try {
+        const token = store.tokenClient || localStorage.getItem("tokenClient") || 
+                      store.tokenOwner || localStorage.getItem("tokenOwner") ||
+                      store.tokenHostess || localStorage.getItem("tokenHostess");
+
+        if (!token) return false;
+
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/booking/${bookingId}/status`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: nuevoEstado })
+        });
+
+        if (response.ok) {
+            const estadoNormalizado = nuevoEstado.toLowerCase();
+
+            if (store.clientBookings) {
+                const nuevasClient = store.clientBookings.map(b =>
+                    b.id === bookingId ? { ...b, estado: estadoNormalizado, status: estadoNormalizado } : b
+                );
+                dispatch({ type: "set_client_bookings", payload: nuevasClient });
             }
-            return false;
-        },
+
+            if (store.bookings) {
+                const nuevasOwner = store.bookings.map(b =>
+                    b.id === bookingId ? { ...b, estado: estadoNormalizado, status: estadoNormalizado } : b
+                );
+                dispatch({ type: "set_bookings", payload: nuevasOwner });
+            }
+
+            return true;
+        }
+    } catch (error) {
+        console.error("Error en updateBookingStatus:", error);
+    }
+    return false;
+},
 
         createItemVenta: async (itemData) => {
             try {
@@ -344,33 +438,29 @@ export default function useGlobalReducer() {
         },
 
         updateClientImage: async (new_url) => {
-    try {
-        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/update-client-image`, {
-            method: "PUT",
-            headers: { 
-                "Content-Type": "application/json",
-                // CORRECCIÓN: Usar el nombre de token que definiste en el login del cliente
-                "Authorization": "Bearer " + localStorage.getItem("tokenClient") 
-            },
-            body: JSON.stringify({ "image_url": new_url })
-        });
+            try {
+                const token = store.tokenClient || localStorage.getItem("tokenClient");
+                if (!token) return false;
 
-        if (resp.ok) {
-            // Actualizamos el estado global con la nueva imagen
-            dispatch({ 
-                type: "set_client_info", 
-                payload: { ...store.clientInfo, image_url: new_url } 
-            });
-            return true;
-        } else {
-            console.error("Error en la respuesta del servidor:", resp.status);
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/update-client-image`, {
+                    method: "PUT",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ "image_url": new_url })
+                });
+
+                if (resp.ok) {
+                    dispatch({ 
+                        type: "set_client_info", 
+                        payload: { ...store.clientInfo, image_url: new_url } 
+                    });
+                    return true;
+                }
+            } catch (error) { console.error(error); }
             return false;
-        }
-    } catch (error) {
-        console.error("Error al guardar la imagen en el backend", error);
-        return false;
-    }
-},
+        },
 
         getItemsBySale: async (saleId) => {
             try {

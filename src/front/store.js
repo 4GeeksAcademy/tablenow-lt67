@@ -26,7 +26,7 @@ export const initialStore = () => {
     tokenClient: tokenClient || null,
     authClient: !!tokenClient,
     clientInfo: (clientInfo && clientInfo !== "undefined") ? JSON.parse(clientInfo) : null,
-
+    clientBookings: [],
 
     // --- ESTADO GENERAL ---
     message: null,
@@ -146,11 +146,16 @@ export default function storeReducer(store, action = {}) {
       };
 
     case "set_client_info":
-    // Guardamos en localStorage para que la imagen persista al recargar
     localStorage.setItem("clientInfo", JSON.stringify(action.payload));
     return {
-        ...store, // Cambiado 'state' por 'store'
+        ...store, 
         clientInfo: action.payload
+    };
+
+   case "set_client_bookings":
+    return {
+        ...store,
+        clientBookings: action.payload // <-- Cambia "bookings" por "clientBookings"
     };
 
     case "set_item_ventas":
