@@ -272,7 +272,6 @@ def delete_owner(id):
 @api.route('/restaurants', methods=['GET'])
 def get_restaurantes():
     try:
-        # Esta sirve para todos: Dueños y Clientes
         restaurantes = Restaurante.query.all()
         return jsonify([r.serialize() for r in restaurantes]), 200
     except Exception as e:
@@ -284,8 +283,8 @@ def crear_restaurante():
     identity = get_jwt_identity()
     body = request.get_json()
     
-    if not body or "nombre" not in body:
-        return jsonify({"msg": "Falta el nombre del restaurante"}), 400
+    if not body or not body.get("nombre") or not body.get("image_url"):
+        return jsonify({"msg": "Nombre e imagen son obligatorios"}), 400
 
     try:
         nuevo_restaurante = Restaurante(
@@ -293,14 +292,19 @@ def crear_restaurante():
             direccion=body.get("direccion"),
             telefono=body.get("telefono"),
             capacidad_total=body.get("capacidad_total"),
-            image_url=body.get("image_url"), # <--- Importante para el futuro
+            image_url=body.get("image_url"),
             owner_id=int(identity) 
         )
+        
         db.session.add(nuevo_restaurante)
         db.session.commit()
+        
         return jsonify(nuevo_restaurante.serialize()), 201
+
     except Exception as e:
+        
         db.session.rollback()
+        print(f"Error al crear restaurante: {str(e)}") 
         return jsonify({"msg": "Error interno al crear", "error": str(e)}), 500
 
 @api.route('/restaurants/<int:id>', methods=['PUT'])
@@ -313,47 +317,48 @@ def update_restaurante(id):
         return jsonify({"msg": "No encontrado o sin permiso"}), 404
 
     try:
-        data = request.json
+        data = request.get_json()
+        if not data:
+            return jsonify({"msg": "No se enviaron datos"}), 400
+
         restaurante.nombre = data.get("nombre", restaurante.nombre)
         restaurante.direccion = data.get("direccion", restaurante.direccion)
         restaurante.telefono = data.get("telefono", restaurante.telefono)
-        restaurante.capacidad_total = data.get("capacidad_total", restaurante.capacidad_total)
+        
+        if "capacidad_total" in data and data["capacidad_total"] not in [None, ""]:
+            try:
+                restaurante.capacidad_total = int(data["capacidad_total"])
+            except ValueError:
+                return jsonify({"msg": "Capacidad total debe ser un número válido"}), 400
 
         db.session.commit()
         return jsonify(restaurante.serialize()), 200
+
     except Exception as e:
         db.session.rollback()
+        print(f"DEBUG ERROR: {str(e)}") 
         return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
 
 @api.route('/restaurants/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_restaurante(id):
     current_owner_id = get_jwt_identity()
-    # Verificamos que el restaurante exista y pertenezca al dueño actual
     restaurante = Restaurante.query.filter_by(id=id, owner_id=int(current_owner_id)).first()
 
     if not restaurante:
         return jsonify({"msg": "No se encontró el restaurante o no tienes permiso"}), 404
 
-    try:
-        # --- LIMPIEZA MANUAL (Como no hay cascade en el modelo) ---
-        
-        # 1. Borrar platos del menú
+    try:        
         Menu.query.filter_by(restaurante_id=id).delete()
         
-        # 2. Borrar reservas
         Reserva.query.filter_by(restaurante_id=id).delete()
         
-        # 3. Borrar hostess/personal
         Hostess.query.filter_by(restaurante_id=id).delete()
 
-        # 4. Borrar ventas (OJO: Esto fallará si la venta tiene ItemVenta, pero probemos así primero)
         Venta.query.filter_by(restaurante_id=id).delete()
 
-        # 5. Borrar mesas (si tienes el modelo Table)
         Table.query.filter_by(restaurante_id=id).delete()
-
-        # Finalmente, borramos el restaurante
+    
         db.session.delete(restaurante)
         db.session.commit()
         
@@ -361,7 +366,7 @@ def delete_restaurante(id):
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error al eliminar: {str(e)}") # Esto saldrá en tu consola de Python
+        print(f"Error al eliminar: {str(e)}") 
         return jsonify({
             "msg": "Error al eliminar el restaurante. Es posible que tenga registros de ventas activos.",
             "error": str(e)
@@ -375,26 +380,26 @@ def get_menus():
 
 @api.route('/menus', methods=['POST'])
 def create_menu():
-    # 1. Obtener datos y verificar que no sea None
+    
     data = request.get_json()
     print(f"DEBUG: Datos recibidos -> {data}") 
     
     if not data:
         return jsonify({"error": "No se recibió información en el cuerpo de la solicitud"}), 400
 
-    # 2. Extraer y validar restaurante_id
+    
     restaurante_id = data.get("restaurante_id")
     if not restaurante_id:
         return jsonify({"error": "Falta el campo obligatorio: restaurante_id"}), 400
 
-    # 3. Verificar si el restaurante existe antes de intentar crear el plato
+    
     restaurante = Restaurante.query.get(restaurante_id)
     if not restaurante:
         return jsonify({
             "error": f"El restaurante con ID {restaurante_id} no existe. Revisa los IDs disponibles en /api/restaurants"
-        }), 400 # Cambiado a 400 para que la terminal no te confunda con un 404 de ruta
+        }), 400 
 
-    # 4. Intentar crear el registro
+    
     try:
         nombre = data.get("nombre")
         precio = data.get("precio")
@@ -591,7 +596,6 @@ def crear_reserva():
             fecha=data.get("fecha"),
             hora=data.get("hora"),
             num_personas=data.get("num_personas"),
-            # Si viene id_mesa (panel owner) se guarda, si no (app cliente) queda en None
             id_mesa=data.get("id_mesa"), 
             restaurante_id=data.get("restaurante_id"),
             cliente_id=data.get("cliente_id"),
@@ -611,7 +615,7 @@ def crear_reserva():
 @jwt_required()
 def update_booking_status(booking_id):
     body = request.get_json()
-    # Acepta status o estado para evitar errores 422
+    
     nuevo_estado = body.get("status") or body.get("estado")
     
     if not nuevo_estado:
@@ -721,7 +725,7 @@ def update_host(host_id):
     host.email = body.get('email', host.email)
     host.phone_number = body.get('phone_number', host.phone_number)
     host.special_notes = body.get('special_notes', host.special_notes)
-    host.password = body.get('password', host.password) # No olvides el password
+    host.password = body.get('password', host.password) 
 
     host.total_visits = body.get('total_visits', host.total_visits)
     host.last_visit = body.get('last_visit', host.last_visit)
@@ -745,7 +749,7 @@ def delete_host(host_id):
         return jsonify({"message": "Error al eliminar el host", "error": str(e)}), 500
 
 # ======================================================
-# 🚀 FLUJO DE CLIENTE (Basado en Trello Ft-14 & Ft-15)
+# 🚀 FLUJO DE CLIENTE 
 # ======================================================
 
 @api.route('/signup-client', methods=['POST'])
@@ -762,7 +766,7 @@ def signup_client():
         email=email,
         phone=body.get("phone"),
         password=body.get("password"),
-        image_url=body.get("image_url"), # Para la tarea de imágenes
+        image_url=body.get("image_url"), 
         is_active=True
     )
     db.session.add(new_client)
@@ -777,7 +781,7 @@ def login_client():
     if client is None or client.password != body.get("password"):
         return jsonify({"msg": "Credenciales inválidas"}), 401
 
-    # Token con identidad de cliente
+    
     access_token = create_access_token(identity=str(client.id))
     return jsonify({
         "token": access_token,
@@ -785,19 +789,16 @@ def login_client():
         "client": client.serialize()
     }), 200
 
-# Cambia /client/ por /api/
+
 @api.route('/my-bookings', methods=['GET'])
 @jwt_required()
 def get_my_bookings():
     """ Obtiene solo las reservas del cliente que tiene la sesión iniciada """
     try:
-        # Obtenemos el ID del cliente desde el Token JWT
         client_id = get_jwt_identity()
         
-        # Filtramos en la base de datos
         reservas = Reserva.query.filter_by(cliente_id=client_id).all()
         
-        # Devolvemos la lista serializada
         return jsonify([r.serialize() for r in reservas]), 200
     except Exception as e:
         return jsonify({"msg": "Error al obtener mis reservas", "error": str(e)}), 500
@@ -815,15 +816,14 @@ def cancel_my_booking(booking_id):
     db.session.commit()
     return jsonify({"msg": "Reserva cancelada correctamente"}), 200
 
-@api.route('/update-client-image', methods=['PUT']) # <--- Cambia 'update-image' por 'update-client-image'
+@api.route('/update-client-image', methods=['PUT']) 
 @jwt_required()
 def update_client_image():
     identity = get_jwt_identity()
     body = request.get_json()
     image_url = body.get("image_url")
     
-    # IMPORTANTE: En el frontend no estás enviando 'user_type', 
-    # así que vamos a asegurar que busque al cliente directamente
+    
     user = Clients.query.get(identity)
     if user:
         user.image_url = image_url

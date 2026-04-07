@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 const NewHost = () => {
-    // Extraemos actions para poder usar getAllRestaurantsPublic
     const { store, actions } = useGlobalReducer();
     
     const [firstName, setFirstName] = useState("");
@@ -15,7 +14,7 @@ const NewHost = () => {
     const [lastVisit, setLastVisit] = useState("");
     const [specialNotes, setSpecialNotes] = useState("");
 
-    // --- EFECTO: Cargamos los restaurantes al montar el componente ---
+    
     useEffect(() => {
         actions.getAllRestaurantsPublic();
     }, []);
@@ -23,7 +22,7 @@ const NewHost = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Obtenemos el ID del primer restaurante disponible en el store
+        
         const restaurantId = store.restaurants && store.restaurants.length > 0 
             ? store.restaurants[0].id 
             : null;

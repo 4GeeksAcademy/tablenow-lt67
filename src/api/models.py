@@ -42,7 +42,6 @@ class Clients(db.Model):
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
-    # NUEVO CAMPO PARA LA IMAGEN
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
 
     def __repr__(self): return f"{self.name}"
@@ -53,7 +52,7 @@ class Clients(db.Model):
             "name": self.name, 
             "email": self.email, 
             "phone": self.phone,
-            "image_url": self.image_url # Lo agregamos aquí también
+            "image_url": self.image_url 
         }
 
 
@@ -78,7 +77,6 @@ class Restaurante(db.Model):
     telefono: Mapped[str] = mapped_column(String(20), nullable=True)
     capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True)
     owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
-    # NUEVO CAMPO PARA LA IMAGEN
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
     
 
@@ -90,7 +88,7 @@ class Restaurante(db.Model):
             "telefono": self.telefono,
             "capacidad_total": self.capacidad_total,
             "owner_id": self.owner_id,
-            "image_url": self.image_url, # Lo agregamos aquí también
+            "image_url": self.image_url, 
             "count_hostess": 0,
             "count_tables": 0
         }
@@ -175,14 +173,14 @@ class Reserva(db.Model):
     
     cliente_id: Mapped[int] = mapped_column(db.ForeignKey('clients.id'), nullable=False) 
     restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id"), nullable=False)
-    id_mesa: Mapped[int] = mapped_column(db.Integer, nullable=True) # El número de mesa del Excel
+    id_mesa: Mapped[int] = mapped_column(db.Integer, nullable=True) 
     
-    fecha: Mapped[str] = mapped_column(String(20), nullable=False) # 2026-03-20
-    hora: Mapped[str] = mapped_column(String(10), nullable=False)  # 19:00
+    fecha: Mapped[str] = mapped_column(String(20), nullable=False) 
+    hora: Mapped[str] = mapped_column(String(10), nullable=False)  
     num_personas: Mapped[int] = mapped_column(db.Integer, nullable=False)
     
-    estado: Mapped[str] = mapped_column(String(50), default="pendiente") # confirmada, cancelada
-    origen: Mapped[str] = mapped_column(String(50), default="online") # online, telefono
+    estado: Mapped[str] = mapped_column(String(50), default="pendiente") 
+    origen: Mapped[str] = mapped_column(String(50), default="online") 
     notas: Mapped[str] = mapped_column(String(250), nullable=True)
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -203,7 +201,7 @@ class Reserva(db.Model):
             "estado": self.estado,
             "origen": self.origen,
             "notas": self.notas,
-            "restaurante_id": self.restaurante_id, # Usamos el nombre de la columna
+            "restaurante_id": self.restaurante_id, 
             "nombre_restaurante": self.restaurante.nombre if self.restaurante else "No asignado",
             "cliente": {
                 "id": self.cliente.id,

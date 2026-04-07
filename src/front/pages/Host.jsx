@@ -25,7 +25,7 @@ const Host = () => {
       try {
         const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/host")
         const data = await response.json()
-        console.log("Datos recibidos del backend:", data[0]); // <--- MIRA ESTO EN LA CONSOLA
+        console.log("Datos recibidos del backend:", data[0]); 
         setHosts(data)
       } catch (error) {
         console.error("Error fetching hosts:", error);

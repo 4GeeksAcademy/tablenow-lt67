@@ -10,7 +10,6 @@ const Layout = () => {
         <div>
             <ScrollToTop>
                 <Navbar />
-                {/* Outlet es el espacio donde se renderizan las rutas hijas de routes.js */}
                 <Outlet /> 
             </ScrollToTop>
         </div>

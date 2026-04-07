@@ -5,7 +5,6 @@ export const initialStore = () => {
   const ownerInfo = localStorage.getItem("ownerInfo");
   const tokenHostess = localStorage.getItem("tokenHostess");
   const hostessInfo = localStorage.getItem("hostessInfo");
-  // --- NUEVO: RECUPERAR SESIÓN CLIENTE ---
   const tokenClient = localStorage.getItem("tokenClient");
   const clientInfo = localStorage.getItem("clientInfo");
 
@@ -155,7 +154,7 @@ export default function storeReducer(store, action = {}) {
    case "set_client_bookings":
     return {
         ...store,
-        clientBookings: action.payload // <-- Cambia "bookings" por "clientBookings"
+        clientBookings: action.payload 
     };
 
     case "set_item_ventas":

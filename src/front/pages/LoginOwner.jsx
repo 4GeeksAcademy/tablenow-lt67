@@ -7,7 +7,7 @@ export const LoginOwner = () => {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("owner"); // "owner" o "client"
+    const [role, setRole] = useState("owner"); 
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
@@ -37,7 +37,7 @@ export const LoginOwner = () => {
                     type: 'login_owner', 
                     payload: {
                         token: data.token,
-                        user: data.owner // Mapeo para el storeReducer
+                        user: data.owner 
                     } 
                 });
                 navigate("/owner-dashboard");
@@ -46,7 +46,7 @@ export const LoginOwner = () => {
                     type: 'login_client', 
                     payload: {
                         token: data.token,
-                        user: data.client // Mapeo para el storeReducer
+                        user: data.client 
                     } 
                 });
                 navigate("/client-dashboard"); 
@@ -61,7 +61,6 @@ export const LoginOwner = () => {
         <div className="container mt-5">
             <div className="row justify-content-center">
                 <div className="col-md-5 card shadow p-4 border-0">
-                    {/* Título dinámico */}
                     <h2 className="text-center mb-4 fw-bold">
                         TableNow {role === "owner" ? "(Owner)" : "(Cliente)"}
                     </h2>

@@ -155,27 +155,29 @@ export default function useGlobalReducer() {
             return false;
         },
 
-        updateRestaurant: async (id, nuevoNombre) => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurants/${id}`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${store.tokenOwner}`
-                    },
-                    body: JSON.stringify({ nombre: nuevoNombre })
-                });
-                if (response.ok) {
-                    const actuales = store.restaurants || [];
-                    const actualizados = actuales.map(r => r.id === id ? { ...r, nombre: nuevoNombre } : r);
-                    dispatch({ type: "set_restaurants", payload: actualizados });
-                    return true;
-                }
-            } catch (error) {
-                console.error("Error actualizando restaurante:", error);
-            }
-            return false;
-        },
+       updateRestaurant: async (id, datosActualizados) => { 
+    try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/restaurants/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${store.tokenOwner}`
+            },
+            body: JSON.stringify(datosActualizados) 
+        });
+        
+        if (response.ok) {
+            const data = await response.json(); 
+            const actuales = store.restaurants || [];
+            const actualizados = actuales.map(r => r.id === id ? data : r);
+            dispatch({ type: "set_restaurants", payload: actualizados });
+            return true;
+        }
+    } catch (error) {
+        console.error("Error actualizando restaurante:", error);
+    }
+    return false;
+},
 
         getOwnerClients: async () => {
             try {

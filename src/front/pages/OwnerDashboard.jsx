@@ -46,37 +46,35 @@ export const OwnerDashboard = () => {
                     </div>
 
                     {/* SECCIÓN: GESTIÓN DE EQUIPO (HOSTESS Y GERENTES) */}
-                    {/* SECCIÓN: GESTIÓN DE EQUIPO (HOSTESS Y GERENTES) */}
-<div className="col-md-6 col-lg-4">
-    <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-        <div className="card-body p-4">
-            <div className="d-flex align-items-center mb-3">
-                <div className="bg-info-subtle text-info p-2 rounded-3 me-3">
-                    <i className="fas fa-users-cog fa-xl"></i>
-                </div>
-                <h5 className="card-title mb-0 fw-bold">Gestión de Staff</h5>
-            </div>
-            <p className="text-muted small">Administra los accesos para tus Gerentes y personal de Hostess.</p>
+                    <div className="col-md-6 col-lg-4">
+                        <div className="card h-100 border-0 shadow-sm hover-shadow transition">
+                            <div className="card-body p-4">
+                                <div className="d-flex align-items-center mb-3">
+                            <div className="bg-info-subtle text-info p-2 rounded-3 me-3">
+                                <i className="fas fa-users-cog fa-xl"></i>
+                            </div>
+                            <h5 className="card-title mb-0 fw-bold">Gestión de Staff</h5>
+                            </div>
+                            <p className="text-muted small">Administra los accesos para tus Gerentes y personal de Hostess.</p>
             
-            <div className="d-grid gap-2 mt-4">
-                <Link to="/hosts" className="btn btn-primary btn-sm text-start ps-3 shadow-sm">
-                    <i className="fas fa-list me-2"></i> Ver Lista de Equipo
-                </Link>
+                            <div className="d-grid gap-2 mt-4">
+                                <Link to="/hosts" className="btn btn-primary btn-sm text-start ps-3 shadow-sm">
+                                    <i className="fas fa-list me-2"></i> Ver Lista de Equipo
+                                </Link>
 
-                <hr className="my-2 text-muted opacity-25" />
+                            <hr className="my-2 text-muted opacity-25" />
 
-                <Link to="/create-host" className="btn btn-outline-dark btn-sm text-start ps-3">
-                    <i className="fas fa-user-plus me-2 text-info"></i> Crear Nueva Hostess
-                </Link>
+                            <Link to="/create-host" className="btn btn-outline-dark btn-sm text-start ps-3">
+                                <i className="fas fa-user-plus me-2 text-info"></i> Crear Nueva Hostess
+                            </Link>
                 
-                <Link to="/new_gerente" className="btn btn-outline-dark btn-sm text-start ps-3">
-                    <i className="fas fa-plus me-2 text-success"></i> Nuevo Gerente
-                </Link>
-            </div>
-        </div>
-    </div>
-</div>
-
+                            <Link to="/new_gerente" className="btn btn-outline-dark btn-sm text-start ps-3">
+                                <i className="fas fa-plus me-2 text-success"></i> Nuevo Gerente
+                            </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {/* SECCIÓN: RESERVAS Y AGENDA */}
                     <div className="col-md-6 col-lg-4">
                         <div className="card h-100 border-0 shadow-sm border-start border-4 border-success hover-shadow transition">
@@ -115,7 +113,6 @@ export const OwnerDashboard = () => {
                 </div>
             </div>
 
-            {/* ESTILOS EXTRA EN LÍNEA */}
             <style>{`
                 .hover-shadow:hover {
                     transform: translateY(-5px);
