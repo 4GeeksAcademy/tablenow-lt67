@@ -43,7 +43,6 @@ class Clients(db.Model):
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
-    # --- NUEVOS CAMPOS ---
     latitud: Mapped[str] = mapped_column(String(200), nullable=True)
     longitud: Mapped[str] = mapped_column(String(200), nullable=True)
 
@@ -56,8 +55,8 @@ class Clients(db.Model):
             "email": self.email, 
             "phone": self.phone,
             "image_url": self.image_url,
-            "latitud": self.latitud,   # Agregado al serialize
-            "longitud": self.longitud  # Agregado al serialize
+            "latitud": self.latitud,   
+            "longitud": self.longitud  
         }
 
 
@@ -96,8 +95,8 @@ class Restaurante(db.Model):
             "capacidad_total": self.capacidad_total,
             "owner_id": self.owner_id,
             "image_url": self.image_url, 
-            "latitud": self.latitud,    # Agregado al serialize
-            "longitud": self.longitud,  # Agregado al serialize
+            "latitud": self.latitud,    
+            "longitud": self.longitud,  
             "count_hostess": 0,
             "count_tables": 0
         }

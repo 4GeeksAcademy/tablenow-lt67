@@ -26,6 +26,12 @@ export const CrearRestaurante = () => {
         }
     }, [store.tokenOwner]);
 
+    // --- NUEVA FUNCIÓN PARA CAPTURAR CAMBIOS DEL MAPA ---
+    const handleMapChange = (newLat, newLng) => {
+        setLatitud(newLat);
+        setLongitud(newLng);
+    };
+
     const getLocation = () => {
         if (!navigator.geolocation) {
             return alert("Tu navegador no soporta geolocalización");
@@ -166,8 +172,14 @@ export const CrearRestaurante = () => {
                                     {latitud ? "Ubicación Capturada" : "Capturar Ubicación Actual"}
                                 </button>
                                 {latitud && longitud && (
-                                    <div className="mb-2 rounded overflow-hidden border" style={{ height: "120px" }}>
-                                        <RestaurantMap lat={latitud} lng={longitud} nombre={nombre || "Local"} />
+                                    <div className="mb-2 rounded border" style={{ height: "120px", overflow: "visible" }}>
+                                        {/* MAPA ACTUALIZADO CON LA NUEVA PROP */}
+                                        <RestaurantMap 
+                                            lat={latitud} 
+                                            lng={longitud} 
+                                            nombre={nombre || "Local"} 
+                                            onLocationChange={handleMapChange}
+                                        />
                                     </div>
                                 )}
                             </div>

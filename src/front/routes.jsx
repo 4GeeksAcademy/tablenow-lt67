@@ -17,7 +17,7 @@ import GerenteDetail from "./pages/GerenteDetail";
 
 // CLIENTS
 import Clients from "./pages/Clients";
-import NewClient from "./pages/NewClient"; // IMPORTANTE: Importado como default
+import NewClient from "./pages/NewClient"; 
 import UpdateClient from "./pages/UpdateClient";
 import Client from "./pages/Client";
 

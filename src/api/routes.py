@@ -293,8 +293,8 @@ def crear_restaurante():
             telefono=body.get("telefono"),
             capacidad_total=body.get("capacidad_total"),
             image_url=body.get("image_url"),
-            latitud=body.get("latitud"),  # <-- Nuevo: Captura latitud
-            longitud=body.get("longitud"), # <-- Nuevo: Captura longitud
+            latitud=body.get("latitud"),  
+            longitud=body.get("longitud"), 
             owner_id=int(identity) 
         )
         
@@ -325,7 +325,6 @@ def update_restaurante(id):
         restaurante.nombre = data.get("nombre", restaurante.nombre)
         restaurante.direccion = data.get("direccion", restaurante.direccion)
         restaurante.telefono = data.get("telefono", restaurante.telefono)
-        # --- NUEVOS CAMPOS ---
         restaurante.latitud = data.get("latitud", restaurante.latitud)
         restaurante.longitud = data.get("longitud", restaurante.longitud)
         
@@ -771,8 +770,8 @@ def signup_client():
         phone=body.get("phone"),
         password=body.get("password"),
         image_url=body.get("image_url"), 
-        latitud=body.get("latitud"),   # <-- Nuevo
-        longitud=body.get("longitud"), # <-- Nuevo
+        latitud=body.get("latitud"),   
+        longitud=body.get("longitud"), 
         is_active=True
     )
     db.session.add(new_client)
