@@ -206,3 +206,21 @@ class Reserva(db.Model):
             "phone": self.cliente.phone
         } if self.cliente else None
     }
+
+class Empleado(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    phone: Mapped[str] = mapped_column(String(120), nullable=False)
+    rol: Mapped[str] = mapped_column(String(40), nullable=False)
+    state: Mapped[str] = mapped_column(String(30), nullable=True)
+    
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "phone": self.phone,
+            "rol": self.rol,
+            "state": self.state
+           
+        }

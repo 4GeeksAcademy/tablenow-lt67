@@ -1,7 +1,7 @@
 import os
 from flask_admin import Admin
 from flask_admin.theme import Bootstrap4Theme
-from api.models import db, User, Gerente, Clients, Owner, Restaurante, Menu, Venta, ItemVenta, Reserva
+from api.models import db, User, Gerente, Clients, Owner, Restaurante, Menu, Venta, ItemVenta, Reserva, Empleado
 from flask_admin.contrib.sqla import ModelView
 from wtforms.validators import DataRequired 
 
@@ -38,3 +38,5 @@ def setup_admin(app):
     admin.add_view(VentaModelView(Venta, db.session))
     admin.add_view(ModelView(ItemVenta, db.session))
     admin.add_view(ReservaModelView(Reserva, db.session))
+
+    admin.add_view(ModelView(Empleado, db.session))

@@ -41,6 +41,10 @@ import { OwnerDashboard } from "./pages/OwnerDashboard";
 import { CrearRestaurante } from "./pages/CrearRestaurante";
 import { Booking } from "./pages/Booking";
 import { NewBooking } from "./pages/NewBooking.jsx";
+import Empleado from "./pages/Empleado.jsx";
+import CreateEmpleado from "./pages/CreateEmpleado.jsx";
+import EditEmpleado from "./pages/EditEmpleado.jsx";
+import EmpleadoDetail from "./pages/EmpleadoDetail.jsx";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -87,6 +91,12 @@ export const router = createBrowserRouter(
       <Route path="/crear-host" element={<h1>Página Crear Hostess</h1>} />
       <Route path="/booking" element={<Booking />} />
       <Route element={<NewBooking />} path="/new-booking" />
+
+      {/* Empleados */}
+      <Route path="/empleado" element={<Empleado />} />
+      <Route path="/crear-empleado" element={<CreateEmpleado/>} />
+      <Route path="/edit-empleado/:id" element={<EditEmpleado/>} />
+      <Route path="/empleado-detail/:id" element={<EmpleadoDetail />} />
     </Route>
   )
 );

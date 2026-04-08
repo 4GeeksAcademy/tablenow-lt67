@@ -82,6 +82,7 @@ export const Home = () => {
 			<button className="btn btn-primary" onClick={()=>navigate("/owners")}>Owners</button>
       <button className="btn btn-success" onClick={() => navigate("/new-sale")}>+ Nueva Venta</button>
       <button className="btn btn-info" onClick={() => navigate("/sales")}>Historial Ventas</button>
+      <button className="btn btn-info" onClick={() => navigate("/empleado")}>Employees</button>
     </div>
 	);
 };

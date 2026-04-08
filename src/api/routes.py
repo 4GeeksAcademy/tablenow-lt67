@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva
+from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Empleado
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token
@@ -629,5 +629,120 @@ def login_owner():
         "name": owner.name,  
         "id": owner.id
     }), 200
+
+# =========================
+# EMPLEADOS
+# =========================
+
+@api.route('/empleado', methods=['GET'])
+def get_empleados():
+    empleados = Empleado.query.all()
+    print(empleados)
+    respuesta = list(map(lambda empleado: empleado.serialize(), empleados))
+    return jsonify(respuesta), 200
+
+@api.route('/empleado/<int:empleado_id>', methods=['GET'])
+def get_empleado(empleado_id):
+    empleado = Empleado.query.filter_by(id=empleado_id).first()
+    if empleado is None:
+        return jsonify({
+            "message": "no se encontro al empleado con el id: " + str(empleado_id)
+        })
+    return jsonify(empleado.serialize()), 200
+
+@api.route('/empleado/<int:empleado_id>', methods=['DELETE'])
+def delete_empleado(empleado_id):
+    empleado = Empleado.query.filter_by(id=empleado_id).first()
+    if empleado is None:
+        return {
+            "message": "no se encontro al empleado con el id: " + str(empleado_id)
+        },400
+    print(empleado.serialize())
+    db.session.delete(empleado)
+    db.session.commit()
+    response_body = {
+        "message": "se elimino al empleado"
+    }
+
+    return jsonify(response_body), 200
+
+@api.route('/empleado', methods=['POST'])
+def create_empleado():
+    body = request.get_json()
+    if "name" not in body or "email" not in body or "phone" not in body or "rol" not in body or "state" not in body or "password" not in body:
+        return jsonify({
+            "message": "faltan campos obligatorios"
+        }),400
+
+    nuevo_empleado = Empleado(
+        name=body["name"],
+        email=body["email"],
+        phone=body["phone"],
+        rol=body["rol"],
+        state=body["state"],
+        password=body["password"]
+    )
+    db.session.add(nuevo_empleado)
+    db.session.commit()
+    response_body = {
+        "message": "se creo al empleado",
+        "empleado": nuevo_empleado.serialize()
+    }
+
+    return jsonify(response_body), 201
+
+@api.route("/empleado", methods=["POST"])
+def login_empleado():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+    empleado = Empleado.query.filter_by(email=email).first()
+    if empleado and empleado.password == password:
+        return jsonify({
+            "message": "Login exitoso",
+            "empleado": empleado.serialize()
+        }), 200
+ 
+    return jsonify({"message": "Credenciales inválidas"}), 401
+
+ 
+
+
+@api.route('/empleado/<int:empleado_id>', methods=['PUT'])
+def update_empleado(empleado_id):
+    empleado = Empleado.query.get(empleado_id)
+    body = request.get_json()
+
+    if empleado is None:
+        return jsonify({
+            "message": "no se encontro al empleado con el id: " + str(empleado_id)
+        }),400
+    
+    if "name" in body:
+        empleado.name = body ["name"]
+
+    if "email" in body:
+        empleado.email = body ["email"]
+
+    if "phone" in body:
+        empleado.phone = body ["phone"]
+
+    if "rol" in body:
+        empleado.rol = body ["rol"]
+
+    if "state" in body:
+        empleado.state = body ["state"]
+
+    if "password" in body:
+        empleado.password = body ["password"]
+
+    db.session.commit()
+    response_body = {
+        "message": "se actualizo al empleado",
+        "empleado": empleado.serialize()
+    }
+
+    return jsonify(response_body), 200
+
 
 
