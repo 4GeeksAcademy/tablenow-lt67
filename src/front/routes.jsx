@@ -50,6 +50,7 @@ import HostDetails from "./pages/HostDetails";
 
 // CLIENT DASHBOARD & AUTH (Importado con llaves según tu archivo anterior)
 import { ClientDashboard } from "./pages/ClientDashboard";
+import { VistaBusqueda } from "./pages/VistaBusqueda.jsx"; // <--- AGREGA ESTA LÍNEA
 
 
 export const router = createBrowserRouter(
@@ -72,6 +73,7 @@ export const router = createBrowserRouter(
       {/* CLIENTS (Vistas Admin) */}
       <Route path="/clients" element={<Clients />} />
       <Route path="/new_client" element={<NewClient />} />
+      <Route path="/buscar" element={<VistaBusqueda />} /> {/* <--- COPIA ESTA LÍNEA */}
       <Route path="/client/:clientId" element={<Client />} />
       <Route path="/edit_client/:clientId" element={<UpdateClient />} />
 

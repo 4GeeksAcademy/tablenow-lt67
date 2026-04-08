@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // Importación necesaria para el botón
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 export const ClientDashboard = () => {
@@ -100,6 +101,17 @@ export const ClientDashboard = () => {
                             <button className="btn btn-outline-primary" onClick={() => actions.updateClientImage(tempUrl)}>Guardar</button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* --- BOTÓN DE BÚSQUEDA GEOLOCALIZADA --- */}
+            <div className="card shadow-sm mb-5 border-0 bg-light rounded-4">
+                <div className="card-body text-center py-4">
+                    <h4 className="fw-bold">¿Tienes hambre, {store.clientInfo?.name?.split(' ')[0] || "Diego"}?</h4>
+                    <p className="text-muted">Encuentra los mejores restaurantes a pocos pasos de tu ubicación actual.</p>
+                    <Link to="/buscar" className="btn btn-primary btn-lg px-5 shadow rounded-pill">
+                        <i className="fas fa-search-location me-2"></i>Explorar Mapa Cercano
+                    </Link>
                 </div>
             </div>
 

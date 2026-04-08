@@ -293,6 +293,8 @@ def crear_restaurante():
             telefono=body.get("telefono"),
             capacidad_total=body.get("capacidad_total"),
             image_url=body.get("image_url"),
+            latitud=body.get("latitud"),  # <-- Nuevo: Captura latitud
+            longitud=body.get("longitud"), # <-- Nuevo: Captura longitud
             owner_id=int(identity) 
         )
         
@@ -302,7 +304,6 @@ def crear_restaurante():
         return jsonify(nuevo_restaurante.serialize()), 201
 
     except Exception as e:
-        
         db.session.rollback()
         print(f"Error al crear restaurante: {str(e)}") 
         return jsonify({"msg": "Error interno al crear", "error": str(e)}), 500
@@ -324,6 +325,9 @@ def update_restaurante(id):
         restaurante.nombre = data.get("nombre", restaurante.nombre)
         restaurante.direccion = data.get("direccion", restaurante.direccion)
         restaurante.telefono = data.get("telefono", restaurante.telefono)
+        # --- NUEVOS CAMPOS ---
+        restaurante.latitud = data.get("latitud", restaurante.latitud)
+        restaurante.longitud = data.get("longitud", restaurante.longitud)
         
         if "capacidad_total" in data and data["capacidad_total"] not in [None, ""]:
             try:
@@ -338,7 +342,7 @@ def update_restaurante(id):
         db.session.rollback()
         print(f"DEBUG ERROR: {str(e)}") 
         return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
-
+    
 @api.route('/restaurants/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_restaurante(id):
@@ -767,6 +771,8 @@ def signup_client():
         phone=body.get("phone"),
         password=body.get("password"),
         image_url=body.get("image_url"), 
+        latitud=body.get("latitud"),   # <-- Nuevo
+        longitud=body.get("longitud"), # <-- Nuevo
         is_active=True
     )
     db.session.add(new_client)

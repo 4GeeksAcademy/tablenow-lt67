@@ -43,6 +43,9 @@ class Clients(db.Model):
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
+    # --- NUEVOS CAMPOS ---
+    latitud: Mapped[str] = mapped_column(String(200), nullable=True)
+    longitud: Mapped[str] = mapped_column(String(200), nullable=True)
 
     def __repr__(self): return f"{self.name}"
 
@@ -52,7 +55,9 @@ class Clients(db.Model):
             "name": self.name, 
             "email": self.email, 
             "phone": self.phone,
-            "image_url": self.image_url 
+            "image_url": self.image_url,
+            "latitud": self.latitud,   # Agregado al serialize
+            "longitud": self.longitud  # Agregado al serialize
         }
 
 
@@ -78,7 +83,9 @@ class Restaurante(db.Model):
     capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True)
     owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
-    
+    # --- NUEVOS CAMPOS ---
+    latitud: Mapped[str] = mapped_column(String(200), nullable=True)
+    longitud: Mapped[str] = mapped_column(String(200), nullable=True)
 
     def serialize(self): 
         return {
@@ -89,6 +96,8 @@ class Restaurante(db.Model):
             "capacidad_total": self.capacidad_total,
             "owner_id": self.owner_id,
             "image_url": self.image_url, 
+            "latitud": self.latitud,    # Agregado al serialize
+            "longitud": self.longitud,  # Agregado al serialize
             "count_hostess": 0,
             "count_tables": 0
         }
