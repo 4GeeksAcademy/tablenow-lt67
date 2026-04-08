@@ -17,7 +17,7 @@ import GerenteDetail from "./pages/GerenteDetail";
 
 // CLIENTS
 import Clients from "./pages/Clients";
-import NewClient from "./pages/NewClient";
+import NewClient from "./pages/NewClient"; 
 import UpdateClient from "./pages/UpdateClient";
 import Client from "./pages/Client";
 
@@ -46,6 +46,17 @@ import CreateEmpleado from "./pages/CreateEmpleado.jsx";
 import EditEmpleado from "./pages/EditEmpleado.jsx";
 import EmpleadoDetail from "./pages/EmpleadoDetail.jsx";
 
+//HOST
+import Host from "./pages/Host";
+import NewHost from "./pages/NewHost";
+import EditHost from "./pages/EditHost";
+import HostDetails from "./pages/HostDetails";
+
+// CLIENT DASHBOARD & AUTH (Importado con llaves según tu archivo anterior)
+import { ClientDashboard } from "./pages/ClientDashboard";
+import { VistaBusqueda } from "./pages/VistaBusqueda.jsx"; // <--- AGREGA ESTA LÍNEA
+
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
@@ -63,9 +74,10 @@ export const router = createBrowserRouter(
       <Route path="/edit_gerente/:id" element={<EditGerente />} />
       <Route path="/gerente/:id" element={<GerenteDetail />} />
 
-      {/* CLIENTS */}
+      {/* CLIENTS (Vistas Admin) */}
       <Route path="/clients" element={<Clients />} />
       <Route path="/new_client" element={<NewClient />} />
+      <Route path="/buscar" element={<VistaBusqueda />} /> {/* <--- COPIA ESTA LÍNEA */}
       <Route path="/client/:clientId" element={<Client />} />
       <Route path="/edit_client/:clientId" element={<UpdateClient />} />
 
@@ -83,20 +95,32 @@ export const router = createBrowserRouter(
       <Route path="/new-sale" element={<NewSale />} />
       <Route path="/add-items/:saleId" element={<AddItemsToSale />} />
 
-      {/* LOGIN OWNER */}
-      <Route path="/login-owner" element={<LoginOwner />} />
+      {/* LOGIN & DASHBOARDS */}
+      <Route path="/login-owner" element={<LoginOwner />} /> 
       <Route path="/owner-dashboard" element={<OwnerDashboard />} />
       
+      {/* RUTAS ESPECÍFICAS DE CLIENTE */}
+      <Route path="/client-dashboard" element={<ClientDashboard />} />
+      <Route path="/signup-client" element={<NewClient />} /> 
+
+      {/* GESTIÓN DE RESTAURANTE */}
       <Route path="/crear-restaurante" element={<CrearRestaurante />} />
       <Route path="/crear-host" element={<h1>Página Crear Hostess</h1>} />
       <Route path="/booking" element={<Booking />} />
       <Route element={<NewBooking />} path="/new-booking" />
 
-      {/* Empleados */}
+      {/* Empleados (TUS RUTAS) */}
       <Route path="/empleado" element={<Empleado />} />
       <Route path="/crear-empleado" element={<CreateEmpleado/>} />
       <Route path="/edit-empleado/:id" element={<EditEmpleado/>} />
       <Route path="/empleado-detail/:id" element={<EmpleadoDetail />} />
+
+      {/* Host */}
+      <Route path="/hosts" element={<Host />} />
+      <Route path="/create-host" element={<NewHost />} />
+      <Route path="/view-host/:id" element={<HostDetails />} />
+      <Route path="/edit-host/:id" element={<EditHost />} />
+
     </Route>
   )
 );

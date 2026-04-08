@@ -115,10 +115,10 @@ export const NewSale = () => {
                     <select name="cliente_id" className="form-select" onChange={handleChange} required value={formData.cliente_id}>
                         <option value="">Select a Client</option>
                         {store.clients?.map((client) => (
-    <option key={client.id} value={client.id}>
-        ID: {client.id} - {client.name} ({client.email})
-    </option>
-))}
+                            <option key={client.id} value={client.id}>
+                                ID: {client.id} - {client.name} ({client.email})
+                            </option>
+                        ))}
                     </select>
                 </div>
 

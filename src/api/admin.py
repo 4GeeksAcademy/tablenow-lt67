@@ -1,7 +1,7 @@
 import os
 from flask_admin import Admin
 from flask_admin.theme import Bootstrap4Theme
-from api.models import db, User, Gerente, Clients, Owner, Restaurante, Menu, Venta, ItemVenta, Reserva, Empleado
+from api.models import db, User, Gerente, Clients, Owner, Restaurante, Menu, Venta, ItemVenta, Reserva, Empleado, Hostess, Table, Waitlist
 from flask_admin.contrib.sqla import ModelView
 from wtforms.validators import DataRequired 
 
@@ -23,17 +23,22 @@ class ReservaModelView(ModelView):
 class VentaModelView(ModelView):
     column_list = ['id', 'total', 'payment_method', 'status', 'restaurante']
 
+
 def setup_admin(app):
     app.secret_key = os.environ.get('FLASK_APP_KEY', 'sample key')
     admin = Admin(app, name='TableNow Admin', theme=Bootstrap4Theme(swatch='cerulean'))
 
+    # Usuarios y Roles
     admin.add_view(ModelView(User, db.session))
     admin.add_view(ModelView(Gerente, db.session))
     admin.add_view(ModelView(Clients, db.session))
     admin.add_view(ModelView(Owner, db.session))
     
-    admin.add_view(RestauranteModelView(Restaurante, db.session)) 
+    admin.add_view(ModelView(Hostess, db.session)) 
+    admin.add_view(ModelView(Table, db.session))   
+    admin.add_view(ModelView(Waitlist, db.session)) 
     
+    admin.add_view(RestauranteModelView(Restaurante, db.session)) 
     admin.add_view(ModelView(Menu, db.session))
     admin.add_view(VentaModelView(Venta, db.session))
     admin.add_view(ModelView(ItemVenta, db.session))

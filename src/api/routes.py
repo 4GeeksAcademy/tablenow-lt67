@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Empleado
+from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Hostess, Table, Waitlist, Empleado
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token
@@ -269,29 +269,6 @@ def delete_owner(id):
 # =========================
 # CRUD MENU & RESTAURANTE
 # =========================
-@api.route('/restaurants', methods=['POST']) 
-@jwt_required()
-def crear_restaurante():
-    identity = get_jwt_identity()
-    body = request.get_json()
-    if not body or "nombre" not in body:
-        return jsonify({"msg": "Falta el nombre"}), 400
-
-    try:
-        nuevo_restaurante = Restaurante(
-            nombre=body["nombre"],
-            direccion=body.get("direccion"),
-            telefono=body.get("telefono"),
-            capacidad_total=body.get("capacidad_total"),
-            owner_id=int(identity) 
-        )
-        db.session.add(nuevo_restaurante)
-        db.session.commit()
-        return jsonify(nuevo_restaurante.serialize()), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Error interno", "error": str(e)}), 500
-
 @api.route('/restaurants', methods=['GET'])
 def get_restaurantes():
     try:
@@ -299,6 +276,37 @@ def get_restaurantes():
         return jsonify([r.serialize() for r in restaurantes]), 200
     except Exception as e:
         return jsonify({"msg": "Error al obtener restaurantes", "error": str(e)}), 500
+
+@api.route('/restaurants', methods=['POST']) 
+@jwt_required()
+def crear_restaurante():
+    identity = get_jwt_identity()
+    body = request.get_json()
+    
+    if not body or not body.get("nombre") or not body.get("image_url"):
+        return jsonify({"msg": "Nombre e imagen son obligatorios"}), 400
+
+    try:
+        nuevo_restaurante = Restaurante(
+            nombre=body["nombre"],
+            direccion=body.get("direccion"),
+            telefono=body.get("telefono"),
+            capacidad_total=body.get("capacidad_total"),
+            image_url=body.get("image_url"),
+            latitud=body.get("latitud"),  
+            longitud=body.get("longitud"), 
+            owner_id=int(identity) 
+        )
+        
+        db.session.add(nuevo_restaurante)
+        db.session.commit()
+        
+        return jsonify(nuevo_restaurante.serialize()), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al crear restaurante: {str(e)}") 
+        return jsonify({"msg": "Error interno al crear", "error": str(e)}), 500
 
 @api.route('/restaurants/<int:id>', methods=['PUT'])
 @jwt_required()
@@ -310,18 +318,30 @@ def update_restaurante(id):
         return jsonify({"msg": "No encontrado o sin permiso"}), 404
 
     try:
-        data = request.json
+        data = request.get_json()
+        if not data:
+            return jsonify({"msg": "No se enviaron datos"}), 400
+
         restaurante.nombre = data.get("nombre", restaurante.nombre)
         restaurante.direccion = data.get("direccion", restaurante.direccion)
         restaurante.telefono = data.get("telefono", restaurante.telefono)
-        restaurante.capacidad_total = data.get("capacidad_total", restaurante.capacidad_total)
+        restaurante.latitud = data.get("latitud", restaurante.latitud)
+        restaurante.longitud = data.get("longitud", restaurante.longitud)
+        
+        if "capacidad_total" in data and data["capacidad_total"] not in [None, ""]:
+            try:
+                restaurante.capacidad_total = int(data["capacidad_total"])
+            except ValueError:
+                return jsonify({"msg": "Capacidad total debe ser un número válido"}), 400
 
         db.session.commit()
         return jsonify(restaurante.serialize()), 200
+
     except Exception as e:
         db.session.rollback()
+        print(f"DEBUG ERROR: {str(e)}") 
         return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
-
+    
 @api.route('/restaurants/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_restaurante(id):
@@ -329,15 +349,31 @@ def delete_restaurante(id):
     restaurante = Restaurante.query.filter_by(id=id, owner_id=int(current_owner_id)).first()
 
     if not restaurante:
-        return jsonify({"msg": "No se encontró el restaurante"}), 404
+        return jsonify({"msg": "No se encontró el restaurante o no tienes permiso"}), 404
 
-    try:
+    try:        
+        Menu.query.filter_by(restaurante_id=id).delete()
+        
+        Reserva.query.filter_by(restaurante_id=id).delete()
+        
+        Hostess.query.filter_by(restaurante_id=id).delete()
+
+        Venta.query.filter_by(restaurante_id=id).delete()
+
+        Table.query.filter_by(restaurante_id=id).delete()
+    
         db.session.delete(restaurante)
         db.session.commit()
-        return jsonify({"msg": "Eliminado correctamente"}), 200
+        
+        return jsonify({"msg": "Restaurante y todos sus datos asociados eliminados"}), 200
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
+        print(f"Error al eliminar: {str(e)}") 
+        return jsonify({
+            "msg": "Error al eliminar el restaurante. Es posible que tenga registros de ventas activos.",
+            "error": str(e)
+        }), 500
 
 @api.route('/menus', methods=['GET'])
 @api.route('/menu', methods=['GET']) 
@@ -347,30 +383,53 @@ def get_menus():
 
 @api.route('/menus', methods=['POST'])
 def create_menu():
-    data = request.json
+    
+    data = request.get_json()
     print(f"DEBUG: Datos recibidos -> {data}") 
     
+    if not data:
+        return jsonify({"error": "No se recibió información en el cuerpo de la solicitud"}), 400
+
+    
+    restaurante_id = data.get("restaurante_id")
+    if not restaurante_id:
+        return jsonify({"error": "Falta el campo obligatorio: restaurante_id"}), 400
+
+    
+    restaurante = Restaurante.query.get(restaurante_id)
+    if not restaurante:
+        return jsonify({
+            "error": f"El restaurante con ID {restaurante_id} no existe. Revisa los IDs disponibles en /api/restaurants"
+        }), 400 
+
+    
     try:
-        if not data.get("nombre") or not data.get("precio") or not data.get("restaurante_id"):
-            return jsonify({"error": "Faltan campos obligatorios (nombre, precio o restaurante_id)"}), 400
+        nombre = data.get("nombre")
+        precio = data.get("precio")
+
+        if not nombre or not precio:
+            return jsonify({"error": "Faltan campos obligatorios: nombre o precio"}), 400
 
         nuevo_menu = Menu(
-            nombre=data.get("nombre"),
+            nombre=nombre,
             categoria=data.get("categoria"),
-            precio=float(data.get("precio")), 
-            restaurante_id=data.get("restaurante_id"),
+            precio=float(precio), 
+            restaurante_id=int(restaurante_id),
             disponible=data.get("disponible", True)
         )
         
         db.session.add(nuevo_menu)
         db.session.commit()
+        
         return jsonify(nuevo_menu.serialize()), 201
 
+    except ValueError:
+        return jsonify({"error": "El precio debe ser un número válido"}), 400
     except Exception as e:
         db.session.rollback() 
-        print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") # Esto es vital para debuguear
-        return jsonify({"error": "No se pudo crear el plato. Revisa si el restaurante_id existe.", "details": str(e)}), 500
-
+        print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") 
+        return jsonify({"error": "Error interno del servidor", "details": str(e)}), 500
+    
 @api.route('/menus/<int:id>', methods=['PUT'])
 def update_menu(id):
     menu = Menu.query.get(id)
@@ -532,12 +591,15 @@ def get_all_bookings():
 @api.route('/booking', methods=['POST'])
 def crear_reserva():
     data = request.json
+    if not data:
+        return jsonify({"msg": "Faltan datos"}), 400
+        
     try:
         nueva_reserva = Reserva(
             fecha=data.get("fecha"),
             hora=data.get("hora"),
             num_personas=data.get("num_personas"),
-            id_mesa=data.get("id_mesa"),
+            id_mesa=data.get("id_mesa"), 
             restaurante_id=data.get("restaurante_id"),
             cliente_id=data.get("cliente_id"),
             notas=data.get("notas"),
@@ -552,46 +614,40 @@ def crear_reserva():
         return jsonify({"msg": "Error al crear reserva", "error": str(e)}), 500
 
 
-@api.route('/booking/<int:id>/status', methods=['PUT'])
+@api.route('/booking/<int:booking_id>/status', methods=['PUT'])
 @jwt_required()
-def cambiar_status_reserva(id):
-    """ Permite al Owner confirmar, cancelar o completar una reserva """
-    reserva = Reserva.query.get(id)
-    if not reserva:
-        return jsonify({"msg": "Reserva no encontrada"}), 404
+def update_booking_status(booking_id):
+    body = request.get_json()
     
-    try:
-        data = request.json
-        reserva.estado = data.get("estado", reserva.estado)
-        db.session.commit()
-        return jsonify(reserva.serialize()), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Error al actualizar estado", "error": str(e)}), 500
+    nuevo_estado = body.get("status") or body.get("estado")
+    
+    if not nuevo_estado:
+        return jsonify({"msg": "Debes proporcionar un estado o status"}), 400
 
-
-@api.route('/booking/<int:id>', methods=['DELETE'])
-@jwt_required()
-def eliminar_reserva(id):
-    """ Elimina permanentemente una reserva """
-    current_owner_id = get_jwt_identity()
-    reserva = Reserva.query.get(id)
-
+    reserva = Reserva.query.get(booking_id)
     if not reserva:
         return jsonify({"msg": "Reserva no encontrada"}), 404
 
-    restaurante = Restaurante.query.filter_by(id=reserva.restaurante_id, owner_id=int(current_owner_id)).first()
+    reserva.estado = nuevo_estado
+    db.session.commit()
+    return jsonify(reserva.serialize()), 200
+
+
+@api.route('/booking/<int:booking_id>', methods=['DELETE'])
+@jwt_required()
+def delete_booking(booking_id):
+    reserva = Reserva.query.get(booking_id)
     
-    if not restaurante:
-        return jsonify({"msg": "No tienes permiso para eliminar esta reserva"}), 403
+    if not reserva:
+        return jsonify({"msg": "Reserva no encontrada"}), 404
 
     try:
         db.session.delete(reserva)
         db.session.commit()
-        return jsonify({"msg": "Reserva eliminada correctamente"}), 200
+        return jsonify({"msg": "Reserva eliminada con éxito"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error al eliminar reserva", "error": str(e)}), 500
+        return jsonify({"msg": "Error al eliminar", "error": str(e)}), 500
 
 # =========================
 # LOGIN-OWNER
@@ -607,27 +663,135 @@ def get_owner_restaurants():
 @api.route('/login-owner', methods=['POST'])
 def login_owner():
     body = request.get_json()
-    
-    if body is None:
-        return jsonify({"msg": "Body must be a JSON"}), 400
-        
-    email = body.get("email")
-    password = body.get("password")
-
-    owner = Owner.query.filter_by(email=email).first()
-    
-    if owner is None:
-        return jsonify({"msg": "Owner not found"}), 404
-        
-    if owner.password != password:
-        return jsonify({"msg": "Invalid credentials"}), 401
+    owner = Owner.query.filter_by(email=body.get("email")).first()
+    if owner is None or owner.password != body.get("password"):
+        return jsonify({"msg": "Credenciales inválidas"}), 401
     
     access_token = create_access_token(identity=str(owner.id))
     return jsonify({
         "token": access_token,
-        "email": owner.email,
-        "name": owner.name,  
-        "id": owner.id
+        "role": "owner",
+        "id": owner.id,
+        "name": owner.name
+    }), 200
+
+# ==========================================
+# RUTAS (Adaptadas a Hostess)
+# ==========================================
+
+@api.route('/host', methods=['GET'])
+def get_hosts():
+    hosts = Hostess.query.all()
+    respuesta = list(map(lambda host: host.serialize(), hosts))
+    return jsonify(respuesta), 200
+
+@api.route('/host/<int:host_id>', methods=['GET'])
+def get_host(host_id):
+    host = Hostess.query.filter_by(id=host_id).first()
+    if host is None:
+        return jsonify({"message": f"no se encontro el host con el id: {host_id}"}), 404
+    return jsonify(host.serialize()), 200
+
+@api.route('/host', methods=['POST'])
+def create_host():
+    body = request.get_json()
+    
+    new_host = Hostess(
+        first_name=body['first_name'],
+        last_name=body['last_name'],
+        email=body['email'],
+        password=body['password'],  
+        phone_number=body['phone_number'],
+        special_notes=body.get('special_notes'),
+        
+        total_visits=body.get('total_visits', 0), 
+        last_visit=body.get('last_visit'),
+        
+        restaurante_id=body['restaurante_id']
+    )
+    
+    db.session.add(new_host)
+    db.session.commit()
+    
+    return jsonify(new_host.serialize()), 201
+
+@api.route('/host/<int:host_id>', methods=['PUT'])
+def update_host(host_id):
+    host = Hostess.query.get(host_id)
+    if not host:
+        return jsonify({"message": "Host not found"}), 404
+        
+    body = request.get_json()
+    
+    host.first_name = body.get('first_name', host.first_name)
+    host.last_name = body.get('last_name', host.last_name)
+    host.email = body.get('email', host.email)
+    host.phone_number = body.get('phone_number', host.phone_number)
+    host.special_notes = body.get('special_notes', host.special_notes)
+    host.password = body.get('password', host.password) 
+
+    host.total_visits = body.get('total_visits', host.total_visits)
+    host.last_visit = body.get('last_visit', host.last_visit)
+    
+    db.session.commit()
+    return jsonify(host.serialize()), 200
+
+@api.route('/host/<int:host_id>', methods=['DELETE'])
+def delete_host(host_id):
+    host = Hostess.query.get(host_id)
+    
+    if host is None:
+        return jsonify({"message": f"No se encontró el host con el id: {host_id}"}), 404
+    
+    try:
+        db.session.delete(host)
+        db.session.commit()
+        return jsonify({"message": "Host eliminado correctamente"}), 200
+    except Exception as e:
+        db.session.rollback() 
+        return jsonify({"message": "Error al eliminar el host", "error": str(e)}), 500
+
+# ======================================================
+# 🚀 FLUJO DE CLIENTE 
+# ======================================================
+
+@api.route('/signup-client', methods=['POST'])
+def signup_client():
+    body = request.get_json()
+    if not body: return jsonify({"msg": "Faltan datos"}), 400
+    
+    email = body.get("email")
+    if Clients.query.filter_by(email=email).first():
+        return jsonify({"msg": "El email ya está registrado"}), 400
+
+    new_client = Clients(
+        name=body.get("name"),
+        email=email,
+        phone=body.get("phone"),
+        password=body.get("password"),
+        image_url=body.get("image_url"), 
+        latitud=body.get("latitud"),   
+        longitud=body.get("longitud"), 
+        is_active=True
+    )
+    db.session.add(new_client)
+    db.session.commit()
+    return jsonify({"msg": "Cliente registrado con éxito", "id": new_client.id}), 201
+
+@api.route('/login-client', methods=['POST'])
+def login_client():
+    body = request.get_json()
+    client = Clients.query.filter_by(email=body.get("email")).first()
+
+    if client is None or client.password != body.get("password"):
+        return jsonify({"msg": "Credenciales inválidas"}), 401
+
+    
+    access_token = create_access_token(identity=str(client.id))
+    return jsonify({
+        "token": access_token,
+        "role": "client",
+        "client": client.serialize()
     }), 200
 
 # =========================
@@ -669,42 +833,58 @@ def delete_empleado(empleado_id):
 @api.route('/empleado', methods=['POST'])
 def create_empleado():
     body = request.get_json()
-    if "name" not in body or "email" not in body or "phone" not in body or "rol" not in body or "state" not in body or "password" not in body:
+    # Verificamos campos obligatorios de forma más limpia
+    required_fields = ["name", "email", "phone", "rol", "state", "password"]
+    for field in required_fields:
+        if field not in body:
+            return jsonify({"message": f"Falta el campo obligatorio: {field}"}), 400
+
+    try:
+        # Validar si el email ya existe para no tener duplicados
+        existing = Empleado.query.filter_by(email=body["email"]).first()
+        if existing:
+            return jsonify({"message": "Este email ya está registrado para un empleado"}), 400
+
+        nuevo_empleado = Empleado(
+            name=body["name"],
+            email=body["email"],
+            phone=body["phone"],
+            rol=body["rol"],
+            state=body["state"],
+            password=body["password"] # Nota: En el futuro deberíamos encriptar esto
+        )
+        db.session.add(nuevo_empleado)
+        db.session.commit()
+        
         return jsonify({
-            "message": "faltan campos obligatorios"
-        }),400
+            "message": "Empleado creado con éxito",
+            "empleado": nuevo_empleado.serialize()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Error interno", "error": str(e)}), 500
 
-    nuevo_empleado = Empleado(
-        name=body["name"],
-        email=body["email"],
-        phone=body["phone"],
-        rol=body["rol"],
-        state=body["state"],
-        password=body["password"]
-    )
-    db.session.add(nuevo_empleado)
-    db.session.commit()
-    response_body = {
-        "message": "se creo al empleado",
-        "empleado": nuevo_empleado.serialize()
-    }
-
-    return jsonify(response_body), 201
-
-@api.route("/empleado", methods=["POST"])
+@api.route("/login-empleado", methods=["POST"])
 def login_empleado():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
+    
     empleado = Empleado.query.filter_by(email=email).first()
+    
+    # Comparamos contraseña y verificamos que el empleado esté "activo" (state)
     if empleado and empleado.password == password:
+        # IMPORTANTE: Generamos el token igual que con el Owner y el Cliente
+        access_token = create_access_token(identity=str(empleado.id))
+        
         return jsonify({
             "message": "Login exitoso",
+            "token": access_token,
+            "role": "empleado",
             "empleado": empleado.serialize()
         }), 200
  
     return jsonify({"message": "Credenciales inválidas"}), 401
-
  
 
 
@@ -745,4 +925,46 @@ def update_empleado(empleado_id):
     return jsonify(response_body), 200
 
 
+
+@api.route('/my-bookings', methods=['GET'])
+@jwt_required()
+def get_my_bookings():
+    """ Obtiene solo las reservas del cliente que tiene la sesión iniciada """
+    try:
+        client_id = get_jwt_identity()
+        
+        reservas = Reserva.query.filter_by(cliente_id=client_id).all()
+        
+        return jsonify([r.serialize() for r in reservas]), 200
+    except Exception as e:
+        return jsonify({"msg": "Error al obtener mis reservas", "error": str(e)}), 500
+
+@api.route('/client/booking/<int:booking_id>/cancel', methods=['PUT'])
+@jwt_required()
+def cancel_my_booking(booking_id):
+    client_id = int(get_jwt_identity())
+    reserva = Reserva.query.filter_by(id=booking_id, cliente_id=client_id).first()
+    
+    if not reserva:
+        return jsonify({"msg": "Reserva no encontrada"}), 404
+    
+    reserva.estado = "cancelada"
+    db.session.commit()
+    return jsonify({"msg": "Reserva cancelada correctamente"}), 200
+
+@api.route('/update-client-image', methods=['PUT']) 
+@jwt_required()
+def update_client_image():
+    identity = get_jwt_identity()
+    body = request.get_json()
+    image_url = body.get("image_url")
+    
+    
+    user = Clients.query.get(identity)
+    if user:
+        user.image_url = image_url
+        db.session.commit()
+        return jsonify({"msg": "Imagen actualizada", "url": image_url}), 200
+    
+    return jsonify({"msg": "Usuario no encontrado"}), 404
 

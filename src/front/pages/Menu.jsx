@@ -10,8 +10,30 @@ export const Menu = () => {
         nombre: "",
         categoria: "",
         precio: "",
-        restaurante_id: 33 
+        restaurante_id: ""
     });
+
+    const getRestauranteNombre = (id) => {
+        if (!store.restaurants) return "Cargando...";
+        const resto = store.restaurants.find(r => r.id === parseInt(id));
+        return resto ? (resto.nombre || resto.name) : "Desconocido";
+    };
+
+    const sincronizarRestaurante = async () => {
+        try {
+            const resp = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/restaurants");
+            if (resp.ok) {
+                const data = await resp.json();
+                dispatch({ type: "set_restaurants", payload: data });
+                
+                if (data.length > 0 && !formData.restaurante_id) {
+                    setFormData(prev => ({ ...prev, restaurante_id: data[0].id }));
+                }
+            }
+        } catch (error) {
+            console.error("Error al sincronizar restaurante", error);
+        }
+    };
 
     const getMenus = async () => {
         try {
@@ -26,20 +48,20 @@ export const Menu = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.restaurante_id) return alert("Selecciona un restaurante");
+
         const url = editMode 
             ? `${import.meta.env.VITE_BACKEND_URL}/api/menus/${currentId}`
             : `${import.meta.env.VITE_BACKEND_URL}/api/menus`;
         
-        const method = editMode ? "PUT" : "POST";
-
         try {
             const resp = await fetch(url, {
-                method: method,
+                method: editMode ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
             });
             if (resp.ok) {
-                setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 33 });
+                setFormData(prev => ({ ...prev, nombre: "", categoria: "", precio: "" }));
                 setEditMode(false);
                 setCurrentId(null);
                 getMenus();
@@ -62,14 +84,12 @@ export const Menu = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("¿Estás seguro de eliminar este plato?")) return;
+        if (!window.confirm("¿Estás seguro?")) return;
         try {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/menus/${id}`, {
                 method: "DELETE"
             });
-            if (response.ok) {
-                dispatch({ type: 'delete_menu_local', payload: id });
-            }
+            if (response.ok) getMenus();
         } catch (error) {
             console.error("Error al eliminar", error);
         }
@@ -77,6 +97,7 @@ export const Menu = () => {
 
     useEffect(() => {
         getMenus();
+        sincronizarRestaurante(); 
     }, []);
 
     return (
@@ -84,11 +105,25 @@ export const Menu = () => {
             <h1 className="mb-4"><i className="fas fa-utensils text-primary me-2"></i>Gestión de Menú</h1>
             
             <div className="row">
-                {/* FORMULARIO DE CREACIÓN / EDICIÓN */}
                 <div className="col-md-4">
                     <div className={`card p-4 shadow-sm border-0 ${editMode ? 'border-start border-warning border-4' : ''}`}>
                         <h5 className="fw-bold mb-3">{editMode ? 'Editar Plato' : 'Nuevo Plato'}</h5>
                         <form onSubmit={handleSubmit}>
+                            <div className="mb-2">
+                                <label className="small fw-bold text-primary">Restaurante</label>
+                                <select 
+                                    className="form-select form-select-sm"
+                                    value={formData.restaurante_id}
+                                    onChange={e => setFormData({...formData, restaurante_id: e.target.value})}
+                                    required
+                                >
+                                    <option value="">Selecciona un local...</option>
+                                    {store.restaurants?.map(res => (
+                                        <option key={res.id} value={res.id}>{res.nombre || res.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
                             <div className="mb-2">
                                 <label className="small fw-bold">Nombre del Plato</label>
                                 <input 
@@ -110,58 +145,42 @@ export const Menu = () => {
                                     value={formData.precio} onChange={e => setFormData({...formData, precio: e.target.value})} required
                                 />
                             </div>
-                            <button type="submit" className={`btn w-100 shadow-sm ${editMode ? 'btn-warning' : 'btn-primary'}`}>
-                                <i className={`fas ${editMode ? 'fa-sync' : 'fa-plus'} me-2`}></i>
-                                {editMode ? 'Actualizar Plato' : 'Guardar Plato'}
+                            <button type="submit" className={`btn w-100 ${editMode ? 'btn-warning' : 'btn-primary'}`}>
+                                {editMode ? 'Actualizar' : 'Guardar'}
                             </button>
-                            {editMode && (
-                                <button type="button" className="btn btn-link btn-sm w-100 mt-2 text-muted" onClick={() => {
-                                    setEditMode(false);
-                                    setFormData({ nombre: "", categoria: "", precio: "", restaurante_id: 33 });
-                                }}>Cancelar</button>
-                            )}
                         </form>
                     </div>
                 </div>
 
-                {/* LISTADO DE PLATOS */}
                 <div className="col-md-8">
                     <div className="card shadow-sm border-0">
                         <div className="card-header bg-white py-3">
-                            <h5 className="mb-0 fw-bold text-secondary">Platos actuales</h5>
+                            <h5 className="mb-0 fw-bold text-secondary">Platos en el Menú</h5>
                         </div>
                         <div className="list-group list-group-flush">
-                            {store.menus && store.menus.length > 0 ? (
-                                store.menus.map((item) => (
-                                    <div key={item.id} className="list-group-item d-flex justify-content-between align-items-center py-3">
-                                        <div>
-                                            <span className="badge bg-info-subtle text-info mb-1">{item.categoria}</span>
-                                            <h6 className="mb-0 fw-bold">{item.nombre}</h6>
-                                            <div className="text-success fw-bold">${item.precio}</div>
+                            {store.menus?.map((item) => (
+                                <div key={item.id} className="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <div>
+                                        <div className="d-flex align-items-center gap-2 mb-1">
+                                            <span className="badge bg-info-subtle text-info">{item.categoria}</span>
+                                            <span className="badge bg-secondary-subtle text-secondary small">
+                                                <i className="fas fa-store me-1"></i>
+                                                {getRestauranteNombre(item.restaurante_id)}
+                                            </span>
                                         </div>
-                                        <div className="btn-group">
-                                            <button 
-                                                className="btn btn-outline-secondary btn-sm border-0" 
-                                                onClick={() => handleEditClick(item)}
-                                                title="Editar plato"
-                                            >
-                                                <i className="fas fa-edit"></i>
-                                            </button>
-                                            <button 
-                                                className="btn btn-outline-danger btn-sm border-0" 
-                                                onClick={() => handleDelete(item.id)}
-                                                title="Eliminar plato"
-                                            >
-                                                <i className="fas fa-trash-alt"></i>
-                                            </button>
-                                        </div>
+                                        <h6 className="mb-0 fw-bold">{item.nombre}</h6>
+                                        <div className="text-success fw-bold">${item.precio}</div>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="text-center py-5">
-                                    <p className="text-muted mb-0">No hay platos registrados en el menú.</p>
+                                    <div className="btn-group">
+                                        <button className="btn btn-outline-secondary btn-sm border-0" onClick={() => handleEditClick(item)}>
+                                            <i className="fas fa-edit"></i>
+                                        </button>
+                                        <button className="btn btn-outline-danger btn-sm border-0" onClick={() => handleDelete(item.id)}>
+                                            <i className="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     </div>
                 </div>

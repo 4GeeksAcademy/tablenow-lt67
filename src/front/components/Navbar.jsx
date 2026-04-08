@@ -35,7 +35,7 @@ export const Navbar = () => {
                         
                         <div className="border-start ms-2 ps-2 d-flex align-items-center gap-3">
                             <span className="text-muted small d-none d-md-inline">
-                                Hola, {store.ownerInfo?.name || store.ownerInfo?.email}
+                                {store.ownerInfo?.name || store.ownerInfo?.email}
                             </span>
 
                             <Link to="/owner-dashboard" className="btn btn-outline-primary btn-sm">Dashboard</Link>
