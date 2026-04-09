@@ -302,10 +302,10 @@ class Empleado(db.Model):
 
     def serialize(self):
         return {
-            "id": self.id,
-            "fullName": self.full_name,
-            "email": self.email,
-            "phone": self.phone,
-            "rol": self.rol,
-            "state": self.state
-        }
+        "id": self.id,
+        "full_name": self.full_name,
+        "email": self.email,
+        "phone": self.phone,
+        "rol": self.rol,
+        "state": self.state
+    }

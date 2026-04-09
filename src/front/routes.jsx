@@ -45,6 +45,7 @@ import Empleado from "./pages/Empleado.jsx";
 import CreateEmpleado from "./pages/CreateEmpleado.jsx";
 import EditEmpleado from "./pages/EditEmpleado.jsx";
 import EmpleadoDetail from "./pages/EmpleadoDetail.jsx";
+import EmpleadoDashboard from "./pages/EmpleadoDashboard.jsx"; 
 
 //HOST
 import Host from "./pages/Host";
@@ -52,9 +53,10 @@ import NewHost from "./pages/NewHost";
 import EditHost from "./pages/EditHost";
 import HostDetails from "./pages/HostDetails";
 
-// CLIENT DASHBOARD & AUTH (Importado con llaves según tu archivo anterior)
+// CLIENT DASHBOARD & AUTH 
 import { ClientDashboard } from "./pages/ClientDashboard";
-import { VistaBusqueda } from "./pages/VistaBusqueda.jsx"; // <--- AGREGA ESTA LÍNEA
+import { VistaBusqueda } from "./pages/VistaBusqueda.jsx"; 
+
 
 
 export const router = createBrowserRouter(
@@ -74,10 +76,10 @@ export const router = createBrowserRouter(
       <Route path="/edit_gerente/:id" element={<EditGerente />} />
       <Route path="/gerente/:id" element={<GerenteDetail />} />
 
-      {/* CLIENTS (Vistas Admin) */}
+      {/* CLIENTS */}
       <Route path="/clients" element={<Clients />} />
       <Route path="/new_client" element={<NewClient />} />
-      <Route path="/buscar" element={<VistaBusqueda />} /> {/* <--- COPIA ESTA LÍNEA */}
+      <Route path="/buscar" element={<VistaBusqueda />} /> 
       <Route path="/client/:clientId" element={<Client />} />
       <Route path="/edit_client/:clientId" element={<UpdateClient />} />
 
@@ -114,6 +116,8 @@ export const router = createBrowserRouter(
       <Route path="/crear-empleado" element={<CreateEmpleado/>} />
       <Route path="/edit-empleado/:id" element={<EditEmpleado/>} />
       <Route path="/empleado-detail/:id" element={<EmpleadoDetail />} />
+      <Route path="/empleado-dashboard" element={<EmpleadoDashboard />} /> {/* <--- RUTA AQUÍ */}
+
 
       {/* Host */}
       <Route path="/hosts" element={<Host />} />

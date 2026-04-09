@@ -15,7 +15,10 @@ export const LoginOwner = () => {
         e.preventDefault();
         setError(null);
 
-        const endpoint = role === "owner" ? "/api/login-owner" : "/api/login-client";
+        let endpoint = "";
+        if (role === "owner") endpoint = "/api/login-owner";
+        else if (role === "client") endpoint = "/api/login-client";
+        else endpoint = "/api/login-empleado"; 
 
         try {
             const resp = await fetch(import.meta.env.VITE_BACKEND_URL + endpoint, {
@@ -35,21 +38,21 @@ export const LoginOwner = () => {
             if (role === "owner") {
                 dispatch({ 
                     type: 'login_owner', 
-                    payload: {
-                        token: data.token,
-                        user: data.owner 
-                    } 
+                    payload: { token: data.token, user: data.owner } 
                 });
                 navigate("/owner-dashboard");
-            } else {
+            } else if (role === "client") {
                 dispatch({ 
                     type: 'login_client', 
-                    payload: {
-                        token: data.token,
-                        user: data.client 
-                    } 
+                    payload: { token: data.token, user: data.client } 
                 });
                 navigate("/client-dashboard"); 
+            } else {
+                dispatch({ 
+                    type: 'login_empleado', 
+                    payload: { token: data.token, user: data.empleado } 
+                });
+                navigate("/empleado-dashboard"); 
             }
 
         } catch (err) {
@@ -57,12 +60,18 @@ export const LoginOwner = () => {
         }
     };
 
+    const getBtnColor = () => {
+        if (role === 'owner') return 'btn-primary';
+        if (role === 'client') return 'btn-success';
+        return 'btn-warning'; 
+    };
+
     return (
         <div className="container mt-5">
             <div className="row justify-content-center">
-                <div className="col-md-5 card shadow p-4 border-0">
+                <div className="col-md-6 card shadow p-4 border-0">
                     <h2 className="text-center mb-4 fw-bold">
-                        TableNow {role === "owner" ? "(Owner)" : "(Cliente)"}
+                        TableNow {role === "owner" ? "(Owner)" : role === "client" ? "(Cliente)" : "(Empleado)"}
                     </h2>
                     
                     <div className="nav nav-pills nav-fill mb-4 bg-light p-1 rounded">
@@ -80,6 +89,14 @@ export const LoginOwner = () => {
                                 onClick={() => setRole("client")}
                             >
                                 Soy Cliente
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button 
+                                className={`nav-link ${role === 'empleado' ? 'active bg-warning text-dark' : 'text-dark'}`}
+                                onClick={() => setRole("empleado")}
+                            >
+                                Soy Empleado
                             </button>
                         </li>
                     </div>
@@ -101,19 +118,25 @@ export const LoginOwner = () => {
                                 value={password} onChange={(e) => setPassword(e.target.value)} required 
                             />
                         </div>
-                        <button type="submit" className={`btn btn-lg w-100 fw-bold ${role === 'owner' ? 'btn-primary' : 'btn-success'}`}>
-                            Entrar como {role === "owner" ? "Owner" : "Cliente"}
+                        <button type="submit" className={`btn btn-lg w-100 fw-bold ${getBtnColor()}`}>
+                            Entrar como {role === "owner" ? "Owner" : role === "client" ? "Cliente" : "Empleado"}
                         </button>
                     </form>
 
                     <div className="text-center mt-4">
-                        <p className="text-muted small">¿Eres un cliente nuevo? 
-                            <span 
-                                className="text-primary ms-1 fw-bold" style={{cursor: "pointer"}}
-                                onClick={() => navigate("/signup-client")}
-                            > 
-                                Regístrate aquí
-                            </span>
+                        <p className="text-muted small">
+                            {role === "client" ? (
+                                <>¿Eres un cliente nuevo? 
+                                    <span 
+                                        className="text-primary ms-1 fw-bold" style={{cursor: "pointer"}}
+                                        onClick={() => navigate("/signup-client")}
+                                    > 
+                                        Regístrate aquí
+                                    </span>
+                                </>
+                            ) : (
+                                "Acceso restringido para personal autorizado"
+                            )}
                         </p>
                     </div>
                 </div>

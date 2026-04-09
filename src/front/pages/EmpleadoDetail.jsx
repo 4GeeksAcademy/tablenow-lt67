@@ -40,16 +40,28 @@ const EmpleadoDetail = () => {
             <div className="d-flex justify-content-center">
                 <div className="card shadow-lg" style={{ width: "100%", maxWidth: "600px" }}>
                     <div className="card-body p-5">
+                        {/* FULL NAME */}
                         <div className="row mb-3">
                             <div className="col-sm-4 font-weight-bold text-secondary">Full Name:</div>
-                            <div className="col-sm-8"><h4>{empleado.name}</h4></div>
+                            <div className="col-sm-8"><h4>{empleado.full_name}</h4></div>
                         </div>
                         <hr />
+
+                        {/* EMAIL - Ahora con color de texto normal (negro) */}
+                        <div className="row mb-3">
+                            <div className="col-sm-4 font-weight-bold text-secondary">Email Address:</div>
+                            <div className="col-sm-8 text-dark">{empleado.email}</div>
+                        </div>
+                        <hr />
+
+                        {/* PHONE NUMBER */}
                         <div className="row mb-3">
                             <div className="col-sm-4 font-weight-bold text-secondary">Phone Number:</div>
                             <div className="col-sm-8">{empleado.phone}</div>
                         </div>
                         <hr />
+
+                        {/* ROLE */}
                         <div className="row mb-3">
                             <div className="col-sm-4 font-weight-bold text-secondary">Role:</div>
                             <div className="col-sm-8">
@@ -57,6 +69,8 @@ const EmpleadoDetail = () => {
                             </div>
                         </div>
                         <hr />
+
+                        {/* STATUS */}
                         <div className="row mb-4">
                             <div className="col-sm-4 font-weight-bold text-secondary">Status:</div>
                             <div className="col-sm-8">
@@ -66,6 +80,7 @@ const EmpleadoDetail = () => {
                             </div>
                         </div>
 
+                        {/* BUTTONS */}
                         <div className="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <Link to="/empleado" className="btn btn-secondary">
                                 <i className="bi bi-arrow-left"></i> Go Back

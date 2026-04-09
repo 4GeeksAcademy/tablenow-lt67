@@ -834,15 +834,14 @@ def delete_empleado(empleado_id):
 def create_empleado():
     body = request.get_json()
     
-    # SOLO los campos que existen en tu models.py
-    required_fields = ["fullName", "email", "phone", "rol", "password"] 
+    required_fields = ["name", "email", "phone", "rol", "password"] 
     for field in required_fields:
         if field not in body:
             return jsonify({"message": f"Falta el campo obligatorio: {field}"}), 400
 
     try:
         nuevo_empleado = Empleado(
-            name=body["name"],
+            full_name=body["name"], 
             email=body["email"],
             phone=body["phone"],
             rol=body["rol"],
@@ -858,6 +857,7 @@ def create_empleado():
         }), 201
     except Exception as e:
         db.session.rollback()
+        print(f"Error en POST /empleado: {str(e)}") 
         return jsonify({"message": "Error interno", "error": str(e)}), 500
 
 
@@ -868,17 +868,46 @@ def update_empleado(empleado_id):
         return jsonify({"message": "No encontrado"}), 404
     
     body = request.get_json()
-    # Solo actualizamos campos existentes
-    if "name" in body: empleado.name = body["name"]
+    
+    if "name" in body: empleado.full_name = body["name"] 
     if "email" in body: empleado.email = body["email"]
     if "phone" in body: empleado.phone = body["phone"]
     if "rol" in body: empleado.rol = body["rol"]
     if "state" in body: empleado.state = body["state"]
     if "password" in body: empleado.password = body["password"]
 
+    try:
+        db.session.commit()
+        return jsonify({"message": "Actualizado", "empleado": empleado.serialize()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Error al actualizar", "error": str(e)}), 500
 
-    db.session.commit()
-    return jsonify({"message": "Actualizado", "empleado": empleado.serialize()}), 200
+# =========================   
+# LOGIN EMPLEADO
+# =========================
+
+@api.route('/login-empleado', methods=['POST'])
+def login_empleado():
+    body = request.get_json()
+    email = body.get("email")
+    password = body.get("password")
+
+    if not email or not password:
+        return jsonify({"msg": "Email y contraseña son obligatorios"}), 400
+
+    empleado = Empleado.query.filter_by(email=email).first()
+
+    if empleado is None or empleado.password != password:
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
+
+    access_token = create_access_token(identity=str(empleado.id))
+    
+    return jsonify({
+        "token": access_token,
+        "empleado": empleado.serialize()
+    }), 200
+
 
 @api.route('/my-bookings', methods=['GET'])
 @jwt_required()
