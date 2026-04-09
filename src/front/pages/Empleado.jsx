@@ -8,7 +8,7 @@ const Empleado = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        fetch('https://symmetrical-potato-7vj4q5r4wg652r9rj-3001.app.github.dev/api/empleado')
+        fetch(import.meta.env.VITE_BACKEND_URL + '/api/empleado')
             .then(response =>
                 response.json())
             .then(data => {
@@ -19,7 +19,7 @@ const Empleado = () => {
     }, [])
 
     const deleteEmpleado = (id) => {
-            fetch(`https://symmetrical-potato-7vj4q5r4wg652r9rj-3001.app.github.dev/api/empleado/${id}`, {
+            fetch(`${import.meta.env.VITE_BACKEND_URL}/api/empleado/${id}`, {
                 method: 'DELETE',
             })
             .then(response => {

@@ -794,7 +794,7 @@ def login_client():
         "client": client.serialize()
     }), 200
 
-# =========================
+# =========================   
 # EMPLEADOS
 # =========================
 
@@ -833,25 +833,19 @@ def delete_empleado(empleado_id):
 @api.route('/empleado', methods=['POST'])
 def create_empleado():
     body = request.get_json()
-    # Verificamos campos obligatorios de forma más limpia
-    required_fields = ["name", "email", "phone", "rol", "state", "password"]
+    
+    # SOLO los campos que existen en tu models.py
+    required_fields = ["name", "phone", "rol"] 
     for field in required_fields:
         if field not in body:
             return jsonify({"message": f"Falta el campo obligatorio: {field}"}), 400
 
     try:
-        # Validar si el email ya existe para no tener duplicados
-        existing = Empleado.query.filter_by(email=body["email"]).first()
-        if existing:
-            return jsonify({"message": "Este email ya está registrado para un empleado"}), 400
-
         nuevo_empleado = Empleado(
             name=body["name"],
-            email=body["email"],
             phone=body["phone"],
             rol=body["rol"],
-            state=body["state"],
-            password=body["password"] # Nota: En el futuro deberíamos encriptar esto
+            state=body.get("state") # .get por si viene vacío, ya que es nullable=True
         )
         db.session.add(nuevo_empleado)
         db.session.commit()
@@ -864,67 +858,22 @@ def create_empleado():
         db.session.rollback()
         return jsonify({"message": "Error interno", "error": str(e)}), 500
 
-@api.route("/login-empleado", methods=["POST"])
-def login_empleado():
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
-    
-    empleado = Empleado.query.filter_by(email=email).first()
-    
-    # Comparamos contraseña y verificamos que el empleado esté "activo" (state)
-    if empleado and empleado.password == password:
-        # IMPORTANTE: Generamos el token igual que con el Owner y el Cliente
-        access_token = create_access_token(identity=str(empleado.id))
-        
-        return jsonify({
-            "message": "Login exitoso",
-            "token": access_token,
-            "role": "empleado",
-            "empleado": empleado.serialize()
-        }), 200
- 
-    return jsonify({"message": "Credenciales inválidas"}), 401
- 
-
 
 @api.route('/empleado/<int:empleado_id>', methods=['PUT'])
 def update_empleado(empleado_id):
     empleado = Empleado.query.get(empleado_id)
-    body = request.get_json()
-
     if empleado is None:
-        return jsonify({
-            "message": "no se encontro al empleado con el id: " + str(empleado_id)
-        }),400
+        return jsonify({"message": "No encontrado"}), 404
     
-    if "name" in body:
-        empleado.name = body ["name"]
-
-    if "email" in body:
-        empleado.email = body ["email"]
-
-    if "phone" in body:
-        empleado.phone = body ["phone"]
-
-    if "rol" in body:
-        empleado.rol = body ["rol"]
-
-    if "state" in body:
-        empleado.state = body ["state"]
-
-    if "password" in body:
-        empleado.password = body ["password"]
+    body = request.get_json()
+    # Solo actualizamos campos existentes
+    if "name" in body: empleado.name = body["name"]
+    if "phone" in body: empleado.phone = body["phone"]
+    if "rol" in body: empleado.rol = body["rol"]
+    if "state" in body: empleado.state = body["state"]
 
     db.session.commit()
-    response_body = {
-        "message": "se actualizo al empleado",
-        "empleado": empleado.serialize()
-    }
-
-    return jsonify(response_body), 200
-
-
+    return jsonify({"message": "Actualizado", "empleado": empleado.serialize()}), 200
 
 @api.route('/my-bookings', methods=['GET'])
 @jwt_required()

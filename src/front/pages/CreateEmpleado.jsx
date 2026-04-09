@@ -11,7 +11,7 @@ const CreateEmpleado = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const empleado = { name, phone, rol, state }
-        fetch('https://symmetrical-potato-7vj4q5r4wg652r9rj-3001.app.github.dev/api/empleado', {
+        fetch(import.meta.env.VITE_BACKEND_URL + '/api/empleado', {
             method: 'POST',
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(empleado)
