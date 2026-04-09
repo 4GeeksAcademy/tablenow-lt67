@@ -293,15 +293,18 @@ class Waitlist(db.Model):
 class Empleado(db.Model):
     __tablename__ = "empleado"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    email: Mapped[str] = mapped_column(String(120), nullable=False)
     phone: Mapped[str] = mapped_column(String(120), nullable=False)
     rol: Mapped[str] = mapped_column(String(40), nullable=False)
     state: Mapped[str] = mapped_column(String(30), nullable=True)
+    password: Mapped[str] = mapped_column(String(120), nullable=False)
 
     def serialize(self):
         return {
             "id": self.id,
-            "name": self.name,
+            "fullName": self.full_name,
+            "email": self.email,
             "phone": self.phone,
             "rol": self.rol,
             "state": self.state

@@ -835,7 +835,7 @@ def create_empleado():
     body = request.get_json()
     
     # SOLO los campos que existen en tu models.py
-    required_fields = ["name", "phone", "rol"] 
+    required_fields = ["fullName", "email", "phone", "rol", "password"] 
     for field in required_fields:
         if field not in body:
             return jsonify({"message": f"Falta el campo obligatorio: {field}"}), 400
@@ -843,9 +843,11 @@ def create_empleado():
     try:
         nuevo_empleado = Empleado(
             name=body["name"],
+            email=body["email"],
             phone=body["phone"],
             rol=body["rol"],
-            state=body.get("state") # .get por si viene vacío, ya que es nullable=True
+            state=body.get("state"),
+            password=body["password"]
         )
         db.session.add(nuevo_empleado)
         db.session.commit()
@@ -868,9 +870,12 @@ def update_empleado(empleado_id):
     body = request.get_json()
     # Solo actualizamos campos existentes
     if "name" in body: empleado.name = body["name"]
+    if "email" in body: empleado.email = body["email"]
     if "phone" in body: empleado.phone = body["phone"]
     if "rol" in body: empleado.rol = body["rol"]
     if "state" in body: empleado.state = body["state"]
+    if "password" in body: empleado.password = body["password"]
+
 
     db.session.commit()
     return jsonify({"message": "Actualizado", "empleado": empleado.serialize()}), 200

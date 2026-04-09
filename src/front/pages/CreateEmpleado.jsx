@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 const CreateEmpleado = () => {
     const navigate = useNavigate();
     const [name, setName] = useState("")
+    const [email, setEmaik] = useState("")
     const [phone, setPhone] = useState("")
     const [rol, setRol] = useState("")
     const [state, setState] = useState("")
+    const [name, setName] = useState("")
 
     const handleSubmit = (e) => {
         e.preventDefault();
