@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Importación necesaria para el botón
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { ConserjeChat } from "../components/ConserjeChat.jsx";
+
 
 export const ClientDashboard = () => {
     const { store, actions } = useGlobalReducer();
+    const location = useLocation();
+    const navigate = useNavigate();
     const [tempUrl, setTempUrl] = useState("");
     const [selectedRest, setSelectedRest] = useState(null);
 
@@ -11,27 +15,82 @@ export const ClientDashboard = () => {
         fecha: "",
         hora: "",
         num_personas: 2,
-        notas: "",
+        notas: "", 
         origen: "web",
         estado: "pendiente"
     });
 
+    // --- ARREGLO 1: FUNCIÓN DE LIMPIEZA SEGURA (Tu lógica original) ---
+    const forceCleanupModal = () => {
+        const backdrops = document.getElementsByClassName('modal-backdrop');
+        while (backdrops[0]) {
+            backdrops[0].parentNode.removeChild(backdrops[0]);
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    };
+
+    // Carga inicial de datos
     useEffect(() => {
-        actions.getAllRestaurantsPublic();
-        actions.getMyBookings();
-        if (actions.getMenus) actions.getMenus();
+        const initDashboard = async () => {
+            await actions.getAllRestaurantsPublic();
+            await actions.getMyBookings();
+            if (actions.getMenus) await actions.getMenus();
+            if (actions.getClientInfo) await actions.getClientInfo();
+        };
+        initDashboard();
     }, []);
+
+    // --- ARREGLO 2: ESCUCHAR CIERRE DE MODALES (Tu lógica original) ---
+    useEffect(() => {
+        const handleHidden = () => {
+            forceCleanupModal();
+        };
+
+        const infoM = document.getElementById('infoModal');
+        const bookM = document.getElementById('bookingModal');
+
+        infoM?.addEventListener('hidden.bs.modal', handleHidden);
+        bookM?.addEventListener('hidden.bs.modal', handleHidden);
+
+        return () => {
+            infoM?.removeEventListener('hidden.bs.modal', handleHidden);
+            bookM?.removeEventListener('hidden.bs.modal', handleHidden);
+        };
+    }, []);
+
+    useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        const restId = queryParams.get("reservaRestId");
+
+        if (restId && store.restaurants?.length > 0) {
+            const restParaMostrar = store.restaurants.find(r => r.id === parseInt(restId));
+            
+            if (restParaMostrar) {
+                setSelectedRest(restParaMostrar);
+                const modalElement = document.getElementById('infoModal');
+                if (modalElement) {
+                    const modal = new window.bootstrap.Modal(modalElement);
+                    modal.show();
+                    navigate(location.pathname, { replace: true });
+                }
+            }
+        }
+    }, [location.search, store.restaurants, navigate]);
+
 
     const handleDelete = async (id) => {
         if (window.confirm("¿Estás seguro de que deseas eliminar esta reserva de tu historial?")) {
-            await actions.deleteBooking(id);
+            const success = await actions.deleteBooking(id);
+            if (success) await actions.getMyBookings();
         }
     };
 
     const handleBooking = async (e) => {
         e.preventDefault();
         if (!store.clientInfo?.id || !selectedRest?.id) {
-            alert("Sesión no válida. Por favor, reingresa.");
+            alert("Sesión no válida o restaurante no seleccionado.");
             return;
         }
 
@@ -44,11 +103,17 @@ export const ClientDashboard = () => {
         const success = await actions.createNewBooking(fullData);
         if (success) {
             const modalElement = document.getElementById('bookingModal');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            modal.hide();
+            const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            setTimeout(forceCleanupModal, 150);
+            
             alert("¡Reserva confirmada!");
             setSelectedRest(null);
             setBookingData({ fecha: "", hora: "", num_personas: 2, notas: "", origen: "web", estado: "pendiente" });
+            await actions.getMyBookings(); 
         }
     };
 
@@ -67,11 +132,21 @@ export const ClientDashboard = () => {
             const file = await resp.json();
             if (file.secure_url) {
                 const success = await actions.updateClientImage(file.secure_url);
-                if (success) alert("¡Imagen actualizada!");
+                if (success) {
+                    alert("¡Imagen actualizada!");
+                    await actions.getClientInfo();
+                }
             }
         } catch (error) {
             console.error("Error subiendo imagen:", error);
         }
+    };
+
+    const safeSplit = (data) => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (typeof data === 'string') return data.split(',').map(item => item.trim());
+        return [];
     };
 
     return (
@@ -98,16 +173,23 @@ export const ClientDashboard = () => {
                         <p className="text-muted">Bienvenido a tu panel personal de TableNow.</p>
                         <div className="input-group input-group-sm mt-2" style={{ maxWidth: "350px" }}>
                             <input type="text" className="form-control" placeholder="URL de imagen..." value={tempUrl} onChange={(e) => setTempUrl(e.target.value)} />
-                            <button className="btn btn-outline-primary" onClick={() => actions.updateClientImage(tempUrl)}>Guardar</button>
+                            <button className="btn btn-outline-primary" onClick={async () => {
+                                const success = await actions.updateClientImage(tempUrl);
+                                if (success) await actions.getClientInfo();
+                            }}>Guardar</button>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <div className="mb-4">
+                <ConserjeChat />
+            </div>
+
             {/* --- BOTÓN DE BÚSQUEDA GEOLOCALIZADA --- */}
             <div className="card shadow-sm mb-5 border-0 bg-light rounded-4">
                 <div className="card-body text-center py-4">
-                    <h4 className="fw-bold">¿Tienes hambre, {store.clientInfo?.name?.split(' ')[0] || "Diego"}?</h4>
+                    <h4 className="fw-bold text-dark">¿Tienes hambre, {store.clientInfo?.name?.split(' ')[0] || "Cliente"}?</h4>
                     <p className="text-muted">Encuentra los mejores restaurantes a pocos pasos de tu ubicación actual.</p>
                     <Link to="/buscar" className="btn btn-primary btn-lg px-5 shadow rounded-pill">
                         <i className="fas fa-search-location me-2"></i>Explorar Mapa Cercano
@@ -146,7 +228,21 @@ export const ClientDashboard = () => {
                                     store.clientBookings.map((reser) => (
                                         <tr key={reser.id} className="align-middle border-bottom">
                                             <td className="ps-4 py-3">
-                                                <div className="fw-bold text-dark">{reser.nombre_restaurante}</div>
+                                                <div className="fw-bold text-dark mb-1" style={{ fontSize: '1rem' }}>{reser.nombre_restaurante}</div>
+                                                <div className="d-flex flex-wrap gap-1 mb-1">
+                                                    {safeSplit(reser.categoria_restaurante).map((cat, i) => (
+                                                        <span key={`cat-${i}`} className="badge rounded-pill bg-info-subtle text-info border border-info-subtle" style={{ fontSize: '0.65rem' }}>
+                                                            {cat}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <div className="d-flex flex-wrap gap-1">
+                                                    {safeSplit(reser.tags_restaurante).map((tag, i) => (
+                                                        <span key={`tag-${i}`} className="text-muted d-flex align-items-center" style={{ fontSize: '0.65rem' }}>
+                                                            <i className="fas fa-tag me-1" style={{ fontSize: '0.6rem' }}></i>{tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </td>
                                             <td className="py-3 text-center">
                                                 <div className="text-dark fw-medium">{reser.fecha}</div>
@@ -171,6 +267,7 @@ export const ClientDashboard = () => {
                                                             onClick={async () => {
                                                                 if (window.confirm("¿Confirmar asistencia a esta reserva?")) {
                                                                     await actions.updateBookingStatus(reser.id, "confirmada");
+                                                                    await actions.getMyBookings();
                                                                 }
                                                             }}
                                                             title="Confirmar reserva"
@@ -188,6 +285,7 @@ export const ClientDashboard = () => {
                                                                     } else {
                                                                         await actions.updateBookingStatus(reser.id, "cancelada");
                                                                     }
+                                                                    await actions.getMyBookings();
                                                                 }
                                                             }}
                                                             title="Cancelar reserva"
@@ -320,6 +418,18 @@ export const ClientDashboard = () => {
                                 />
                                 <h3 className="fw-bold text-dark mb-1">{selectedRest?.nombre || selectedRest?.name}</h3>
                                 
+                                <div className="mb-3">
+                                    {safeSplit(selectedRest?.categoria_restaurante || selectedRest?.categoria || selectedRest?.categorias).length > 0 ? (
+                                        safeSplit(selectedRest?.categoria_restaurante || selectedRest?.categoria || selectedRest?.categorias).map((cat, i) => (
+                                            <span key={i} className="badge bg-primary-subtle text-primary border border-primary-subtle mx-1 rounded-pill px-3">
+                                                {cat}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="badge bg-light text-muted rounded-pill px-3">General</span>
+                                    )}
+                                </div>
+
                                 <div className="d-flex justify-content-center gap-3 flex-wrap mt-2">
                                     <small className="text-muted">
                                         <i className="fas fa-map-marker-alt me-1 text-primary"></i>
@@ -335,6 +445,19 @@ export const ClientDashboard = () => {
                                     </small>
                                 </div>
                             </div>
+
+                            {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).length > 0 && (
+                                <div className="mb-4 text-center">
+                                    <p className="small text-uppercase fw-bold text-secondary mb-2" style={{ letterSpacing: '1px' }}>Ideal para:</p>
+                                    <div className="d-flex justify-content-center flex-wrap gap-2">
+                                        {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).map((tag, i) => (
+                                            <span key={i} className="small text-dark bg-light px-2 py-1 rounded border shadow-xs">
+                                                <i className="fas fa-tag me-1 text-warning small"></i>{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <h5 className="fw-bold mb-3 border-bottom pb-2">
                                 <i className="fas fa-utensils me-2 small text-secondary"></i>Nuestro Menú
@@ -373,12 +496,24 @@ export const ClientDashboard = () => {
             </div>
 
             <style>{`
+                .modal-backdrop {
+                    background-color: rgba(0, 0, 0, 0.5) !important;
+                    opacity: 1 !important;
+                }
+                
+                .modal {
+                    background: rgba(0, 0, 0, 0.2);
+                }
+
                 .border-hover:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,0.1) !important; }
                 .transition { transition: all 0.3s ease; }
                 .bg-success-subtle { background-color: #d1e7dd !important; color: #0f5132 !important; }
                 .bg-warning-subtle { background-color: #fff3cd !important; color: #664d03 !important; }
                 .bg-danger-subtle { background-color: #f8d7da !important; color: #842029 !important; }
                 .bg-info-subtle { background-color: #cff4fc !important; color: #055160 !important; }
+                .bg-primary-subtle { background-color: #e7f1ff !important; color: #0d6efd !important; }
+                .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                .border-primary-subtle { border-color: #cfe2ff !important; }
                 .btn-white { background-color: #fff; }
                 table thead th { letter-spacing: 0.05rem; font-size: 0.75rem; }
             `}</style>

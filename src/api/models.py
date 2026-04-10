@@ -82,9 +82,14 @@ class Restaurante(db.Model):
     capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True)
     owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
-    # --- NUEVOS CAMPOS ---
     latitud: Mapped[str] = mapped_column(String(200), nullable=True)
     longitud: Mapped[str] = mapped_column(String(200), nullable=True)
+
+    # --- NUEVOS CAMPOS PARA IA Y CATEGORIZACIÓN ---
+    # Aquí guardaremos ejemplos como: "Italiana, Francesa, Asiática"
+    category: Mapped[str] = mapped_column(String(200), nullable=True, default="General")
+    # Aquí guardaremos ejemplos como: "Romántico, Aniversario, Negocios, Familiar"
+    tags: Mapped[str] = mapped_column(String(500), nullable=True, default="Estándar")
 
     def serialize(self): 
         return {
@@ -96,7 +101,9 @@ class Restaurante(db.Model):
             "owner_id": self.owner_id,
             "image_url": self.image_url, 
             "latitud": self.latitud,    
-            "longitud": self.longitud,  
+            "longitud": self.longitud,
+            "category": self.category, # Lo incluimos en el serialize
+            "tags": self.tags,         # Lo incluimos en el serialize
             "count_hostess": 0,
             "count_tables": 0
         }
@@ -218,7 +225,7 @@ class Reserva(db.Model):
                 "phone": self.cliente.phone
             } if self.cliente else None
         }
-    
+     
 class Hostess(db.Model):
     __tablename__ = "hostess"
     id: Mapped[int] = mapped_column(primary_key=True)

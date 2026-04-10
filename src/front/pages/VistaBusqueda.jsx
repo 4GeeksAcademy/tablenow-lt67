@@ -135,8 +135,6 @@ export const VistaBusqueda = () => {
                                             <small className="text-muted d-block text-truncate" style={{ maxWidth: "160px" }}>
                                                 {rest.direccion}
                                             </small>
-                                            <div className="d-flex justify-content-between align-items-center mt-1">                                                
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -170,11 +168,19 @@ export const VistaBusqueda = () => {
                             {nearbyRestaurants.map(rest => (
                                 <Marker key={rest.id} position={[parseFloat(rest.latitud), parseFloat(rest.longitud)]}>
                                     <Popup>
-                                        <div className="text-center">
-                                            <strong className="d-block">{rest.nombre}</strong>
+                                        <div className="p-2" style={{ minWidth: "140px" }}>
+                                            <h6 className="fw-bold mb-1 text-center">{rest.nombre}</h6>
+                                            <p className="small text-muted mb-2 text-center">{rest.direccion}</p>
+                                            <span className="badge bg-info text-dark mb-2 d-block mx-auto" style={{width: "fit-content"}}>
+                                                {rest.category || "General"}
+                                            </span>
                                             <hr className="my-1"/>
-                                            <Link to={`/restaurant/${rest.id}`} className="btn btn-sm btn-primary w-100 text-white">
-                                                Ver Detalles
+                                            <Link 
+                                                to={`/client-dashboard?reservaRestId=${rest.id}`} 
+                                                    className="btn btn-primary btn-sm w-100 rounded-pill fw-bold mt-2 text-white" // <-- Agregamos text-white
+                                                        >
+                                                    <i className="fas fa-calendar-check me-2 text-white"></i> {/* También al icono */}
+                                                Reserva aquí
                                             </Link>
                                         </div>
                                     </Popup>
@@ -189,6 +195,7 @@ export const VistaBusqueda = () => {
                 {`
                     .leaflet-control-geosearch form { background: white; border-radius: 8px; }
                     .leaflet-control-geosearch button.reset { color: red; }
+                    .leaflet-popup-content-wrapper { border-radius: 12px; }
                 `}
             </style>
         </div>

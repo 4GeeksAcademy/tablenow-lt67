@@ -295,6 +295,10 @@ def crear_restaurante():
             image_url=body.get("image_url"),
             latitud=body.get("latitud"),  
             longitud=body.get("longitud"), 
+            # --- NUEVOS CAMPOS ---
+            category=body.get("category", "General"),
+            tags=body.get("tags", "Estándar"),
+            # ---------------------
             owner_id=int(identity) 
         )
         
@@ -328,6 +332,11 @@ def update_restaurante(id):
         restaurante.latitud = data.get("latitud", restaurante.latitud)
         restaurante.longitud = data.get("longitud", restaurante.longitud)
         
+        # --- ACTUALIZACIÓN DE NUEVOS CAMPOS ---
+        restaurante.category = data.get("category", restaurante.category)
+        restaurante.tags = data.get("tags", restaurante.tags)
+        # --------------------------------------
+        
         if "capacidad_total" in data and data["capacidad_total"] not in [None, ""]:
             try:
                 restaurante.capacidad_total = int(data["capacidad_total"])
@@ -341,7 +350,7 @@ def update_restaurante(id):
         db.session.rollback()
         print(f"DEBUG ERROR: {str(e)}") 
         return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
-    
+
 @api.route('/restaurants/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_restaurante(id):
