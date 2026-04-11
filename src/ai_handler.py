@@ -135,4 +135,4 @@ def obtener_recomendacion_conserje(pregunta, restaurantes_data):
         f"Es referente en cocina **{cat_f}** y su ambiente de **{tags_f}** garantiza que disfrutarás cada bocado.\n\n"
         f"✨ **Protocolo de Experiencia Sugerido:**\n\n"
         f"{tip}"
-    ) 
+    )
