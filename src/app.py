@@ -7,13 +7,10 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager 
 
 from api.utils import APIException, generate_sitemap
-from api.models import db, Restaurante  ### 1. IMPORTANTE: Importa tu modelo Restaurante aquí
+from api.models import db
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
-
-# 2. Importa la lógica de la IA (está en la misma carpeta src que app.py)
-from ai_handler import obtener_recomendacion_conserje
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
 static_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../dist/')
@@ -44,36 +41,6 @@ db.init_app(app)
 setup_admin(app)
 setup_commands(app)
 app.register_blueprint(api, url_prefix='/api')
-
-### 3. EL NUEVO ENDPOINT DEL CONSERJE ###
-@app.route('/api/conserje', methods=['POST'])
-def conserje_ia():
-    try:
-        body = request.get_json()
-        pregunta_usuario = body.get("query")
-        
-        if not pregunta_usuario:
-            return jsonify({"msg": "Escribe algo para el conserje"}), 400
-        
-        # Obtenemos los restaurantes de la DB
-        restaurantes = Restaurante.query.all()
-        
-        # Simplificamos la data para Gemini
-        data_para_ia = [
-            {
-                "nombre": r.name, 
-                "categoria": r.category, 
-                "tags": r.tags
-            } for r in restaurantes
-        ]
-        
-        # Llamamos a la función de ai_handler
-        respuesta = obtener_recomendacion_conserje(pregunta_usuario, data_para_ia)
-        
-        return jsonify({"respuesta": respuesta}), 200
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):

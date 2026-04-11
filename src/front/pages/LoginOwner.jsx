@@ -77,7 +77,7 @@ export const LoginOwner = () => {
                     <div className="nav nav-pills nav-fill mb-4 bg-light p-1 rounded">
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${role === 'owner' ? 'active bg-primary' : 'text-dark'}`}
+                                className={`nav-link ${role === 'owner' ? 'active bg-primary text-white' : 'text-dark'}`}
                                 onClick={() => setRole("owner")}
                             >
                                 Soy Owner
@@ -85,7 +85,7 @@ export const LoginOwner = () => {
                         </li>
                         <li className="nav-item">
                             <button 
-                                className={`nav-link ${role === 'client' ? 'active bg-success' : 'text-dark'}`}
+                                className={`nav-link ${role === 'client' ? 'active bg-success text-white' : 'text-dark'}`}
                                 onClick={() => setRole("client")}
                             >
                                 Soy Cliente
@@ -126,12 +126,23 @@ export const LoginOwner = () => {
                     <div className="text-center mt-4">
                         <p className="text-muted small">
                             {role === "client" ? (
-                                <>¿Eres un cliente nuevo? 
+                                <>
+                                    ¿Eres un cliente nuevo? 
                                     <span 
                                         className="text-primary ms-1 fw-bold" style={{cursor: "pointer"}}
                                         onClick={() => navigate("/signup-client")}
                                     > 
                                         Regístrate aquí
+                                    </span>
+                                </>
+                            ) : role === "owner" ? (
+                                <>
+                                    ¿Quieres registrar tu restaurante? 
+                                    <span 
+                                        className="text-primary ms-1 fw-bold" style={{cursor: "pointer"}}
+                                        onClick={() => navigate("/owners")} 
+                                    > 
+                                        Regístrate como Owner
                                     </span>
                                 </>
                             ) : (

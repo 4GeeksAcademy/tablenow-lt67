@@ -1,10 +1,11 @@
 from flask import request, jsonify, Blueprint
 from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Hostess, Table, Waitlist, Empleado
 from flask_cors import CORS
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
+from ai_handler import obtener_recomendacion_conserje
 
 api = Blueprint('api', __name__)
 CORS(api)
@@ -960,3 +961,106 @@ def update_client_image():
     
     return jsonify({"msg": "Usuario no encontrado"}), 404
 
+# =========================   
+# IA
+# =========================
+
+@api.route('/conserje', methods=['POST'])
+def conserje_ia():
+    try:
+        body = request.get_json()
+        pregunta_usuario = body.get("query")
+        
+        if not pregunta_usuario:
+            return jsonify({"msg": "Escribe algo para el conserje"}), 400
+        
+        # Obtenemos los restaurantes de la base de datos
+        restaurantes = Restaurante.query.all()
+        
+        # Formateamos la data con los nombres correctos de tu modelo
+        data_para_ia = [
+            {
+                "nombre": r.nombre,    # <--- Antes decía r.name (ERROR)
+                "categoria": r.category, # <--- Se queda r.category (Correcto según tu POST)
+                "tags": r.tags         # <--- Se queda r.tags (Correcto según tu POST)
+            } for r in restaurantes
+        ]
+        
+        # Llamamos al motor de la IA
+        respuesta = obtener_recomendacion_conserje(pregunta_usuario, data_para_ia)
+        
+        return jsonify({"respuesta": respuesta}), 200
+        
+    except Exception as e:
+        # Esto nos ayudará a ver errores de la API de Gemini en la consola
+        print(f"Error en Conserje IA: {str(e)}") 
+        return jsonify({"error": str(e)}), 500
+
+# ==========================================
+# ESTADÍSTICAS PARA EL GRÁFICO (FASE 3)
+# ==========================================
+
+@api.route('/stats/<int:restaurante_id>', methods=['GET'])
+def get_restaurant_stats(restaurante_id):
+    try:
+        # 1. Buscamos el restaurante
+        restaurante = Restaurante.query.get(restaurante_id)
+        if not restaurante:
+            return jsonify({"error": "Restaurante no encontrado"}), 404
+        
+        # Usamos capacidad_total (ajuste previo que ya hicimos)
+        aforo_total = restaurante.capacidad_total or 50
+        
+        # 2. Buscamos las reservas
+        reservas = Reserva.query.filter_by(restaurante_id=restaurante_id).all()
+        
+        conteo_reservas = {"Lun": 0, "Mar": 0, "Mie": 0, "Jue": 0, "Vie": 0, "Sab": 0, "Dom": 0}
+        dias_map = {0: "Lun", 1: "Mar", 2: "Mie", 3: "Jue", 4: "Vie", 5: "Sab", 6: "Dom"}
+
+        for res in reservas:
+            fecha_obj = None
+            
+            # --- VALIDACIÓN DE FECHA CORREGIDA ---
+            if isinstance(res.fecha, (date, datetime)):
+                fecha_obj = res.fecha
+            elif isinstance(res.fecha, str):
+                try:
+                    # CORRECCIÓN AQUÍ: Extraemos SOLO la parte "YYYY-MM-DD"
+                    # Reemplazamos la 'T' por espacio (por si viene en formato ISO) y tomamos el primer bloque
+                    fecha_limpia = res.fecha.replace('T', ' ').split(' ')[0]
+                    fecha_obj = datetime.strptime(fecha_limpia, '%Y-%m-%d')
+                except Exception as e:
+                    print(f"Error ignorado en fecha '{res.fecha}': {e}")
+                    continue 
+            
+            if fecha_obj:
+                dia_nombre = dias_map.get(fecha_obj.weekday())
+                if dia_nombre:
+                    # CORRECCIÓN AQUÍ: Forzamos a que sea un entero (int) para que sume matemáticamente
+                    # y no concatene textos en caso de que la DB lo devuelva como string
+                    personas = int(res.num_personas) if res.num_personas else 1
+                    conteo_reservas[dia_nombre] += personas
+
+        # 3. Formateamos para el frontend
+        stats_formateadas = []
+        dias_ordenados = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
+        
+        for dia in dias_ordenados:
+            personas = conteo_reservas[dia]
+            porcentaje = round((personas / aforo_total) * 100) if aforo_total > 0 else 0
+            stats_formateadas.append({
+                "dia": dia, 
+                "personas": personas, 
+                "capacidad_restante": max(0, aforo_total - personas),
+                "ocupacion": porcentaje 
+            })
+
+        return jsonify({
+            "aforo_maximo": aforo_total,
+            "semana": stats_formateadas,
+            "esta_abierto": True 
+        }), 200
+
+    except Exception as e:
+        print(f"Error en stats: {str(e)}")
+        return jsonify({"error": str(e)}), 500

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Link } from "react-router-dom";
 import { OpenStreetMapProvider, GeoSearchControl } from 'leaflet-geosearch';
@@ -14,7 +14,6 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// --- COMPONENTE LUPA (ESTILO BOTÓN) ---
 const SearchField = ({ onLocationChange }) => {
     const map = useMap();
     useEffect(() => {
@@ -54,6 +53,9 @@ export const VistaBusqueda = () => {
     const [userLocation, setUserLocation] = useState({ lat: 10.4806, lng: -66.8983 });
     const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [fixedPopupId, setFixedPopupId] = useState(null); // Estado para el popup fijo
+    
+    const markerRefs = useRef({});
 
     useEffect(() => {
         actions.getAllRestaurantsPublic();
@@ -99,6 +101,34 @@ export const VistaBusqueda = () => {
         filterNearby(lat, lng);
     };
 
+    // Función para manejar el click y fijar el popup
+    const handleRestaurantClick = (rest) => {
+        if (fixedPopupId === rest.id) {
+            setFixedPopupId(null);
+        } else {
+            setFixedPopupId(rest.id);
+            openRestaurantPopup(rest);
+        }
+    };
+
+    const openRestaurantPopup = (rest) => {
+        const marker = markerRefs.current[rest.id];
+        if (marker) {
+            setUserLocation({ lat: parseFloat(rest.latitud), lng: parseFloat(rest.longitud) });
+            marker.openPopup();
+        }
+    };
+
+    const closeRestaurantPopup = (rest) => {
+        // Solo cerramos si no está fijado por un click previo
+        if (fixedPopupId !== rest.id) {
+            const marker = markerRefs.current[rest.id];
+            if (marker) {
+                marker.closePopup();
+            }
+        }
+    };
+
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -109,7 +139,6 @@ export const VistaBusqueda = () => {
             </div>
 
             <div className="row">
-                {/* LISTADO DE RESTAURANTES */}
                 <div className="col-md-4">
                     <button
                         className="btn btn-primary w-100 mb-3 shadow-sm py-2 fw-bold"
@@ -123,12 +152,23 @@ export const VistaBusqueda = () => {
                     <div className="list-group shadow-sm overflow-auto" style={{ maxHeight: "70vh", borderRadius: "10px" }}>
                         {nearbyRestaurants.length > 0 ? (
                             nearbyRestaurants.map((rest) => (
-                                <div key={rest.id} className="list-group-item list-group-item-action p-3">
+                                <div 
+                                    key={rest.id} 
+                                    className={`list-group-item list-group-item-action p-3 ${fixedPopupId === rest.id ? 'bg-light border-primary' : ''}`}
+                                    style={{ 
+                                        cursor: "pointer", 
+                                        borderLeft: fixedPopupId === rest.id ? "4px solid #0d6efd" : "" 
+                                    }}
+                                    onClick={() => handleRestaurantClick(rest)}
+                                    onMouseEnter={() => openRestaurantPopup(rest)}
+                                    onMouseLeave={() => closeRestaurantPopup(rest)}
+                                >
                                     <div className="d-flex align-items-center">
                                         <img
                                             src={rest.image_url || "https://via.placeholder.com/60"}
                                             className="rounded shadow-sm me-3"
                                             style={{ width: "65px", height: "65px", objectFit: "cover" }}
+                                            alt={rest.nombre}
                                         />
                                         <div className="flex-grow-1">
                                             <h6 className="mb-0 fw-bold">{rest.nombre}</h6>
@@ -149,7 +189,6 @@ export const VistaBusqueda = () => {
                     </div>
                 </div>
 
-                {/* MAPA INTERACTIVO */}
                 <div className="col-md-8">
                     <div className="rounded shadow border overflow-hidden" style={{ height: "75vh", position: "relative" }}>
                         <MapContainer
@@ -166,7 +205,11 @@ export const VistaBusqueda = () => {
                             </Marker>
 
                             {nearbyRestaurants.map(rest => (
-                                <Marker key={rest.id} position={[parseFloat(rest.latitud), parseFloat(rest.longitud)]}>
+                                <Marker 
+                                    key={rest.id} 
+                                    position={[parseFloat(rest.latitud), parseFloat(rest.longitud)]}
+                                    ref={(el) => (markerRefs.current[rest.id] = el)}
+                                >
                                     <Popup>
                                         <div className="p-2" style={{ minWidth: "140px" }}>
                                             <h6 className="fw-bold mb-1 text-center">{rest.nombre}</h6>
@@ -177,9 +220,9 @@ export const VistaBusqueda = () => {
                                             <hr className="my-1"/>
                                             <Link 
                                                 to={`/client-dashboard?reservaRestId=${rest.id}`} 
-                                                    className="btn btn-primary btn-sm w-100 rounded-pill fw-bold mt-2 text-white" // <-- Agregamos text-white
-                                                        >
-                                                    <i className="fas fa-calendar-check me-2 text-white"></i> {/* También al icono */}
+                                                className="btn btn-primary btn-sm w-100 rounded-pill fw-bold mt-2 text-white"
+                                            >
+                                                <i className="fas fa-calendar-check me-2 text-white"></i>
                                                 Reserva aquí
                                             </Link>
                                         </div>
@@ -193,6 +236,11 @@ export const VistaBusqueda = () => {
 
             <style>
                 {`
+                    .list-group-item-action:hover {
+                        background-color: #f8f9fa;
+                        border-left: 4px solid #0d6efd;
+                        transition: all 0.2s ease;
+                    }
                     .leaflet-control-geosearch form { background: white; border-radius: 8px; }
                     .leaflet-control-geosearch button.reset { color: red; }
                     .leaflet-popup-content-wrapper { border-radius: 12px; }

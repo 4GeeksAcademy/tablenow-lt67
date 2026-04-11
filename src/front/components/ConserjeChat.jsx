@@ -9,14 +9,14 @@ export const ConserjeChat = () => {
     const handleAskAI = async () => {
         if (!chatInput.trim()) return;
         
-        setLoadingAI(true);
+        setLoadingAI(true); 
         try {
-            const resp = await fetch(process.env.BACKEND_URL + "/api/conserje", {
+            const resp = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/conserje", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ "query": chatInput })
             });
-            const data = await resp.json();
+            const data = await resp.json();  
             
             // Ajusta "data.respuesta" según lo que devuelva tu API
             setAiResponse(data.respuesta || data.message || "No recibí respuesta.");
