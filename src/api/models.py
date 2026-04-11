@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import DateTime, Float, String, ForeignKey, Boolean,Integer,Date
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column,relationship
 from datetime import datetime, timezone
 
 db = SQLAlchemy()
@@ -68,6 +68,8 @@ class Owner(db.Model):
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
+
+    restaurantes: Mapped[list["Restaurante"]] = relationship(cascade="all, delete-orphan")
 
     def serialize(self):
         return {"id": self.id, "name": self.name, "email": self.email, "phone": self.phone}
