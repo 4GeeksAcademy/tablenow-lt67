@@ -234,14 +234,27 @@ def update_owner(id):
     owner = Owner.query.get(id)
 
     if not owner:
-        return jsonify({"msg": "No encontrado"}), 404
+        return jsonify({"msg": "Owner no encontrado"}), 404
 
     try:
         data = request.json
+        
+        # 1. Actualizamos datos básicos (si no vienen en el JSON, se queda lo que ya estaba)
         owner.name = data.get("name", owner.name)
         owner.email = data.get("email", owner.email)
         owner.phone = data.get("phone", owner.phone)
-        owner.password = data.get("password", owner.password)
+
+        # 2. LA CLAVE: Solo tocamos la contraseña si el usuario envió algo real
+        # .get("password") puede ser None o "" si el usuario no escribió nada
+        new_password = data.get("password")
+        
+        if new_password and str(new_password).strip() != "":
+            # Aquí solo entra si escribiste algo nuevo en el input de password
+            owner.password = new_password 
+            print(f"Contraseña actualizada para el owner {id}")
+        else:
+            # Si no envió nada, NO TOCAMOS owner.password
+            print(f"Se mantuvo la contraseña anterior para el owner {id}")
 
         db.session.commit()
         return jsonify(owner.serialize()), 200
