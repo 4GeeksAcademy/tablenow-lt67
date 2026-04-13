@@ -88,10 +88,13 @@ class Restaurante(db.Model):
     longitud: Mapped[str] = mapped_column(String(200), nullable=True)
 
     # --- NUEVOS CAMPOS PARA IA Y CATEGORIZACIÓN ---
-    # Aquí guardaremos ejemplos como: "Italiana, Francesa, Asiática"
     category: Mapped[str] = mapped_column(String(200), nullable=True, default="General")
-    # Aquí guardaremos ejemplos como: "Romántico, Aniversario, Negocios, Familiar"
     tags: Mapped[str] = mapped_column(String(500), nullable=True, default="Estándar")
+
+    # --- NUEVOS CAMPOS DE HORARIO ---
+    # Guardaremos en formato "HH:mm" (ej: "08:00", "22:30")
+    opening_time: Mapped[str] = mapped_column(String(10), nullable=True, default="09:00")
+    closing_time: Mapped[str] = mapped_column(String(10), nullable=True, default="22:00")
 
     def serialize(self): 
         return {
@@ -104,8 +107,10 @@ class Restaurante(db.Model):
             "image_url": self.image_url, 
             "latitud": self.latitud,    
             "longitud": self.longitud,
-            "category": self.category, # Lo incluimos en el serialize
-            "tags": self.tags,         # Lo incluimos en el serialize
+            "category": self.category,
+            "tags": self.tags,
+            "opening_time": self.opening_time, # Agregado al serialize
+            "closing_time": self.closing_time, # Agregado al serialize
             "count_hostess": 0,
             "count_tables": 0
         }
@@ -117,14 +122,22 @@ class Menu(db.Model):
     categoria: Mapped[str] = mapped_column(String(80))
     precio: Mapped[float] = mapped_column(db.Float, nullable=False)
     disponible: Mapped[bool] = mapped_column(Boolean(), default=True)
+    # --- NUEVOS CAMPOS ---
+    foto: Mapped[str] = mapped_column(String(500), nullable=True) 
+    descripcion: Mapped[str] = mapped_column(String(255), nullable=True)
+    # ---------------------
     restaurante_id: Mapped[int] = mapped_column(
         db.ForeignKey("restaurante.id", ondelete="CASCADE"))
-    def __repr__(self):
-        return f"{self.nombre}"
+
     def serialize(self):
         return {
-            "id": self.id, "nombre": self.nombre, "categoria": self.categoria,
-            "precio": self.precio, "disponible": self.disponible,
+            "id": self.id, 
+            "nombre": self.nombre, 
+            "categoria": self.categoria,
+            "precio": self.precio, 
+            "disponible": self.disponible,
+            "foto": self.foto, # Importante añadirlo aquí
+            "descripcion": self.descripcion, # Y aquí
             "restaurante_id": self.restaurante_id
         }
 

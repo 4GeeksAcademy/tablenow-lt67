@@ -1,29 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
-// 1. Recibimos el restauranteId que le envía el OwnerDashboard
 const OcupacionChart = ({ restauranteId }) => {
-  // 2. Estados para guardar los datos reales y el estado de carga
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 3. Efecto para buscar los datos en el backend cuando carga el componente
   useEffect(() => {
     if (!restauranteId) return;
 
     const fetchStats = async () => {
       try {
         setLoading(true);
-        // Hacemos la petición a tu ruta de Flask
-        // Ajusta la variable de entorno según como la tengas en tu proyecto (VITE_BACKEND_URL, process.env, etc.)
         const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stats/${restauranteId}`);
         
-        if (!response.ok) throw new Error("Error al obtener estadísticas");
+        if (!response.ok) throw new Error("Error fetching statistics");
         
         const result = await response.json();
-        
-        // El backend devuelve { aforo_maximo: X, semana: [...], esta_abierto: true }
-        // Solo necesitamos el arreglo "semana" para el gráfico
         setData(result.semana); 
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -35,46 +27,67 @@ const OcupacionChart = ({ restauranteId }) => {
     fetchStats();
   }, [restauranteId]);
 
-  // Pantalla de carga mientras trae los datos
-  if (loading) return <div className="text-center p-5 text-muted"><i className="fas fa-spinner fa-spin fa-2x mb-3"></i><p>Cargando estadísticas...</p></div>;
-  if (!data || data.length === 0) return <div className="text-center p-5 text-muted">No hay datos suficientes para el gráfico.</div>;
+  if (loading) return (
+    <div className="text-center p-5 text-muted-gold">
+      <i className="fas fa-spinner fa-spin fa-2x mb-3"></i>
+      <p>Loading statistics...</p>
+    </div>
+  );
+  
+  if (!data || data.length === 0) return (
+    <div className="text-center p-5 text-muted-gold">
+      Not enough data for the chart.
+    </div>
+  );
 
-  // 4. Lógica para el Tip: Encontrar dinámicamente el día con más reservas
   const diaPico = data.reduce((max, current) => (current.personas > max.personas ? current : max), data[0]);
 
   return (
-    <div className="card shadow-sm mb-4 border-0">
-      <div className="card-body p-4">
-        <h5 className="card-title text-center text-primary mb-4 fw-bold">
-            <i className="fas fa-chart-bar me-2"></i>Análisis de Ocupación Semanal
+    <div className="bg-transparent border-0">
+      <div className="p-0">
+        <h5 className="text-center text-white mb-4 fw-bold font-serif tracking-wide">
+            <i className="fas fa-chart-bar me-2 text-gold"></i>Weekly Occupancy Analysis
         </h5>
         
         <div style={{ width: '100%', height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-              <XAxis dataKey="dia" axisLine={false} tickLine={false} />
-              <YAxis axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(197, 164, 126, 0.1)" />
+              <XAxis 
+                dataKey="dia" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{fill: '#c5a47e', fontSize: 12}}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{fill: '#c5a47e', fontSize: 12}}
+              />
               
-              {/* Tooltip personalizado para mostrar Personas y % de Ocupación */}
               <Tooltip 
-                cursor={{fill: '#f8f9fa'}}
-                contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0px 4px 10px rgba(0,0,0,0.1)' }}
+                cursor={{fill: 'rgba(255,255,255,0.05)'}}
+                contentStyle={{ 
+                    backgroundColor: '#111', 
+                    borderRadius: '8px', 
+                    border: '1px solid #c5a47e',
+                    color: '#fff'
+                }}
+                itemStyle={{ color: '#c5a47e' }}
                 formatter={(value, name, props) => {
                     return [
-                        `${value} personas (${props.payload.ocupacion}% aforo)`, 
-                        "Ocupación"
+                        `${value} people (${props.payload.ocupacion}% capacity)`, 
+                        "Occupancy"
                     ];
                 }}
               />
               
-              {/* Cambiamos dataKey a "personas" porque así lo manda tu backend */}
-              <Bar dataKey="personas" radius={[5, 5, 0, 0]} barSize={45}>
+              <Bar dataKey="personas" radius={[4, 4, 0, 0]} barSize={40}>
                 {data.map((entry, index) => (
-                    // 5. ¡Magia visual! Coloreamos la barra según el % de ocupación que calculó tu backend
                     <Cell 
                         key={`cell-${index}`} 
-                        fill={entry.ocupacion > 80 ? "#dc3545" : entry.ocupacion > 50 ? "#ffc107" : "#0d6efd"} 
+                        // Gold/Luxury palette based on occupancy
+                        fill={entry.ocupacion > 80 ? "#e63946" : entry.ocupacion > 50 ? "#c5a47e" : "#8a7051"} 
                     />
                 ))}
               </Bar>
@@ -82,15 +95,16 @@ const OcupacionChart = ({ restauranteId }) => {
           </ResponsiveContainer>
         </div>
         
-        {/* Tip dinámico basado en los datos reales */}
         {diaPico && diaPico.personas > 0 ? (
-            <div className="alert alert-info mt-4 py-3 small border-0 shadow-sm" role="alert">
-              <i className="fas fa-lightbulb me-2 text-warning fa-lg"></i>
-              <strong>Tip TableNow:</strong> El día <strong>{diaPico.dia}</strong> presenta tu mayor pico de demanda con <strong>{diaPico.personas} personas</strong>. Asegúrate de tener staff suficiente.
+            <div className="mt-4 py-3 px-4 small rounded shadow-sm" style={{ backgroundColor: 'rgba(197, 164, 126, 0.1)', border: '1px solid rgba(197, 164, 126, 0.2)' }}>
+              <i className="fas fa-lightbulb me-2 text-gold fa-lg"></i>
+              <span className="text-white">
+                <strong className="text-gold">TableNow Insight:</strong> <strong>{diaPico.dia}</strong> shows the highest demand with <strong>{diaPico.personas} guests</strong>. Plan your staff schedule accordingly.
+              </span>
             </div>
         ) : (
-            <div className="alert alert-light mt-4 py-3 small border" role="alert">
-               <i className="fas fa-info-circle me-2 text-muted"></i> Aún no hay reservas esta semana.
+            <div className="mt-4 py-3 px-4 small rounded border border-gold-opacity text-muted-gold text-center">
+               <i className="fas fa-info-circle me-2"></i> No reservations recorded for this week yet.
             </div>
         )}
       </div>

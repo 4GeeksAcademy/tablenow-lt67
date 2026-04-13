@@ -402,98 +402,139 @@ export const ClientDashboard = () => {
             </div>
 
             {/* --- MODAL DE INFO Y MENÚ --- */}
-            <div className="modal fade" id="infoModal" tabIndex="-1" aria-hidden="true">
-                <div className="modal-dialog modal-dialog-centered modal-md">
-                    <div className="modal-content border-0 shadow-lg rounded-4">
-                        <div className="modal-header border-0 pb-0">
-                            <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div className="modal-body p-4 pt-0">
-                            <div className="text-center mb-4">
-                                <img
-                                    src={selectedRest?.image_url || "https://picsum.photos/400/200"}
-                                    className="rounded-4 mb-3 shadow-sm"
-                                    style={{ width: "100%", height: "200px", objectFit: "cover" }}
-                                    alt="Resto"
-                                />
-                                <h3 className="fw-bold text-dark mb-1">{selectedRest?.nombre || selectedRest?.name}</h3>
+<div className="modal fade" id="infoModal" tabIndex="-1" aria-hidden="true">
+    <div className="modal-dialog modal-dialog-centered modal-md">
+        <div className="modal-content border-0 shadow-lg rounded-4">
+            <div className="modal-header border-0 pb-0">
+                <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div className="modal-body p-4 pt-0">
+                <div className="text-center mb-4">
+                    <img
+                        src={selectedRest?.image_url || "https://picsum.photos/400/200"}
+                        className="rounded-4 mb-3 shadow-sm"
+                        style={{ width: "100%", height: "200px", objectFit: "cover" }}
+                        alt="Resto"
+                    />
+                    <h3 className="fw-bold text-dark mb-1">{selectedRest?.nombre || selectedRest?.name}</h3>
+                    
+                    <div className="mb-2">
+                        {safeSplit(selectedRest?.categoria_restaurante || selectedRest?.categoria || selectedRest?.categorias).length > 0 ? (
+                            safeSplit(selectedRest?.categoria_restaurante || selectedRest?.categoria || selectedRest?.categorias).map((cat, i) => (
+                                <span key={i} className="badge bg-primary-subtle text-primary border border-primary-subtle mx-1 rounded-pill px-3">
+                                    {cat}
+                                </span>
+                            ))
+                        ) : (
+                            <span className="badge bg-light text-muted rounded-pill px-3">General</span>
+                        )}
+                    </div>
+
+                    {/* --- SECCIÓN DE HORARIO ULTRA-COMPATIBLE --- */}
+                    <div className="d-flex justify-content-center align-items-center gap-2 mb-3">
+                        <div className="bg-light px-3 py-1 rounded-pill border shadow-sm d-flex align-items-center">
+                            <i className="far fa-clock me-2 text-primary"></i>
+                            <span className="small fw-bold text-dark me-2">
+                                {(() => {
+                                    // Mapeo de posibles nombres de campos que vienen de tu API
+                                    const open = selectedRest?.horario_apertura || selectedRest?.opening_time || selectedRest?.opening_hour || selectedRest?.apertura;
+                                    const close = selectedRest?.horario_cierre || selectedRest?.closing_time || selectedRest?.closing_hour || selectedRest?.cierre;
+                                    
+                                    if (open && close) return `${open} - ${close}`;
+                                    return "Horario no disponible";
+                                })()}
+                            </span>
+                            {(() => {
+                                const openField = selectedRest?.horario_apertura || selectedRest?.opening_time || selectedRest?.opening_hour || selectedRest?.apertura;
+                                const closeField = selectedRest?.horario_cierre || selectedRest?.closing_time || selectedRest?.closing_hour || selectedRest?.cierre;
                                 
-                                <div className="mb-3">
-                                    {safeSplit(selectedRest?.categoria_restaurante || selectedRest?.categoria || selectedRest?.categorias).length > 0 ? (
-                                        safeSplit(selectedRest?.categoria_restaurante || selectedRest?.categoria || selectedRest?.categorias).map((cat, i) => (
-                                            <span key={i} className="badge bg-primary-subtle text-primary border border-primary-subtle mx-1 rounded-pill px-3">
-                                                {cat}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className="badge bg-light text-muted rounded-pill px-3">General</span>
-                                    )}
-                                </div>
+                                if (!openField || !closeField) return null;
+                                
+                                try {
+                                    const now = new Date();
+                                    const currentTime = now.getHours() * 100 + now.getMinutes();
+                                    // Limpiamos cualquier carácter no numérico (como los ":")
+                                    const open = parseInt(openField.toString().replace(/\D/g, ''));
+                                    const close = parseInt(closeField.toString().replace(/\D/g, ''));
+                                    
+                                    const isOpen = currentTime >= open && currentTime <= close;
 
-                                <div className="d-flex justify-content-center gap-3 flex-wrap mt-2">
-                                    <small className="text-muted">
-                                        <i className="fas fa-map-marker-alt me-1 text-primary"></i>
-                                        {selectedRest?.direccion || "Dirección no disponible"}
-                                    </small>
-                                    <small className="text-muted">
-                                        <i className="fas fa-phone me-1 text-primary"></i>
-                                        {selectedRest?.telefono || "Sin teléfono"}
-                                    </small>
-                                    <small className="text-muted">
-                                        <i className="fas fa-users me-1 text-primary"></i>
-                                        Aforo: {selectedRest?.capacidad_total || "Consultar"} pers.
-                                    </small>
-                                </div>
-                            </div>
-
-                            {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).length > 0 && (
-                                <div className="mb-4 text-center">
-                                    <p className="small text-uppercase fw-bold text-secondary mb-2" style={{ letterSpacing: '1px' }}>Ideal para:</p>
-                                    <div className="d-flex justify-content-center flex-wrap gap-2">
-                                        {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).map((tag, i) => (
-                                            <span key={i} className="small text-dark bg-light px-2 py-1 rounded border shadow-xs">
-                                                <i className="fas fa-tag me-1 text-warning small"></i>{tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <h5 className="fw-bold mb-3 border-bottom pb-2">
-                                <i className="fas fa-utensils me-2 small text-secondary"></i>Nuestro Menú
-                            </h5>
-                            <div className="list-group list-group-flush" style={{ maxHeight: "300px", overflowY: "auto" }}>
-                                {store.menus && store.menus.filter(m => m.restaurante_id === selectedRest?.id).length > 0 ? (
-                                    store.menus
-                                        .filter(item => item.restaurante_id === selectedRest?.id)
-                                        .map((plato, index) => (
-                                            <div key={index} className="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 className="mb-0 fw-bold">{plato.nombre}</h6>
-                                                    <small className="text-muted">{plato.categoria}</small>
-                                                </div>
-                                                <span className="fw-bold text-success">${plato.precio}</span>
-                                            </div>
-                                        ))
-                                ) : (
-                                    <div className="text-center py-4">
-                                        <p className="text-muted small">Este restaurante aún no ha cargado platos al menú.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="modal-footer border-0">
-                            <button
-                                className="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#bookingModal"
-                            >
-                                ¡Me encanta, Reservar Mesa!
-                            </button>
+                                    return (
+                                        <span className={`badge rounded-pill ${isOpen ? 'bg-success' : 'bg-danger'}`} style={{ fontSize: '0.7rem' }}>
+                                            <i className={`fas ${isOpen ? 'fa-check-circle' : 'fa-times-circle'} me-1`}></i>
+                                            {isOpen ? 'Abierto' : 'Cerrado'}
+                                        </span>
+                                    );
+                                } catch (e) { return null; }
+                            })()}
                         </div>
                     </div>
+
+                    <div className="d-flex justify-content-center gap-3 flex-wrap mt-2">
+                        <small className="text-muted">
+                            <i className="fas fa-map-marker-alt me-1 text-primary"></i>
+                            {selectedRest?.direccion || "Dirección no disponible"}
+                        </small>
+                        <small className="text-muted">
+                            <i className="fas fa-phone me-1 text-primary"></i>
+                            {selectedRest?.telefono || "Sin teléfono"}
+                        </small>
+                        <small className="text-muted">
+                            <i className="fas fa-users me-1 text-primary"></i>
+                            Aforo: {selectedRest?.capacidad_total || "Consultar"} pers.
+                        </small>
+                    </div>
+                </div>
+
+                {/* Tags y Menú */}
+                {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).length > 0 && (
+                    <div className="mb-4 text-center">
+                        <p className="small text-uppercase fw-bold text-secondary mb-2" style={{ letterSpacing: '1px' }}>Ideal para:</p>
+                        <div className="d-flex justify-content-center flex-wrap gap-2">
+                            {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).map((tag, i) => (
+                                <span key={i} className="small text-dark bg-light px-2 py-1 rounded border shadow-xs">
+                                    <i className="fas fa-tag me-1 text-warning small"></i>{tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <h5 className="fw-bold mb-3 border-bottom pb-2">
+                    <i className="fas fa-utensils me-2 small text-secondary"></i>Nuestro Menú
+                </h5>
+                <div className="list-group list-group-flush" style={{ maxHeight: "300px", overflowY: "auto" }}>
+                    {store.menus && store.menus.filter(m => m.restaurante_id === selectedRest?.id).length > 0 ? (
+                        store.menus
+                            .filter(item => item.restaurante_id === selectedRest?.id)
+                            .map((plato, index) => (
+                                <div key={index} className="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 className="mb-0 fw-bold">{plato.nombre}</h6>
+                                        <small className="text-muted">{plato.categoria}</small>
+                                    </div>
+                                    <span className="fw-bold text-success">${plato.precio}</span>
+                                </div>
+                            ))
+                    ) : (
+                        <div className="text-center py-4">
+                            <p className="text-muted small">Este restaurante aún no ha cargado platos al menú.</p>
+                        </div>
+                    )}
                 </div>
             </div>
+            <div className="modal-footer border-0">
+                <button
+                    className="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#bookingModal"
+                >
+                    ¡Me encanta, Reservar Mesa!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
             <style>{`
                 .modal-backdrop {

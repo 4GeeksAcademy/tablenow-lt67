@@ -309,10 +309,12 @@ def crear_restaurante():
             image_url=body.get("image_url"),
             latitud=body.get("latitud"),  
             longitud=body.get("longitud"), 
-            # --- NUEVOS CAMPOS ---
             category=body.get("category", "General"),
             tags=body.get("tags", "Estándar"),
-            # ---------------------
+            # --- NUEVOS CAMPOS DE HORARIO ---
+            opening_time=body.get("opening_time", "09:00"),
+            closing_time=body.get("closing_time", "22:00"),
+            # --------------------------------
             owner_id=int(identity) 
         )
         
@@ -345,11 +347,13 @@ def update_restaurante(id):
         restaurante.telefono = data.get("telefono", restaurante.telefono)
         restaurante.latitud = data.get("latitud", restaurante.latitud)
         restaurante.longitud = data.get("longitud", restaurante.longitud)
-        
-        # --- ACTUALIZACIÓN DE NUEVOS CAMPOS ---
         restaurante.category = data.get("category", restaurante.category)
         restaurante.tags = data.get("tags", restaurante.tags)
-        # --------------------------------------
+        
+        # --- ACTUALIZACIÓN DE HORARIOS ---
+        restaurante.opening_time = data.get("opening_time", restaurante.opening_time)
+        restaurante.closing_time = data.get("closing_time", restaurante.closing_time)
+        # ---------------------------------
         
         if "capacidad_total" in data and data["capacidad_total"] not in [None, ""]:
             try:
@@ -406,52 +410,46 @@ def get_menus():
 
 @api.route('/menus', methods=['POST'])
 def create_menu():
-    
     data = request.get_json()
     print(f"DEBUG: Datos recibidos -> {data}") 
     
     if not data:
-        return jsonify({"error": "No se recibió información en el cuerpo de la solicitud"}), 400
+        return jsonify({"error": "No se recibió información"}), 400
 
-    
     restaurante_id = data.get("restaurante_id")
     if not restaurante_id:
-        return jsonify({"error": "Falta el campo obligatorio: restaurante_id"}), 400
+        return jsonify({"error": "Falta restaurante_id"}), 400
 
-    
     restaurante = Restaurante.query.get(restaurante_id)
     if not restaurante:
-        return jsonify({
-            "error": f"El restaurante con ID {restaurante_id} no existe. Revisa los IDs disponibles en /api/restaurants"
-        }), 400 
+        return jsonify({"error": "Restaurante no existe"}), 400 
 
-    
     try:
         nombre = data.get("nombre")
         precio = data.get("precio")
 
         if not nombre or not precio:
-            return jsonify({"error": "Faltan campos obligatorios: nombre o precio"}), 400
+            return jsonify({"error": "Faltan nombre o precio"}), 400
 
         nuevo_menu = Menu(
             nombre=nombre,
             categoria=data.get("categoria"),
             precio=float(precio), 
             restaurante_id=int(restaurante_id),
-            disponible=data.get("disponible", True)
+            disponible=data.get("disponible", True),
+            foto=data.get("foto"), # <-- Campo nuevo
+            descripcion=data.get("descripcion") # <-- Campo nuevo
         )
         
         db.session.add(nuevo_menu)
         db.session.commit()
-        
         return jsonify(nuevo_menu.serialize()), 201
 
     except ValueError:
-        return jsonify({"error": "El precio debe ser un número válido"}), 400
+        return jsonify({"error": "Precio inválido"}), 400
     except Exception as e:
         db.session.rollback() 
-        print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") 
-        return jsonify({"error": "Error interno del servidor", "details": str(e)}), 500
+        return jsonify({"error": "Error interno", "details": str(e)}), 500
     
 @api.route('/menus/<int:id>', methods=['PUT'])
 def update_menu(id):
@@ -465,14 +463,17 @@ def update_menu(id):
         menu.categoria = data.get("categoria", menu.categoria)
         menu.precio = float(data.get("precio", menu.precio))
         menu.disponible = data.get("disponible", menu.disponible)
-        
         menu.restaurante_id = data.get("restaurante_id", menu.restaurante_id)
+        # --- NUEVOS CAMPOS ---
+        menu.foto = data.get("foto", menu.foto)
+        menu.descripcion = data.get("descripcion", menu.descripcion)
+        # ---------------------
 
         db.session.commit()
         return jsonify(menu.serialize()), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error al actualizar el plato", "error": str(e)}), 500
+        return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
 
 @api.route('/menus/<int:id>', methods=['DELETE'])
 def delete_menu(id):

@@ -19,10 +19,10 @@ export const SalesList = () => {
                 });
                 
                 if (response.ok) {
-    const data = await response.json();
-    console.log("Ventas recibidas del server:", data); // <--- MIRA ESTO EN LA CONSOLA
-    dispatch({ type: "set_sales", payload: data });
-} else {
+                    const data = await response.json();
+                    console.log("Ventas recibidas del server:", data); 
+                    dispatch({ type: "set_sales", payload: data });
+                } else {
                     console.error("Error en la respuesta del servidor");
                 }
             } catch (error) {
@@ -33,89 +33,248 @@ export const SalesList = () => {
     }, []);
 
     return (
-        <div className="container mt-5">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="fw-bold">Sales History</h2>
-                <button className="btn btn-primary shadow-sm" onClick={() => navigate("/new-sale")}>
-                    + New Receipt
-                </button>
-            </div>
+        <div className="sales-page-wrapper">
+            <div className="background-overlay"></div>
 
-            <div className="row">
-                {store.sales && store.sales.length > 0 ? (
-                    store.sales.map((sale) => (
-                        <div className="col-md-4 mb-4" key={sale.id}>
-                            {/* DISEÑO DE RECIBO */}
-                            <div className="card border-0 shadow-sm" style={{ borderLeft: "5px solid #198754" }}>
-                                <div className="card-body p-4">
-                                    <div className="d-flex justify-content-between mb-3">
-                                        <span className="text-muted small">#{sale.id.toString().padStart(5, '0')}</span>
-                                        <span className={`badge ${sale.status === 'paid' ? 'bg-success' : 'bg-warning text-dark'}`}>
-                                            {sale.status.toUpperCase()}
-                                        </span>
-                                    </div>
+            <div className="container content-relative py-5">
+                {/* Header Estilizado */}
+                <div className="d-flex justify-content-between align-items-end mb-5">
+                    <div>
+                        <p className="brand-badge">Financial Records</p>
+                        <h1 className="display-4 text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                            Sales <span className="text-gold">History</span>
+                        </h1>
+                    </div>
+                    <button className="btn-luxury-action" onClick={() => navigate("/new-sale")}>
+                        + NEW RECEIPT
+                    </button>
+                </div>
+
+                <div className="row g-4">
+                    {store.sales && store.sales.length > 0 ? (
+                        store.sales.map((sale) => (
+                            <div className="col-12 col-md-6 col-lg-4" key={sale.id}>
+                                {/* DISEÑO DE RECIBO PREMIUM */}
+                                <div className="receipt-card-luxury">
+                                    <div className="receipt-top-edge"></div>
                                     
-                                    <h5 className="text-center my-3 fw-bold text-uppercase" style={{ letterSpacing: "2px" }}>
-                                        Receipt
-                                    </h5>
-                                    
-                                    <hr className="border-secondary border-1 opacity-25" />
-                                    
-                                    <div className="d-flex justify-content-between my-2">
-                                        <span>Date:</span>
-                                            <span className="fw-medium">
+                                    <div className="card-body p-4">
+                                        <div className="d-flex justify-content-between mb-4">
+                                            <span className="receipt-id">ID: #{sale.id.toString().padStart(5, '0')}</span>
+                                            <span className={`receipt-status-badge ${sale.status === 'paid' ? 'status-paid' : 'status-pending'}`}>
+                                                {sale.status.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        
+                                        <h5 className="receipt-title text-center mb-4">
+                                            TRANSACTION RECEIPT
+                                        </h5>
+                                        
+                                        <div className="receipt-divider"></div>
+                                        
+                                        <div className="receipt-info-row">
+                                            <span>Date:</span>
+                                            <span className="fw-bold">
                                                 {new Date(sale.date + "Z").toLocaleDateString("es-VE", {
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                                year: 'numeric'
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric'
                                                 })}
                                             </span>
-                                    </div>
-                                    <div className="d-flex justify-content-between my-2">
-                                        <span>Method:</span>
-                                        <span className="text-capitalize">{sale.payment_method}</span>
-                                    </div>
-                                    <div className="d-flex justify-content-between my-2">
-                                <span>Booking:</span> 
-                                    <span className="fw-bold text-capitalize">
-                                            {sale.customer_name ? sale.customer_name : "Walk-in Customer"}
-                                    </span>
-                                    </div>
-                                    <hr className="border-secondary border-1 opacity-25" />
+                                        </div>
+                                        <div className="receipt-info-row">
+                                            <span>Method:</span>
+                                            <span className="text-capitalize">{sale.payment_method}</span>
+                                        </div>
+                                        <div className="receipt-info-row">
+                                            <span>Booking:</span> 
+                                            <span className="text-capitalize fw-bold">
+                                                {sale.customer_name ? sale.customer_name : "Walk-in Customer"}
+                                            </span>
+                                        </div>
 
-                                    <div className="d-flex justify-content-between align-items-center mt-3">
-                                        <span className="h5 mb-0 fw-bold">TOTAL</span>
-                                        <span className="h4 mb-0 fw-bold text-success">
-                                            ${sale.total.toFixed(2)}
-                                        </span>
-                                    </div>
+                                        <div className="receipt-divider"></div>
 
-                                    <div className="mt-3">
-                                        <Link to={`/add-items/${sale.id}`} className="btn btn-outline-primary btn-sm w-100 shadow-sm">
-                                            <i className="fas fa-utensils me-2"></i>Manage Items
-                                        </Link>
+                                        <div className="d-flex justify-content-between align-items-center my-4">
+                                            <span className="total-label">TOTAL</span>
+                                            <span className="total-amount">
+                                                ${sale.total.toFixed(2)}
+                                            </span>
+                                        </div>
+
+                                        <div className="mb-4">
+                                            <Link to={`/add-items/${sale.id}`} className="btn-manage-items text-decoration-none d-block text-center">
+                                                <i className="fas fa-utensils me-2"></i>MANAGE ITEMS
+                                            </Link>
+                                        </div>
+                                        
+                                        <div className="text-center receipt-footer">
+                                            <p className="m-0 text-gold fw-bold">
+                                                {sale.restaurante_nombre ? sale.restaurante_nombre : "TableNow Central"}
+                                            </p>
+                                            <p className="m-0 small text-muted">Luxury Hospitality Group</p>
+                                        </div>
                                     </div>
-                                    
-                                    <div className="text-center mt-4 pt-2 border-top border-dashed">
-                                        <p className="small text-muted mb-0">
-                                            {sale.restaurante_nombre ? sale.restaurante_nombre : "TableNow Central"}
-                                        </p>
-                                        <p className="small text-muted">Thank you for your visit!</p>
-                                    </div>
+                                    <div className="receipt-bottom-edge"></div>
                                 </div>
                             </div>
+                        ))
+                    ) : (
+                        <div className="col-12 text-center mt-5">
+                            <p className="text-muted fs-4" style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}>
+                                No digital receipts found in the archive...
+                            </p>
                         </div>
-                    ))
-                ) : (
-                    <div className="text-center mt-5">
-                        <p className="text-muted">No receipts found. Try registering a new sale.</p>
-                    </div>
-                )}
+                    )}
+                </div>
+                
+                <div className="mt-5">
+                    <button className="btn-back-minimal" onClick={() => navigate("/")}>
+                        ← BACK TO DASHBOARD
+                    </button>
+                </div>
             </div>
-            
-            <button className="btn btn-outline-secondary mt-3" onClick={() => navigate("/")}>
-                Back to Home
-            </button>
+
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Montserrat:wght@200;400;600;700&display=swap');
+
+                .sales-page-wrapper {
+                    position: relative;
+                    min-height: 100vh;
+                    background-color: #050505;
+                    background-image: url('https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?q=80&w=2070');
+                    background-size: cover;
+                    background-position: center;
+                    background-attachment: fixed;
+                    font-family: 'Montserrat', sans-serif;
+                }
+
+                .background-overlay {
+                    position: absolute;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.95) 100%);
+                    z-index: 1;
+                }
+
+                .content-relative { position: relative; z-index: 2; }
+
+                .brand-badge {
+                    color: #c5a47e;
+                    text-transform: uppercase;
+                    letter-spacing: 4px;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    margin-bottom: 0;
+                }
+
+                .text-gold { color: #c5a47e; font-style: italic; }
+
+                /* Botón New Receipt */
+                .btn-luxury-action {
+                    background-color: #c5a47e;
+                    color: #000;
+                    border: none;
+                    padding: 12px 25px;
+                    font-weight: 700;
+                    font-size: 0.8rem;
+                    letter-spacing: 1px;
+                    transition: all 0.3s ease;
+                }
+                .btn-luxury-action:hover {
+                    background-color: #fff;
+                    transform: translateY(-2px);
+                }
+
+                /* DISEÑO DE RECIBO */
+                .receipt-card-luxury {
+                    background: #fff;
+                    color: #000;
+                    position: relative;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+                    transition: transform 0.3s ease;
+                }
+                .receipt-card-luxury:hover {
+                    transform: scale(1.02) rotate(1deg);
+                }
+
+                .receipt-top-edge {
+                    height: 8px;
+                    background-image: radial-gradient(circle, transparent 70%, #fff 70%);
+                    background-size: 16px 16px;
+                    background-position: 0 -8px;
+                    width: 100%;
+                }
+
+                .receipt-bottom-edge {
+                    height: 8px;
+                    background-image: radial-gradient(circle, transparent 70%, #fff 70%);
+                    background-size: 16px 16px;
+                    background-position: 0 0;
+                    width: 100%;
+                }
+
+                .receipt-id { color: #888; font-size: 0.75rem; letter-spacing: 1px; }
+
+                .receipt-status-badge {
+                    font-size: 0.65rem;
+                    padding: 4px 10px;
+                    font-weight: 800;
+                    letter-spacing: 1px;
+                }
+                .status-paid { background: #d4edda; color: #155724; }
+                .status-pending { background: #fff3cd; color: #856404; }
+
+                .receipt-title {
+                    font-family: 'Playfair Display', serif;
+                    letter-spacing: 3px;
+                    font-weight: 700;
+                    border-bottom: 2px solid #000;
+                    display: inline-block;
+                    width: 100%;
+                }
+
+                .receipt-divider {
+                    border-top: 1px dashed #ccc;
+                    margin: 15px 0;
+                }
+
+                .receipt-info-row {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.85rem;
+                    margin-bottom: 8px;
+                }
+
+                .total-label { font-weight: 800; font-size: 1.2rem; }
+                .total-amount { font-weight: 800; font-size: 1.5rem; color: #155724; }
+
+                .btn-manage-items {
+                    background: #000;
+                    color: #fff;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    padding: 10px;
+                    transition: 0.3s;
+                }
+                .btn-manage-items:hover { background: #c5a47e; color: #000; }
+
+                .receipt-footer {
+                    font-size: 0.7rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+
+                .btn-back-minimal {
+                    background: transparent;
+                    border: none;
+                    color: #888;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    letter-spacing: 2px;
+                    transition: 0.3s;
+                }
+                .btn-back-minimal:hover { color: #c5a47e; }
+            `}</style>
         </div>
     );
 };

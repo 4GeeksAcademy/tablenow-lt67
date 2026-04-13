@@ -14,6 +14,43 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// --- FUNCIÓN AUXILIAR DE ESTADO DE HORARIO ---
+const checkStatus = (open, close) => {
+    if (!open || !close) return { label: "Horario no disp.", color: "text-muted", full: "N/A" };
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    const [hOpen, mOpen] = open.split(':').map(Number);
+    const [hClose, mClose] = close.split(':').map(Number);
+
+    const openTime = hOpen * 60 + mOpen;
+    const closeTime = hClose * 60 + mClose;
+
+    // Manejo de horarios que cierran después de medianoche (ej: 18:00 a 02:00)
+    let isOpen = false;
+    if (closeTime > openTime) {
+        isOpen = currentTime >= openTime && currentTime < closeTime;
+    } else {
+        isOpen = currentTime >= openTime || currentTime < closeTime;
+    }
+
+    // Formatear a 12h (AM/PM)
+    const format12h = (timeStr) => {
+        const [h, m] = timeStr.split(':');
+        const hour = parseInt(h);
+        const suffix = hour >= 12 ? 'pm' : 'am';
+        const formattedHour = ((hour + 11) % 12 + 1);
+        return `${formattedHour}${suffix}`;
+    };
+
+    return {
+        label: isOpen ? "Abierto" : "Cerrado",
+        color: isOpen ? "text-success" : "text-danger",
+        timeRange: `${format12h(open)} / ${format12h(close)}`
+    };
+};
+
 const SearchField = ({ onLocationChange }) => {
     const map = useMap();
     useEffect(() => {
@@ -53,7 +90,7 @@ export const VistaBusqueda = () => {
     const [userLocation, setUserLocation] = useState({ lat: 10.4806, lng: -66.8983 });
     const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [fixedPopupId, setFixedPopupId] = useState(null); // Estado para el popup fijo
+    const [fixedPopupId, setFixedPopupId] = useState(null);
     
     const markerRefs = useRef({});
 
@@ -101,7 +138,6 @@ export const VistaBusqueda = () => {
         filterNearby(lat, lng);
     };
 
-    // Función para manejar el click y fijar el popup
     const handleRestaurantClick = (rest) => {
         if (fixedPopupId === rest.id) {
             setFixedPopupId(null);
@@ -120,7 +156,6 @@ export const VistaBusqueda = () => {
     };
 
     const closeRestaurantPopup = (rest) => {
-        // Solo cerramos si no está fijado por un click previo
         if (fixedPopupId !== rest.id) {
             const marker = markerRefs.current[rest.id];
             if (marker) {
@@ -151,34 +186,44 @@ export const VistaBusqueda = () => {
 
                     <div className="list-group shadow-sm overflow-auto" style={{ maxHeight: "70vh", borderRadius: "10px" }}>
                         {nearbyRestaurants.length > 0 ? (
-                            nearbyRestaurants.map((rest) => (
-                                <div 
-                                    key={rest.id} 
-                                    className={`list-group-item list-group-item-action p-3 ${fixedPopupId === rest.id ? 'bg-light border-primary' : ''}`}
-                                    style={{ 
-                                        cursor: "pointer", 
-                                        borderLeft: fixedPopupId === rest.id ? "4px solid #0d6efd" : "" 
-                                    }}
-                                    onClick={() => handleRestaurantClick(rest)}
-                                    onMouseEnter={() => openRestaurantPopup(rest)}
-                                    onMouseLeave={() => closeRestaurantPopup(rest)}
-                                >
-                                    <div className="d-flex align-items-center">
-                                        <img
-                                            src={rest.image_url || "https://via.placeholder.com/60"}
-                                            className="rounded shadow-sm me-3"
-                                            style={{ width: "65px", height: "65px", objectFit: "cover" }}
-                                            alt={rest.nombre}
-                                        />
-                                        <div className="flex-grow-1">
-                                            <h6 className="mb-0 fw-bold">{rest.nombre}</h6>
-                                            <small className="text-muted d-block text-truncate" style={{ maxWidth: "160px" }}>
-                                                {rest.direccion}
-                                            </small>
+                            nearbyRestaurants.map((rest) => {
+                                // LLAMADA A LA LÓGICA DE TIEMPO
+                                const status = checkStatus(rest.opening_time, rest.closing_time);
+                                
+                                return (
+                                    <div 
+                                        key={rest.id} 
+                                        className={`list-group-item list-group-item-action p-3 ${fixedPopupId === rest.id ? 'bg-light border-primary' : ''}`}
+                                        style={{ 
+                                            cursor: "pointer", 
+                                            borderLeft: fixedPopupId === rest.id ? "4px solid #0d6efd" : "" 
+                                        }}
+                                        onClick={() => handleRestaurantClick(rest)}
+                                        onMouseEnter={() => openRestaurantPopup(rest)}
+                                        onMouseLeave={() => closeRestaurantPopup(rest)}
+                                    >
+                                        <div className="d-flex align-items-center">
+                                            <img
+                                                src={rest.image_url || "https://via.placeholder.com/60"}
+                                                className="rounded shadow-sm me-3"
+                                                style={{ width: "65px", height: "65px", objectFit: "cover" }}
+                                                alt={rest.nombre}
+                                            />
+                                            <div className="flex-grow-1">
+                                                <h6 className="mb-0 fw-bold">{rest.nombre}</h6>
+                                                {/* NUEVA LÍNEA DE HORARIO Y ESTADO */}
+                                                <div className="small fw-bold">
+                                                    <span className="text-muted">{status.timeRange}</span>
+                                                    <span className={`ms-2 ${status.color}`}>• {status.label}</span>
+                                                </div>
+                                                <small className="text-muted d-block text-truncate" style={{ maxWidth: "160px" }}>
+                                                    {rest.direccion}
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <div className="p-5 text-center text-muted bg-light">
                                 <i className="fas fa-map-marked-alt fa-3x mb-3 opacity-25"></i>
@@ -204,31 +249,41 @@ export const VistaBusqueda = () => {
                                 <Popup><b>Tu búsqueda / ubicación</b></Popup>
                             </Marker>
 
-                            {nearbyRestaurants.map(rest => (
-                                <Marker 
-                                    key={rest.id} 
-                                    position={[parseFloat(rest.latitud), parseFloat(rest.longitud)]}
-                                    ref={(el) => (markerRefs.current[rest.id] = el)}
-                                >
-                                    <Popup>
-                                        <div className="p-2" style={{ minWidth: "140px" }}>
-                                            <h6 className="fw-bold mb-1 text-center">{rest.nombre}</h6>
-                                            <p className="small text-muted mb-2 text-center">{rest.direccion}</p>
-                                            <span className="badge bg-info text-dark mb-2 d-block mx-auto" style={{width: "fit-content"}}>
-                                                {rest.category || "General"}
-                                            </span>
-                                            <hr className="my-1"/>
-                                            <Link 
-                                                to={`/client-dashboard?reservaRestId=${rest.id}`} 
-                                                className="btn btn-primary btn-sm w-100 rounded-pill fw-bold mt-2 text-white"
-                                            >
-                                                <i className="fas fa-calendar-check me-2 text-white"></i>
-                                                Reserva aquí
-                                            </Link>
-                                        </div>
-                                    </Popup>
-                                </Marker>
-                            ))}
+                            {nearbyRestaurants.map(rest => {
+                                // LLAMADA A LA LÓGICA DE TIEMPO PARA EL POPUP
+                                const status = checkStatus(rest.opening_time, rest.closing_time);
+
+                                return (
+                                    <Marker 
+                                        key={rest.id} 
+                                        position={[parseFloat(rest.latitud), parseFloat(rest.longitud)]}
+                                        ref={(el) => (markerRefs.current[rest.id] = el)}
+                                    >
+                                        <Popup>
+                                            <div className="p-2" style={{ minWidth: "160px" }}>
+                                                <h6 className="fw-bold mb-1 text-center">{rest.nombre}</h6>
+                                                {/* ESTADO EN EL POPUP */}
+                                                <div className="text-center mb-2" style={{fontSize: "0.75rem"}}>
+                                                    <span className="fw-bold text-muted">{status.timeRange}</span>
+                                                    <span className={`ms-1 fw-bold ${status.color}`}>({status.label})</span>
+                                                </div>
+                                                <p className="small text-muted mb-2 text-center">{rest.direccion}</p>
+                                                <span className="badge bg-info text-dark mb-2 d-block mx-auto" style={{width: "fit-content"}}>
+                                                    {rest.category || "General"}
+                                                </span>
+                                                <hr className="my-1"/>
+                                                <Link 
+                                                    to={`/client-dashboard?reservaRestId=${rest.id}`} 
+                                                    className="btn btn-primary btn-sm w-100 rounded-pill fw-bold mt-2 text-white"
+                                                >
+                                                    <i className="fas fa-calendar-check me-2 text-white"></i>
+                                                    Reserva aquí
+                                                </Link>
+                                            </div>
+                                        </Popup>
+                                    </Marker>
+                                );
+                            })}
                         </MapContainer>
                     </div>
                 </div>

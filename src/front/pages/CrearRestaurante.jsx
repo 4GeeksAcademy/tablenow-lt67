@@ -18,6 +18,10 @@ export const CrearRestaurante = () => {
     const [tags, setTags] = useState([]);
     const [tagInput, setTagInput] = useState(""); 
 
+    // --- NUEVOS ESTADOS DE HORARIO ---
+    const [openingTime, setOpeningTime] = useState("09:00");
+    const [closingTime, setClosingTime] = useState("22:00");
+
     // --- ESTADOS DE UBICACIÓN ---
     const [latitud, setLatitud] = useState(null);
     const [longitud, setLongitud] = useState(null);
@@ -131,7 +135,10 @@ export const CrearRestaurante = () => {
                     longitud,
                     // Se envían como un solo string separado por comas
                     category: finalCategories.length > 0 ? finalCategories.join(", ") : "General",
-                    tags: finalTags.length > 0 ? finalTags.join(", ") : "Estándar"
+                    tags: finalTags.length > 0 ? finalTags.join(", ") : "Estándar",
+                    // --- NUEVAS LÍNEAS ---
+                    opening_time: openingTime,
+                    closing_time: closingTime
                 })
             });
 
@@ -242,6 +249,18 @@ export const CrearRestaurante = () => {
                                 </div>
                             </div>
 
+                            {/* SECCIÓN DE HORARIOS */}
+                            <div className="row mb-3">
+                                <div className="col">
+                                    <label className="form-label small fw-bold">Apertura</label>
+                                    <input type="time" className="form-control form-control-sm" value={openingTime} onChange={(e) => setOpeningTime(e.target.value)} />
+                                </div>
+                                <div className="col">
+                                    <label className="form-label small fw-bold">Cierre</label>
+                                    <input type="time" className="form-control form-control-sm" value={closingTime} onChange={(e) => setClosingTime(e.target.value)} />
+                                </div>
+                            </div>
+
                             <div className="mb-3">
                                 <label className="form-label small fw-bold">Ubicación GPS</label>
                                 <button type="button" className={`btn ${latitud ? 'btn-success' : 'btn-outline-dark'} w-100 btn-sm mb-2`} onClick={getLocation} disabled={loadingLocation}>
@@ -335,6 +354,14 @@ export const CrearRestaurante = () => {
                                                                     {tag.trim()}
                                                                 </span>
                                                             ))}
+                                                        </div>
+
+                                                        {/* RENDERIZADO DE HORARIOS */}
+                                                        <div className="text-muted small mt-1 d-flex align-items-center">
+                                                            <i className="far fa-clock me-1 text-primary"></i>
+                                                            <span className="badge bg-light text-dark border">
+                                                                {rest.opening_time || "09:00"} - {rest.closing_time || "22:00"}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
