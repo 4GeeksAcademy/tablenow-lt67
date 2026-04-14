@@ -401,7 +401,7 @@ export const ClientDashboard = () => {
                 </div>
             </div>
 
-            {/* --- MODAL DE INFO Y MENÚ --- */}
+{/* --- MODAL DE INFO Y MENÚ --- */}
 <div className="modal fade" id="infoModal" tabIndex="-1" aria-hidden="true">
     <div className="modal-dialog modal-dialog-centered modal-md">
         <div className="modal-content border-0 shadow-lg rounded-4">
@@ -426,7 +426,7 @@ export const ClientDashboard = () => {
                                 </span>
                             ))
                         ) : (
-                            <span className="badge bg-light text-muted rounded-pill px-3">General</span>
+                            <span className="badge bg-light text-muted rounded-pill px-3"></span>
                         )}
                     </div>
 
@@ -436,10 +436,8 @@ export const ClientDashboard = () => {
                             <i className="far fa-clock me-2 text-primary"></i>
                             <span className="small fw-bold text-dark me-2">
                                 {(() => {
-                                    // Mapeo de posibles nombres de campos que vienen de tu API
                                     const open = selectedRest?.horario_apertura || selectedRest?.opening_time || selectedRest?.opening_hour || selectedRest?.apertura;
                                     const close = selectedRest?.horario_cierre || selectedRest?.closing_time || selectedRest?.closing_hour || selectedRest?.cierre;
-                                    
                                     if (open && close) return `${open} - ${close}`;
                                     return "Horario no disponible";
                                 })()}
@@ -447,18 +445,13 @@ export const ClientDashboard = () => {
                             {(() => {
                                 const openField = selectedRest?.horario_apertura || selectedRest?.opening_time || selectedRest?.opening_hour || selectedRest?.apertura;
                                 const closeField = selectedRest?.horario_cierre || selectedRest?.closing_time || selectedRest?.closing_hour || selectedRest?.cierre;
-                                
                                 if (!openField || !closeField) return null;
-                                
                                 try {
                                     const now = new Date();
                                     const currentTime = now.getHours() * 100 + now.getMinutes();
-                                    // Limpiamos cualquier carácter no numérico (como los ":")
                                     const open = parseInt(openField.toString().replace(/\D/g, ''));
                                     const close = parseInt(closeField.toString().replace(/\D/g, ''));
-                                    
                                     const isOpen = currentTime >= open && currentTime <= close;
-
                                     return (
                                         <span className={`badge rounded-pill ${isOpen ? 'bg-success' : 'bg-danger'}`} style={{ fontSize: '0.7rem' }}>
                                             <i className={`fas ${isOpen ? 'fa-check-circle' : 'fa-times-circle'} me-1`}></i>
@@ -486,7 +479,7 @@ export const ClientDashboard = () => {
                     </div>
                 </div>
 
-                {/* Tags y Menú */}
+                {/* Tags */}
                 {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).length > 0 && (
                     <div className="mb-4 text-center">
                         <p className="small text-uppercase fw-bold text-secondary mb-2" style={{ letterSpacing: '1px' }}>Ideal para:</p>
@@ -508,12 +501,19 @@ export const ClientDashboard = () => {
                         store.menus
                             .filter(item => item.restaurante_id === selectedRest?.id)
                             .map((plato, index) => (
-                                <div key={index} className="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                                    <div>
+                                <div key={index} className="list-group-item px-0 py-3 d-flex align-items-center">
+                                    {/* IMAGEN DEL PLATO */}
+                                    <img 
+                                        src={plato.foto || "https://dummyimage.com/50x50/eeeeee/999999&text=Plato"} 
+                                        alt={plato.nombre}
+                                        className="rounded-3 me-3 shadow-sm"
+                                        style={{ width: "55px", height: "55px", objectFit: "cover" }}
+                                    />
+                                    <div className="flex-grow-1">
                                         <h6 className="mb-0 fw-bold">{plato.nombre}</h6>
                                         <small className="text-muted">{plato.categoria}</small>
                                     </div>
-                                    <span className="fw-bold text-success">${plato.precio}</span>
+                                    <span className="fw-bold text-success ms-2">${plato.precio}</span>
                                 </div>
                             ))
                     ) : (
@@ -535,7 +535,6 @@ export const ClientDashboard = () => {
         </div>
     </div>
 </div>
-
             <style>{`
                 .modal-backdrop {
                     background-color: rgba(0, 0, 0, 0.5) !important;
@@ -560,4 +559,4 @@ export const ClientDashboard = () => {
             `}</style>
         </div>
     );
-};
+};       

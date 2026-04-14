@@ -23,11 +23,11 @@ const EmpleadoDetail = () => {
         getEmpleadoInfo();
     }, [id]);
 
-    
+    // -- SPINNER ESTILIZADO --
     if (!empleado) {
         return (
-            <div className="container mt-5 text-center">
-                <div className="spinner-border text-primary" role="status">
+            <div className="min-vh-100 d-flex justify-content-center align-items-center" style={{ background: '#000' }}>
+                <div className="spinner-border" style={{ color: '#c5a47e' }} role="status">
                     <span className="visually-hidden">Loading...</span>
                 </div>
             </div>
@@ -35,59 +35,125 @@ const EmpleadoDetail = () => {
     }
 
     return (
-        <div className="container mt-5">
-            <h1 className="text-center display-3 mb-4">Employee Details</h1>
-            <div className="d-flex justify-content-center">
-                <div className="card shadow-lg" style={{ width: "100%", maxWidth: "600px" }}>
-                    <div className="card-body p-5">
-                        {/* FULL NAME */}
-                        <div className="row mb-3">
-                            <div className="col-sm-4 font-weight-bold text-secondary">Full Name:</div>
-                            <div className="col-sm-8"><h4>{empleado.full_name}</h4></div>
-                        </div>
-                        <hr />
+        <div className="min-vh-100 py-5 d-flex align-items-center" style={{
+            background: `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), url('https://images.unsplash.com/photo-1550966841-3ee32c3f8702?q=80&w=2070&auto=format&fit=crop')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+            color: '#fff'
+        }}>
+            {/* ESTILOS PERSONALIZADOS */}
+            <style>{`
+                .gold-text { color: #c5a47e !important; }
+                .profile-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(197, 164, 126, 0.2);
+                    border-radius: 25px;
+                    overflow: hidden;
+                }
+                .profile-header {
+                    background: rgba(197, 164, 126, 0.05);
+                    border-bottom: 1px solid rgba(197, 164, 126, 0.1);
+                    padding: 40px 20px;
+                }
+                .info-label {
+                    color: #c5a47e;
+                    font-weight: 600;
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1.5px;
+                }
+                .info-value {
+                    font-size: 1.1rem;
+                    color: #e0e0e0;
+                }
+                .btn-gold-pill { 
+                    background-color: #c5a47e !important; 
+                    color: #000 !important; 
+                    font-weight: 700; 
+                    border-radius: 50px;
+                    padding: 10px 25px;
+                    border: none;
+                    transition: all 0.3s;
+                }
+                .btn-gold-pill:hover { transform: translateY(-2px); filter: brightness(1.1); }
+                .btn-outline-pill {
+                    border-radius: 50px;
+                    padding: 10px 25px;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff;
+                    transition: all 0.3s;
+                    text-decoration: none;
+                }
+                .btn-outline-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+                .font-playfair { font-family: 'Playfair Display', serif; }
+                hr { border-top: 1px solid rgba(197, 164, 126, 0.1); }
+            `}</style>
 
-                        {/* EMAIL - Ahora con color de texto normal (negro) */}
-                        <div className="row mb-3">
-                            <div className="col-sm-4 font-weight-bold text-secondary">Email Address:</div>
-                            <div className="col-sm-8 text-dark">{empleado.email}</div>
-                        </div>
-                        <hr />
-
-                        {/* PHONE NUMBER */}
-                        <div className="row mb-3">
-                            <div className="col-sm-4 font-weight-bold text-secondary">Phone Number:</div>
-                            <div className="col-sm-8">{empleado.phone}</div>
-                        </div>
-                        <hr />
-
-                        {/* ROLE */}
-                        <div className="row mb-3">
-                            <div className="col-sm-4 font-weight-bold text-secondary">Role:</div>
-                            <div className="col-sm-8">
-                                <span className="badge bg-info text-dark">{empleado.rol}</span>
-                            </div>
-                        </div>
-                        <hr />
-
-                        {/* STATUS */}
-                        <div className="row mb-4">
-                            <div className="col-sm-4 font-weight-bold text-secondary">Status:</div>
-                            <div className="col-sm-8">
-                                <span className={`badge ${empleado.state === 'Active' ? 'bg-success' : 'bg-warning text-dark'}`}>
-                                    {empleado.state || "No State"}
+            <div className="container">
+                <div className="row justify-content-center">
+                    <div className="col-md-8 col-lg-6">
+                        <div className="profile-card shadow-lg">
+                            
+                            {/* CABECERA DE PERFIL */}
+                            <div className="profile-header text-center">
+                                <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                                     style={{ width: '100px', height: '100px', border: '2px solid #c5a47e', background: 'rgba(0,0,0,0.3)' }}>
+                                    <i className="bi bi-person-circle gold-text display-3"></i>
+                                </div>
+                                <h1 className="font-playfair h2 mb-1">{empleado.full_name}</h1>
+                                <span className="badge rounded-pill px-3 py-2" 
+                                      style={{ background: 'rgba(197, 164, 126, 0.15)', color: '#c5a47e', letterSpacing: '1px' }}>
+                                    {empleado.rol}
                                 </span>
                             </div>
-                        </div>
 
-                        {/* BUTTONS */}
-                        <div className="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <Link to="/empleado" className="btn btn-secondary">
-                                <i className="bi bi-arrow-left"></i> Go Back
-                            </Link>
-                            <Link to={`/edit-empleado/${id}`} className="btn btn-primary">
-                                <i className="bi bi-pencil"></i> Edit Info
-                            </Link>
+                            {/* CUERPO DE DETALLES */}
+                            <div className="card-body p-4 p-md-5">
+                                
+                                {/* EMAIL */}
+                                <div className="d-flex align-items-center mb-4">
+                                    <div className="me-3 fs-4 gold-text"><i className="bi bi-envelope-at"></i></div>
+                                    <div>
+                                        <div className="info-label">Email Address</div>
+                                        <div className="info-value">{empleado.email}</div>
+                                    </div>
+                                </div>
+                                <hr />
+
+                                {/* PHONE */}
+                                <div className="d-flex align-items-center my-4">
+                                    <div className="me-3 fs-4 gold-text"><i className="bi bi-telephone"></i></div>
+                                    <div>
+                                        <div className="info-label">Contact Number</div>
+                                        <div className="info-value">{empleado.phone}</div>
+                                    </div>
+                                </div>
+                                <hr />
+
+                                {/* STATUS */}
+                                <div className="d-flex align-items-center mt-4">
+                                    <div className="me-3 fs-4 gold-text"><i className="bi bi-shield-check"></i></div>
+                                    <div>
+                                        <div className="info-label">Account Status</div>
+                                        <div className={`fw-bold ${empleado.state === 'Active' ? 'text-success' : 'text-warning'}`}>
+                                            <i className="bi bi-dot fs-3 align-middle"></i>
+                                            {empleado.state || "No State"}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* BOTONES DE ACCIÓN */}
+                                <div className="d-flex gap-3 justify-content-center mt-5">
+                                    <Link to="/empleado" className="btn-outline-pill">
+                                        <i className="bi bi-arrow-left me-2"></i>Back
+                                    </Link>
+                                    <Link to={`/edit-empleado/${id}`} className="btn-gold-pill text-decoration-none">
+                                        <i className="bi bi-pencil-square me-2"></i>Edit Profile
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
