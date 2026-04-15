@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 export const ConserjeChat = () => {
-    // Estados para manejar el input, la respuesta y el cargando
     const [chatInput, setChatInput] = useState("");
     const [aiResponse, setAiResponse] = useState("");
     const [loadingAI, setLoadingAI] = useState(false);
@@ -17,50 +16,86 @@ export const ConserjeChat = () => {
                 body: JSON.stringify({ "query": chatInput })
             });
             const data = await resp.json();  
-            
-            // Ajusta "data.respuesta" según lo que devuelva tu API
-            setAiResponse(data.respuesta || data.message || "No recibí respuesta.");
+            setAiResponse(data.respuesta || data.message || "I couldn't find a response.");
         } catch (error) {
-            setAiResponse("Hubo un error al conectar con el servidor.");
+            setAiResponse("There was an error connecting to the AI Concierge.");
         } finally {
             setLoadingAI(false);
         }
     };
 
     return (
-        <div className="card border-0 shadow-sm p-4 rounded-4" style={{ background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)" }}>
-            <div className="d-flex align-items-center mb-3">
-                <div className="bg-primary text-white p-2 rounded-circle me-3 shadow">
-                    <i className="fas fa-robot fa-lg"></i>
+        <div className="card border-0 shadow-lg p-4 rounded-4" style={{ 
+            background: "linear-gradient(145deg, rgba(30, 30, 30, 0.9) 0%, rgba(20, 20, 20, 1) 100%)",
+            border: "1px solid rgba(197, 164, 126, 0.2) !important",
+            backdropFilter: "blur(10px)"
+        }}>
+            {/* Header */}
+            <div className="d-flex align-items-center mb-4">
+                <div className="p-3 rounded-circle me-3 shadow-lg" style={{ 
+                    backgroundColor: "rgba(197, 164, 126, 0.1)", 
+                    border: "1px solid #c5a47e" 
+                }}>
+                    <i className="fas fa-robot fa-lg" style={{ color: "#c5a47e" }}></i>
                 </div>
                 <div>
-                    <h4 className="fw-bold mb-0 text-dark">Conserje AI</h4>
-                    <p className="text-muted small mb-0">Dime qué se te antoja y te recomendaré el lugar perfecto.</p>
+                    <h4 className="fw-bold mb-0 text-white" style={{ letterSpacing: "1px" }}>AI CONCIERGE</h4>
+                    <p className="small mb-0" style={{ color: "rgba(255,255,255,0.5)" }}>
+                        Tell me what you're craving and I'll find the perfect spot.
+                    </p>
                 </div>
             </div>
             
-            <div className="input-group mb-2 shadow-sm rounded-pill overflow-hidden bg-white p-1">
+            {/* Input Group */}
+            <div className="input-group mb-2 shadow-lg rounded-pill overflow-hidden p-1" style={{ 
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.1)"
+            }}>
                 <input 
                     type="text" 
-                    className="form-control border-0 ps-3" 
-                    placeholder="Ej: Recomiéndame un lugar romántico para cenar pasta..." 
+                    className="form-control border-0 ps-3 bg-transparent text-white" 
+                    placeholder="Ex: Recommend a romantic Italian spot..." 
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAskAI()}
                     style={{ outline: "none", boxShadow: "none" }}
                 />
                 <button 
-                    className="btn btn-primary rounded-pill px-4" 
+                    className="btn rounded-pill px-4 transition-all" 
+                    style={{ backgroundColor: "#c5a47e", color: "#000", fontWeight: "bold" }}
                     onClick={handleAskAI} 
                     disabled={loadingAI}
                 >
-                    {loadingAI ? <span className="spinner-border spinner-border-sm"></span> : <i className="fas fa-paper-plane"></i>}
+                    {loadingAI ? (
+                        <span className="spinner-border spinner-border-sm"></span>
+                    ) : (
+                        <i className="fas fa-paper-plane"></i>
+                    )}
                 </button>
             </div>
             
+            {/* AI Response Bubble */}
             {aiResponse && (
-                <div className="mt-3 p-3 bg-white rounded-3 shadow-sm border-start border-primary border-4 animate__animated animate__fadeIn">
-                    <p className="mb-0 text-dark" style={{ fontSize: "0.95rem", lineHeight: "1.5" }}>{aiResponse}</p>
+                <div className="mt-4 p-3 rounded-4 shadow-sm animate__animated animate__fadeIn" style={{ 
+                    backgroundColor: "rgba(255, 255, 255, 0.03)", 
+                    borderLeft: "4px solid #c5a47e",
+                    color: "rgba(255, 255, 255, 0.9)"
+                }}>
+                    <div className="d-flex align-items-start">
+                        <i className="fas fa-quote-left me-2 mt-1" style={{ color: "#c5a47e", fontSize: "0.8rem" }}></i>
+                        <p className="mb-0" style={{ fontSize: "0.95rem", lineHeight: "1.6", fontStyle: "italic" }}>
+                            {aiResponse}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Hint text */}
+            {!aiResponse && !loadingAI && (
+                <div className="text-center mt-3">
+                    <small style={{ color: "rgba(197, 164, 126, 0.4)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "1px" }}>
+                        Powered by TableNow Intelligence
+                    </small>
                 </div>
             )}
         </div>

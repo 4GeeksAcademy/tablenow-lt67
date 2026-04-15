@@ -21,18 +21,29 @@ export const Navbar = () => {
                     letter-spacing: 1px;
                     font-family: 'Playfair Display', serif;
                 }
-                /* Custom buttons with your specific color */
+                
+                /* Color principal TableNow */
+                .text-custom-gold { color: #c5a47e !important; }
+
+                /* Botón New Booking (Gold Original) */
                 .btn-custom-gold {
                     background-color: #c5a47e !important;
                     border-color: #c5a47e !important;
                     color: #fff !important;
-                    border-radius: 50px; /* Rounded pill style */
+                    border-radius: 50px;
                     font-weight: 600;
                 }
-                .btn-custom-gold:hover {
-                    filter: brightness(1.1);
+
+                /* Botón Dashboard (Gold más oscuro para diferenciar) */
+                .btn-dashboard-dark {
+                    background-color: #a38662 !important; /* Versión más oscura del gold */
+                    border-color: #a38662 !important;
                     color: #fff !important;
+                    border-radius: 50px;
+                    font-weight: 600;
                 }
+
+                /* Botón Logout / Regresar (Outline o Sólido en Gold) */
                 .btn-outline-custom {
                     border-color: #c5a47e !important;
                     color: #c5a47e !important;
@@ -42,6 +53,7 @@ export const Navbar = () => {
                     background-color: #c5a47e !important;
                     color: #fff !important;
                 }
+
                 .btn-pill { border-radius: 50px; }
                 .sticky-top { z-index: 1020; }
             `}</style>
@@ -49,7 +61,8 @@ export const Navbar = () => {
             <div className="container-fluid">
                 <Link to="/" className="text-decoration-none">
                     <span className="navbar-brand mb-0 h1 fw-bold text-white">
-                        <i className="fas fa-utensils me-2"></i>TableNow
+                        <i className="fas fa-utensils me-2 text-white"></i>
+                        <span className="text-custom-gold">TableNow</span>
                     </span>
                 </Link>
 
@@ -57,7 +70,7 @@ export const Navbar = () => {
                     {!store.authOwner || isHome || isLoginPage ? (
                         !isLoginPage && (
                             <Link to="/login-owner">
-                                <button className="btn btn-outline-light px-4 shadow-sm fw-bold btn-pill">
+                                <button className="btn btn-outline-custom px-4 shadow-sm fw-bold btn-pill">
                                     <i className="fas fa-user-tie me-2"></i>Login
                                 </button>
                             </Link>
@@ -69,24 +82,24 @@ export const Navbar = () => {
                                 <i className="fas fa-history me-1"></i> History
                             </Link>
 
-                            {/* New Booking */}
+                            {/* New Booking (Gold Original) */}
                             <Link to="/new-booking" className="btn btn-custom-gold btn-sm shadow-sm px-3">
                                 <i className="fas fa-plus me-1"></i> New Booking
                             </Link>
                             
                             <div className="border-start border-light ms-2 ps-3 d-flex align-items-center gap-3">
-                                {/* Dashboard */}
+                                {/* Dashboard (Gold Oscuro) */}
                                 <Link 
                                     to="/owner-dashboard" 
-                                    className="btn btn-sm fw-bold btn-custom-gold"
+                                    className="btn btn-sm fw-bold btn-dashboard-dark"
                                     style={{ transition: 'all 0.3s' }}
                                 >
                                     Dashboard
                                 </Link>
                                 
-                                {/* Logout */}
+                                {/* Logout (Cambiado a Gold #c5a47e) */}
                                 <button 
-                                    className="btn btn-outline-danger btn-sm px-3 shadow-sm btn-pill" 
+                                    className="btn btn-outline-custom btn-sm px-3 shadow-sm btn-pill" 
                                     style={{ transition: 'all 0.3s' }}
                                     onClick={() => {
                                         actions.logout_owner(); 

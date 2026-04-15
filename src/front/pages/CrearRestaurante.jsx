@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import RestaurantMap from "./RestaurantMap.jsx"; 
+import RestaurantMap from "./RestaurantMap.jsx";
 
 export const CrearRestaurante = () => {
     const { store, actions } = useGlobalReducer();
@@ -11,18 +11,15 @@ export const CrearRestaurante = () => {
     const [capacidad, setCapacidad] = useState("");
     const [imageUrl, setImageUrl] = useState("");
     
-    // --- CAMPOS DE CATEGORIZACIÓN MÚLTIPLE (Chips) ---
     const [categories, setCategories] = useState([]);
     const [categoryInput, setCategoryInput] = useState(""); 
     
     const [tags, setTags] = useState([]);
     const [tagInput, setTagInput] = useState(""); 
 
-    // --- NUEVOS ESTADOS DE HORARIO ---
     const [openingTime, setOpeningTime] = useState("09:00");
     const [closingTime, setClosingTime] = useState("22:00");
 
-    // --- ESTADOS DE UBICACIÓN ---
     const [latitud, setLatitud] = useState(null);
     const [longitud, setLongitud] = useState(null);
     const [loadingLocation, setLoadingLocation] = useState(false);
@@ -43,18 +40,18 @@ export const CrearRestaurante = () => {
     };
 
     const getLocation = () => {
-        if (!navigator.geolocation) return alert("Tu navegador no soporta geolocalización");
+        if (!navigator.geolocation) return alert("Your browser does not support geolocation");
         setLoadingLocation(true);
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setLatitud(position.coords.latitude);
                 setLongitud(position.coords.longitude);
                 setLoadingLocation(false);
-                alert("📍 Ubicación capturada correctamente");
+                alert("📍 Location captured successfully");
             },
             (error) => {
                 setLoadingLocation(false);
-                alert("No se pudo obtener la ubicación automáticamente.");
+                alert("Could not obtain location automatically.");
             },
             { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
@@ -76,23 +73,17 @@ export const CrearRestaurante = () => {
             const file = await resp.json();
             if (file.secure_url) setImageUrl(file.secure_url);
         } catch (error) {
-            alert("Error al subir la imagen a Cloudinary");
+            alert("Error uploading image to Cloudinary");
         } finally {
             setUploading(false);
         }
     };
 
-    // --- LÓGICA PARA AGREGAR/ELIMINAR CHIPS ---
     const handleAddChip = (e, state, setState, inputState, setInputState) => {
-        // Prevenir que al dar Enter se envíe el formulario
-        if (e.key === 'Enter') {
-            e.preventDefault();
-        }
-        // Agregar chip si es Enter o Coma
+        if (e.key === 'Enter') e.preventDefault();
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
             const val = inputState.trim();
-            // Evitar vacíos y duplicados
             if (val && !state.some(item => item.toLowerCase() === val.toLowerCase())) {
                 setState([...state, val]);
             }
@@ -106,11 +97,10 @@ export const CrearRestaurante = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!store.tokenOwner) return alert("No hay sesión activa.");
-        if (!imageUrl) return alert("Por favor, sube una imagen o pega una URL.");
-        if (!latitud || !longitud) return alert("Por favor, captura la ubicación GPS.");
+        if (!store.tokenOwner) return alert("No active session found.");
+        if (!imageUrl) return alert("Please upload an image or paste a URL.");
+        if (!latitud || !longitud) return alert("Please capture the GPS location.");
 
-        // Por si el usuario escribió algo y no le dio Enter antes de guardar
         const finalCategories = [...categories];
         if (categoryInput.trim()) finalCategories.push(categoryInput.trim());
         
@@ -133,10 +123,8 @@ export const CrearRestaurante = () => {
                     image_url: imageUrl,
                     latitud,
                     longitud,
-                    // Se envían como un solo string separado por comas
                     category: finalCategories.length > 0 ? finalCategories.join(", ") : "General",
-                    tags: finalTags.length > 0 ? finalTags.join(", ") : "Estándar",
-                    // --- NUEVAS LÍNEAS ---
+                    tags: finalTags.length > 0 ? finalTags.join(", ") : "Standard",
                     opening_time: openingTime,
                     closing_time: closingTime
                 })
@@ -148,237 +136,297 @@ export const CrearRestaurante = () => {
                 setCategories([]); setCategoryInput("");
                 setTags([]); setTagInput(""); 
                 await actions.getOwnerRestaurants();
-                alert("¡Restaurante añadido con éxito!");
+                alert("Restaurant added successfully!");
             } else {
                 const errorData = await response.json();
-                alert("Error: " + (errorData.msg || "No se pudo crear"));
+                alert("Error: " + (errorData.msg || "Could not create restaurant"));
             }
         } catch (error) {
-            alert("Error de conexión");
+            alert("Connection error");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("¿Seguro que quieres eliminar este restaurante?")) {
+        if (window.confirm("Are you sure you want to delete this restaurant?")) {
             const exito = await actions.deleteRestaurant(id);
-            if (exito) alert("Restaurante eliminado correctamente");
+            if (exito) alert("Restaurant deleted successfully");
         }
     };
 
     const handleEdit = async (id, nombreActual) => {
-        const nuevoNombre = prompt("Nuevo nombre para el restaurante:", nombreActual);
+        const nuevoNombre = prompt("New name for the restaurant:", nombreActual);
         if (nuevoNombre && nuevoNombre !== nombreActual) {
             await actions.updateRestaurant(id, { nombre: nuevoNombre });
         }
     };
 
+    const styles = {
+        mainContainer: {
+            backgroundImage: 'url("https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+            minHeight: '100vh',
+            paddingTop: '50px',
+            paddingBottom: '50px',
+            color: '#fff',
+            position: 'relative'
+        },
+        overlay: {
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.9) 100%)',
+            minHeight: '100vh',
+            width: '100%',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 1
+        },
+        content: {
+            position: 'relative',
+            zIndex: 2
+        },
+        glassCard: {
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '15px',
+            color: '#fff',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.8)'
+        },
+        input: {
+            background: 'rgba(255, 255, 255, 0.07)',
+            border: '1px solid rgba(197, 164, 126, 0.3)',
+            color: '#fff',
+            borderRadius: '8px'
+        },
+        goldButton: {
+            backgroundColor: '#c5a47e',
+            border: 'none',
+            color: '#000',
+            fontWeight: 'bold',
+            transition: '0.3s'
+        },
+        goldOutline: {
+            border: '1px solid #c5a47e',
+            color: '#c5a47e',
+            background: 'transparent'
+        },
+        badgeGold: {
+            backgroundColor: '#c5a47e',
+            color: '#000'
+        },
+        tagLight: {
+            color: '#c5a47e',
+            border: '1px solid rgba(197, 164, 126, 0.5)',
+            fontSize: '0.75rem',
+            padding: '2px 8px',
+            borderRadius: '4px'
+        }
+    };
+
     return (
-        <div className="container mt-5">
-            <div className="row">
-                {/* FORMULARIO DE CREACIÓN */}
-                <div className="col-md-4 mb-4">
-                    <div className="card shadow-sm p-4 border-0">
-                        <h4 className="fw-bold mb-1"><i className="fas fa-plus-circle text-primary me-2"></i>Nuevo Local</h4>
-                        <p className="text-muted small mb-4">Define tu estilo y ubicación.</p>
-                        
-                        <form onSubmit={handleSubmit}>
-                            <div className="mb-3">
-                                <label className="form-label small fw-bold">Nombre</label>
-                                <input type="text" className="form-control" placeholder="Ej: La Trattoria Premium" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-                            </div>
-
-                            {/* INPUT DE CATEGORÍAS MÚLTIPLES */}
-                            <div className="mb-3">
-                                <label className="form-label small fw-bold mb-1">Categorías</label>
-                                <div className="d-flex flex-wrap gap-1 mb-2">
-                                    {categories.map((cat, index) => (
-                                        <span key={index} className="badge bg-primary text-white d-flex align-items-center">
-                                            {cat}
-                                            <i className="fas fa-times ms-2" style={{cursor: 'pointer', fontSize: '0.65rem'}} onClick={() => removeChip(index, categories, setCategories)}></i>
-                                        </span>
-                                    ))}
+        <div style={styles.mainContainer}>
+            <div style={styles.overlay}></div>
+            <div className="container" style={styles.content}>
+                <div className="row">
+                    {/* CREATION FORM */}
+                    <div className="col-md-4 mb-4">
+                        <div className="card p-4 border-0" style={styles.glassCard}>
+                            <h4 className="fw-bold mb-1" style={{color: '#c5a47e'}}>
+                                <i className="fas fa-plus-circle me-2"></i>New Venue
+                            </h4>
+                            <p className="text-light opacity-75 small mb-4">Define your style and location.</p>
+                            
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold">Restaurant Name</label>
+                                    <input type="text" className="form-control text-white shadow-none" style={styles.input} placeholder="e.g., La Trattoria Premium" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
                                 </div>
-                                <input 
-                                    type="text" 
-                                    className="form-control form-control-sm" 
-                                    placeholder="Escribe y presiona Enter..." 
-                                    value={categoryInput} 
-                                    onChange={(e) => setCategoryInput(e.target.value)}
-                                    onKeyDown={(e) => handleAddChip(e, categories, setCategories, categoryInput, setCategoryInput)}
-                                />
-                                <div className="form-text" style={{fontSize: '0.65rem'}}>Ej: Italiana, Sushi, Parrilla</div>
-                            </div>
 
-                            {/* INPUT DE ETIQUETAS MÚLTIPLES */}
-                            <div className="mb-3">
-                                <label className="form-label small fw-bold mb-1">Etiquetas / Ambiente (IA)</label>
-                                <div className="d-flex flex-wrap gap-1 mb-2">
-                                    {tags.map((tag, index) => (
-                                        <span key={index} className="badge bg-secondary text-white d-flex align-items-center">
-                                            {tag}
-                                            <i className="fas fa-times ms-2" style={{cursor: 'pointer', fontSize: '0.65rem'}} onClick={() => removeChip(index, tags, setTags)}></i>
-                                        </span>
-                                    ))}
-                                </div>
-                                <input 
-                                    type="text" 
-                                    className="form-control form-control-sm" 
-                                    placeholder="Escribe y presiona Enter..." 
-                                    value={tagInput} 
-                                    onChange={(e) => setTagInput(e.target.value)}
-                                    onKeyDown={(e) => handleAddChip(e, tags, setTags, tagInput, setTagInput)}
-                                />
-                                <div className="form-text" style={{fontSize: '0.65rem'}}>Ej: Romántico, Familiar, Terraza</div>
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label small fw-bold">Dirección</label>
-                                <input type="text" className="form-control" placeholder="Av. Principal Local 5" value={direccion} onChange={(e) => setDireccion(e.target.value)} required />
-                            </div>
-
-                            <div className="row mb-3">
-                                <div className="col">
-                                    <label className="form-label small fw-bold">Teléfono</label>
-                                    <input type="text" className="form-control" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
-                                </div>
-                                <div className="col">
-                                    <label className="form-label small fw-bold">Mesas</label>
-                                    <input type="number" className="form-control" value={capacidad} onChange={(e) => setCapacidad(e.target.value)} required />
-                                </div>
-                            </div>
-
-                            {/* SECCIÓN DE HORARIOS */}
-                            <div className="row mb-3">
-                                <div className="col">
-                                    <label className="form-label small fw-bold">Apertura</label>
-                                    <input type="time" className="form-control form-control-sm" value={openingTime} onChange={(e) => setOpeningTime(e.target.value)} />
-                                </div>
-                                <div className="col">
-                                    <label className="form-label small fw-bold">Cierre</label>
-                                    <input type="time" className="form-control form-control-sm" value={closingTime} onChange={(e) => setClosingTime(e.target.value)} />
-                                </div>
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label small fw-bold">Ubicación GPS</label>
-                                <button type="button" className={`btn ${latitud ? 'btn-success' : 'btn-outline-dark'} w-100 btn-sm mb-2`} onClick={getLocation} disabled={loadingLocation}>
-                                    {loadingLocation ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-map-marker-alt me-2"></i>}
-                                    {latitud ? "Ubicación Capturada" : "Capturar Ubicación Actual"}
-                                </button>
-                                {latitud && longitud && (
-                                    <div className="mb-2 rounded border" style={{ height: "120px", overflow: "visible" }}>
-                                        <RestaurantMap lat={latitud} lng={longitud} nombre={nombre || "Local"} onLocationChange={handleMapChange} />
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold mb-1">Categories</label>
+                                    <div className="d-flex flex-wrap gap-1 mb-2">
+                                        {categories.map((cat, index) => (
+                                            <span key={index} className="badge d-flex align-items-center" style={styles.badgeGold}>
+                                                {cat}
+                                                <i className="fas fa-times ms-2" style={{cursor: 'pointer', fontSize: '0.65rem'}} onClick={() => removeChip(index, categories, setCategories)}></i>
+                                            </span>
+                                        ))}
                                     </div>
-                                )}
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label small fw-bold">Imagen del Local</label>
-                                
-                                <label className="btn btn-outline-primary w-100 mb-2 py-2 border-2 border-dashed shadow-sm" style={{ cursor: 'pointer', fontSize: '0.85rem' }}>
-                                    {uploading ? <span><i className="fas fa-spinner fa-spin me-2"></i>Subiendo...</span> : <><i className="fas fa-camera me-2"></i>Subir desde PC</>}
-                                    <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
-                                </label>
-
-                                <div className="text-center my-2">
-                                    <small className="text-muted">O PEGAR URL</small>
-                                </div>
-
-                                <div className="input-group input-group-sm mb-2">
-                                    <span className="input-group-text bg-white"><i className="fas fa-link text-muted"></i></span>
                                     <input 
                                         type="text" 
-                                        className="form-control" 
-                                        placeholder="https://imagen.com/foto.jpg" 
-                                        value={imageUrl} 
-                                        onChange={(e) => setImageUrl(e.target.value)} 
+                                        className="form-control form-control-sm text-white shadow-none" 
+                                        style={styles.input}
+                                        placeholder="Grill, Sushi..." 
+                                        value={categoryInput} 
+                                        onChange={(e) => setCategoryInput(e.target.value)}
+                                        onKeyDown={(e) => handleAddChip(e, categories, setCategories, categoryInput, setCategoryInput)}
                                     />
                                 </div>
 
-                                {imageUrl && (
-                                    <div className="mt-2 text-center position-relative">
-                                        <img src={imageUrl} alt="Preview" className="img-thumbnail rounded" style={{ maxHeight: "80px", width: "100%", objectFit: "cover" }} 
-                                             onError={(e) => e.target.src = "https://via.placeholder.com/400x200?text=URL+No+Valida"} />
-                                        <button type="button" className="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" style={{borderRadius: "50%", padding: "0px 6px"}} onClick={() => setImageUrl("")}>×</button>
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold mb-1">Tags / Ambiance</label>
+                                    <div className="d-flex flex-wrap gap-1 mb-2">
+                                        {tags.map((tag, index) => (
+                                            <span key={index} className="badge border text-white d-flex align-items-center" style={{borderColor: '#c5a47e'}}>
+                                                {tag}
+                                                <i className="fas fa-times ms-2" style={{cursor: 'pointer', fontSize: '0.65rem'}} onClick={() => removeChip(index, tags, setTags)}></i>
+                                            </span>
+                                        ))}
                                     </div>
-                                )}
-                            </div>
+                                    <input 
+                                        type="text" 
+                                        className="form-control form-control-sm text-white shadow-none" 
+                                        style={styles.input}
+                                        placeholder="Elegant, Family friendly..." 
+                                        value={tagInput} 
+                                        onChange={(e) => setTagInput(e.target.value)}
+                                        onKeyDown={(e) => handleAddChip(e, tags, setTags, tagInput, setTagInput)}
+                                    />
+                                </div>
 
-                            <button type="submit" className="btn btn-primary w-100 fw-bold shadow-sm" disabled={isSubmitting || uploading}>
-                                {isSubmitting ? "Guardando..." : "Registrar Local"}
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold">Physical Address</label>
+                                    <input type="text" className="form-control text-white shadow-none" style={styles.input} placeholder="Main Ave. Suite 5" value={direccion} onChange={(e) => setDireccion(e.target.value)} required />
+                                </div>
 
-                {/* LISTADO DE RESTAURANTES */}
-                <div className="col-md-8">
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-white py-3 border-0 d-flex align-items-center">
-                            <h5 className="mb-0 fw-bold"><i className="fas fa-list text-success me-2"></i>Mis Restaurantes</h5>
-                            <span className="badge bg-secondary ms-2">{store.restaurants?.length || 0}</span>
+                                <div className="row mb-3">
+                                    <div className="col">
+                                        <label className="form-label small fw-bold">Phone</label>
+                                        <input type="text" className="form-control text-white shadow-none" style={styles.input} value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
+                                    </div>
+                                    <div className="col">
+                                        <label className="form-label small fw-bold">Tables</label>
+                                        <input type="number" className="form-control text-white shadow-none" style={styles.input} value={capacidad} onChange={(e) => setCapacidad(e.target.value)} required />
+                                    </div>
+                                </div>
+
+                                <div className="row mb-3">
+                                    <div className="col">
+                                        <label className="form-label small fw-bold text-center w-100">Opening</label>
+                                        <input type="time" className="form-control form-control-sm text-white shadow-none" style={styles.input} value={openingTime} onChange={(e) => setOpeningTime(e.target.value)} />
+                                    </div>
+                                    <div className="col">
+                                        <label className="form-label small fw-bold text-center w-100">Closing</label>
+                                        <input type="time" className="form-control form-control-sm text-white shadow-none" style={styles.input} value={closingTime} onChange={(e) => setClosingTime(e.target.value)} />
+                                    </div>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold">Geolocation</label>
+                                    <button type="button" className="btn w-100 btn-sm mb-2 shadow-sm" style={latitud ? styles.goldButton : styles.goldOutline} onClick={getLocation} disabled={loadingLocation}>
+                                        {loadingLocation ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-map-marker-alt me-2"></i>}
+                                        {latitud ? "Location Captured" : "Capture Current GPS"}
+                                    </button>
+                                    {latitud && longitud && (
+                                        <div className="mb-2 rounded border border-secondary shadow-sm" style={{ height: "130px", overflow: "hidden" }}>
+                                            <RestaurantMap lat={latitud} lng={longitud} nombre={nombre || "Venue"} onLocationChange={handleMapChange} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold">Establishment Image</label>
+                                    <label className="btn w-100 mb-2 py-2 shadow-sm" style={{ ...styles.goldOutline, borderStyle: 'dashed', cursor: 'pointer' }}>
+                                        {uploading ? <span><i className="fas fa-spinner fa-spin me-2"></i>Uploading...</span> : <><i className="fas fa-camera me-2"></i>Select File</>}
+                                        <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                    </label>
+
+                                    <div className="input-group input-group-sm mb-2">
+                                        <span className="input-group-text bg-dark border-secondary text-white"><i className="fas fa-link"></i></span>
+                                        <input type="text" className="form-control text-white shadow-none" style={styles.input} placeholder="Or paste image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                                    </div>
+
+                                    {imageUrl && (
+                                        <div className="mt-2 text-center position-relative">
+                                            <img src={imageUrl} alt="Preview" className="img-thumbnail bg-dark border-secondary" style={{ maxHeight: "100px", width: "100%", objectFit: "cover" }} 
+                                                 onError={(e) => e.target.src = "https://via.placeholder.com/400x200?text=Invalid+URL"} />
+                                            <button type="button" className="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle" style={{padding: "0px 6px"}} onClick={() => setImageUrl("")}>×</button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button type="submit" className="btn w-100 py-2 mt-2 shadow" style={styles.goldButton} disabled={isSubmitting || uploading}>
+                                    {isSubmitting ? "REGISTERING..." : "SAVE RESTAURANT"}
+                                </button>
+                            </form>
                         </div>
-                        <div className="table-responsive">
-                            <table className="table table-hover align-middle mb-0">
-                                <thead className="table-light">
-                                    <tr>
-                                        <th className="ps-4">RESTAURANTE / CATEGORÍAS / MAPA</th>
-                                        <th className="text-end pe-4">ACCIONES</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {store.restaurants?.map((rest) => (
-                                        <tr key={rest.id}>
-                                            <td className="ps-4 py-3">
-                                                <div className="d-flex align-items-start mb-2">
-                                                    <img src={rest.image_url || "https://via.placeholder.com/40"} className="rounded-circle me-3 mt-1" style={{ width: "45px", height: "45px", objectFit: "cover" }} />
-                                                    <div>
-                                                        <div className="fw-bold mb-1">{rest.nombre}</div>
-                                                        
-                                                        {/* RENDERIZADO DE MÚLTIPLES CATEGORÍAS */}
-                                                        <div className="d-flex flex-wrap gap-1">
-                                                            {rest.category && rest.category.split(',').map((cat, i) => (
-                                                                <span key={`cat-${i}`} className="badge bg-info text-dark" style={{ fontSize: '0.7rem' }}>
-                                                                    {cat.trim()}
-                                                                </span>
-                                                            ))}
-                                                        </div>
+                    </div>
 
-                                                        {/* RENDERIZADO DE MÚLTIPLES TAGS */}
-                                                        <div className="text-muted small mt-2 d-flex flex-wrap gap-1 align-items-center">
-                                                            <i className="fas fa-tags"></i> 
-                                                            {rest.tags && rest.tags.split(',').map((tag, i) => (
-                                                                <span key={`tag-${i}`} className="badge border text-secondary" style={{ backgroundColor: '#f8f9fa' }}>
-                                                                    {tag.trim()}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-
-                                                        {/* RENDERIZADO DE HORARIOS */}
-                                                        <div className="text-muted small mt-1 d-flex align-items-center">
-                                                            <i className="far fa-clock me-1 text-primary"></i>
-                                                            <span className="badge bg-light text-dark border">
-                                                                {rest.opening_time || "09:00"} - {rest.closing_time || "22:00"}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {rest.latitud && (
-                                                    <div className="rounded border mt-2" style={{ width: "200px", height: "80px" }}>
-                                                        <RestaurantMap lat={rest.latitud} lng={rest.longitud} nombre={rest.nombre} zoom={13} />
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="text-end pe-4">
-                                                <button className="btn btn-sm text-secondary" onClick={() => handleEdit(rest.id, rest.nombre)}><i className="fas fa-edit"></i></button>
-                                                <button className="btn btn-sm text-danger" onClick={() => handleDelete(rest.id)}><i className="fas fa-trash-alt"></i></button>
-                                            </td>
+                    {/* RESTAURANTS LIST */}
+                    <div className="col-md-8">
+                        <div className="card shadow-lg border-0" style={styles.glassCard}>
+                            <div className="card-header bg-transparent py-3 border-bottom border-secondary d-flex align-items-center justify-content-between">
+                                <h5 className="mb-0 fw-bold"><i className="fas fa-utensils me-2" style={{color: '#c5a47e'}}></i>My Restaurants</h5>
+                                <span className="badge" style={styles.badgeGold}>{store.restaurants?.length || 0} Venues</span>
+                            </div>
+                            <div className="table-responsive">
+                                <table className="table table-dark table-hover align-middle mb-0" style={{backgroundColor: 'transparent'}}>
+                                    <thead style={{backgroundColor: 'rgba(197, 164, 126, 0.1)'}}>
+                                        <tr style={{color: '#c5a47e'}}>
+                                            <th className="ps-4 border-0">ESTABLISHMENT AND DETAILS</th>
+                                            <th className="text-end pe-4 border-0">MANAGEMENT</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="border-0">
+                                        {store.restaurants?.map((rest) => (
+                                            <tr key={rest.id} className="border-bottom border-secondary">
+                                                <td className="ps-4 py-4">
+                                                    <div className="d-flex align-items-start mb-3">
+                                                        <img src={rest.image_url || "https://via.placeholder.com/60"} className="rounded shadow-sm me-3" style={{ width: "65px", height: "65px", objectFit: "cover", border: '2px solid #c5a47e' }} />
+                                                        <div>
+                                                            <div className="fw-bold fs-5 mb-1 text-white">{rest.nombre}</div>
+                                                            <div className="d-flex flex-wrap gap-1 mb-2">
+                                                                {rest.category && rest.category.split(',').map((cat, i) => (
+                                                                    <span key={`cat-${i}`} className="badge text-dark" style={{ ...styles.badgeGold, fontSize: '0.65rem' }}>
+                                                                        {cat.trim()}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                            <div className="small opacity-75 d-flex flex-wrap gap-2 align-items-center mb-1">
+                                                                <span className="me-2"><i className="fas fa-map-marker-alt me-1 text-warning"></i>{rest.direccion}</span>
+                                                                <span><i className="fas fa-phone me-1 text-warning"></i>{rest.telefono}</span>
+                                                            </div>
+                                                            <div className="small d-flex flex-wrap gap-2 mt-2">
+                                                                {rest.tags && rest.tags.split(',').map((tag, i) => (
+                                                                    <span key={`tag-${i}`} style={styles.tagLight}>
+                                                                        <i className="fas fa-tag me-1" style={{fontSize: '0.6rem'}}></i>{tag.trim()}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="d-flex align-items-center gap-3">
+                                                        <div className="badge bg-dark border border-secondary p-2 d-flex align-items-center">
+                                                            <i className="far fa-clock me-2" style={{color: '#c5a47e'}}></i>
+                                                            {rest.opening_time || "09:00"} - {rest.closing_time || "22:00"}
+                                                        </div>
+                                                        {rest.latitud && (
+                                                            <div className="rounded border border-secondary shadow-sm" style={{ width: "220px", height: "90px", overflow: 'hidden' }}>
+                                                                <RestaurantMap lat={rest.latitud} lng={rest.longitud} nombre={rest.nombre} zoom={14} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="text-end pe-4">
+                                                    <div className="btn-group shadow-sm">
+                                                        <button className="btn btn-outline-light btn-sm px-3" onClick={() => handleEdit(rest.id, rest.nombre)} title="Edit name">
+                                                            <i className="fas fa-edit"></i>
+                                                        </button>
+                                                        <button className="btn btn-outline-danger btn-sm px-3" onClick={() => handleDelete(rest.id)} title="Delete">
+                                                            <i className="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
