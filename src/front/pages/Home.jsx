@@ -2,13 +2,13 @@ import React, { useEffect } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { useNavigate } from "react-router-dom";
 
-// Imágenes de alta resolución
 const sideImageUrl = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop";
 const journeyImageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
 
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
+
 
   const loadMessage = async () => {
     try {
@@ -226,6 +226,155 @@ export const Home = () => {
         </div>
       </div>
 
+      {/* SECCIÓN: GALLERY & SOCIAL VIBE (RELLENO) */}
+      <div className="gallery-vibe-section py-5">
+        <div className="container">
+          <div className="text-center mb-5 galeria-header">
+            <span className="brand-badge text-center w-100 d-block">Experience the Atmosphere</span>
+            <h2 className="section-title text-white">Moments at TableNow</h2>
+            <p className="sub-text mx-auto text-white-50" style={{ maxWidth: "600px" }}>
+              Join the elite circle of diners enjoying unforgettable evenings. 
+              Our restaurants are more than just food; they are about connections.
+            </p>
+          </div>
+
+          <div className="row g-3 galeria-grid">
+            {/* Imagen Grande Izquierda */}
+            <div className="col-lg-6 col-md-12">
+              <div className="gallery-item large-item rounded-4 overflow-hidden shadow-lg position-relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800&auto=format&fit=crop" 
+                  alt="People enjoying dinner" 
+                  className="w-100 h-100 object-fit-cover transition-all galeria-img"
+                />
+                <div className="img-overlay position-absolute bottom-0 start-0 w-100 p-4 text-white">
+                  <h5 className="mb-1 fw-bold">Unforgettable Evenings</h5>
+                  <p className="small mb-0 text-white-50">Laughter, wine, and exquisite taste.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid Derecha (4 imágenes pequeñas) */}
+            <div className="col-lg-6 col-md-12">
+              <div className="row g-3">
+                {/* Top Left */}
+                <div className="col-6">
+                  <div className="gallery-item small-item rounded-4 overflow-hidden shadow position-relative">
+                    <img 
+                      src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=600&auto=format&fit=crop" 
+                      alt="Elegant interior" 
+                      className="w-100 h-100 object-fit-cover transition-all galeria-img"
+                    />
+                  </div>
+                </div>
+                {/* Top Right */}
+                <div className="col-6">
+                  <div className="gallery-item small-item rounded-4 overflow-hidden shadow position-relative">
+                    <img 
+                      src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=600&auto=format&fit=crop" 
+                      alt="Friends toasting" 
+                      className="w-100 h-100 object-fit-cover transition-all galeria-img"
+                    />
+                  </div>
+                </div>
+                {/* Bottom Left */}
+                <div className="col-6">
+                  <div className="gallery-item small-item rounded-4 overflow-hidden shadow position-relative">
+                    <img 
+                      src="https://images.unsplash.com/photo-1560624052-449f5ddf0c31?q=80&w=600&auto=format&fit=crop" 
+                      alt="Couple dining" 
+                      className="w-100 h-100 object-fit-cover transition-all galeria-img"
+                    />
+                  </div>
+                </div>
+                {/* Bottom Right */}
+                <div className="col-6">
+                  <div className="gallery-item small-item rounded-4 overflow-hidden shadow position-relative">
+                    <img 
+                      src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=600&auto=format&fit=crop" 
+                      alt="Gourmet dish presentation" 
+                      className="w-100 h-100 object-fit-cover transition-all galeria-img"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-5 galeria-footer">
+            <button className="btn btn-luxury btn-outline" onClick={() => navigate("/clients")}>
+              Book Your Moment →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* SECCIÓN: TESTIMONIALS */}
+      <div className="testimonials-section">
+        <div className="container">
+          <div className="text-center mb-5">
+            <span className="brand-badge text-center w-100 d-block">Guest Experiences</span>
+            <h2 className="section-title">What They Say</h2>
+          </div>
+
+          <div className="row g-4">
+            <div className="col-lg-4">
+              <div className="testimonial-card">
+                <div className="stars">★★★★★</div>
+                <p className="testimonial-text">
+                  "The most seamless booking experience I've ever had. TableNow curated a 
+                  perfect anniversary dinner for us. The interface is as elegant as the 
+                  restaurants they feature."
+                </p>
+                <div className="guest-info">
+                  <img src="https://i.pravatar.cc/150?u=sarah" alt="Guest" className="guest-avatar" />
+                  <div>
+                    <h6 className="guest-name">Sarah Jenkins</h6>
+                    <p className="guest-title">Food Enthusiast</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-4">
+              <div className="testimonial-card featured-testimonial">
+                <div className="stars">★★★★★</div>
+                <p className="testimonial-text">
+                  "As a restaurant owner, TableNow has transformed how we manage our 
+                  reservations. The admin dashboard is intuitive and the support team 
+                  is world-class. Truly a game changer."
+                </p>
+                <div className="guest-info">
+                  <img src="https://i.pravatar.cc/150?u=marcus" alt="Guest" className="guest-avatar" />
+                  <div>
+                    <h6 className="guest-name">Marcus Thorne</h6>
+                    <p className="guest-title">Bistro Owner</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-4">
+              <div className="testimonial-card">
+                <div className="stars">★★★★★</div>
+                <p className="testimonial-text">
+                  "Exquisite attention to detail. I love how I can see the signature dishes 
+                  before even arriving. It makes choosing where to dine an absolute 
+                  pleasure every single time."
+                </p>
+                <div className="guest-info">
+                  <img src="https://i.pravatar.cc/150?u=elena" alt="Guest" className="guest-avatar" />
+                  <div>
+                    <h6 className="guest-name">Elena Rodriguez</h6>
+                    <p className="guest-title">Lifestyle Blogger</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* NUEVA SECCIÓN: CONTACT US */}
       <div className="contact-section">
         <div className="container">
@@ -292,7 +441,57 @@ export const Home = () => {
         </div>
       </div>
 
+      {/* FOOTER DE REDES SOCIALES Y LINKS */}
+<footer className="footer-section pt-5 pb-3" style={{ backgroundColor: "#000", borderTop: "1px solid #222", color: "#fff" }}>
+  <div className="container">
+    <div className="row mb-5">
+      <div className="col-lg-4 mb-4">
+        <h3 style={{ fontFamily: "'Playfair Display', serif", color: "#fff" }}>TableNow</h3>
+        <p style={{ color: "#777", fontSize: "0.9rem" }}>
+          Conectando paladares exigentes con las mejores mesas del país. La excelencia gastronómica a un click de distancia.
+        </p>
+        <div className="social-links d-flex gap-3">
+          <a href="#" style={{ color: "#fff", fontSize: "1.2rem", border: "1px solid #333", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }}><i className="fab fa-x-twitter"></i></a>
+          <a href="#" style={{ color: "#fff", fontSize: "1.2rem", border: "1px solid #333", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }}><i className="fab fa-facebook-f"></i></a>
+          <a href="#" style={{ color: "#fff", fontSize: "1.2rem", border: "1px solid #333", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }}><i className="fab fa-instagram"></i></a>
+          <a href="#" style={{ color: "#fff", fontSize: "1.2rem", border: "1px solid #333", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }}><i className="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
       
+      <div className="col-lg-2 col-md-4 mb-4">
+        <h6 className="text-uppercase mb-4" style={{ color: "#c9a050", fontSize: "0.8rem", letterSpacing: "2px" }}>Useful Links</h6>
+        <ul className="list-unstyled" style={{ color: "#777", fontSize: "0.9rem" }}>
+          <li className="mb-2"><a href="#" className="text-decoration-none text-reset">Home</a></li>
+          <li className="mb-2"><a href="#" className="text-decoration-none text-reset">About Us</a></li>
+          <li className="mb-2"><a href="#" className="text-decoration-none text-reset">Services</a></li>
+          <li className="mb-2"><a href="#" className="text-decoration-none text-reset">Privacy Policy</a></li>
+        </ul>
+      </div>
+
+      <div className="col-lg-3 col-md-4 mb-4">
+        <h6 className="text-uppercase mb-4" style={{ color: "#c9a050", fontSize: "0.8rem", letterSpacing: "2px" }}>Our Services</h6>
+        <ul className="list-unstyled" style={{ color: "#777", fontSize: "0.9rem" }}>
+          <li className="mb-2">Table Reservations</li>
+          <li className="mb-2">Event Planning</li>
+          <li className="mb-2">VIP Concierge</li>
+          <li className="mb-2">Corporate Dining</li>
+        </ul>
+      </div>
+
+      <div className="col-lg-3 col-md-4 mb-4">
+        <h6 className="text-uppercase mb-4" style={{ color: "#c9a050", fontSize: "0.8rem", letterSpacing: "2px" }}>Contact Us</h6>
+        <p className="mb-1" style={{ color: "#777", fontSize: "0.9rem" }}>A108 Adam Street</p>
+        <p className="mb-3" style={{ color: "#777", fontSize: "0.9rem" }}>New York, NY 535022</p>
+        <p className="mb-1" style={{ color: "#777", fontSize: "0.9rem" }}><strong>Phone:</strong> +1 5589 55488 55</p>
+        <p style={{ color: "#777", fontSize: "0.9rem" }}><strong>Email:</strong> info@tablenow.com</p>
+      </div>
+    </div>
+    
+    <div className="footer-bottom text-center pt-4" style={{ borderTop: "1px solid #222", color: "#555", fontSize: "0.8rem" }}>
+      <p>© Copyright <strong>TableNow</strong> All Rights Reserved</p>
+    </div>
+  </div>
+</footer>
 
       {/* Indicador de Conexión */}
       <div className="status-pill">
@@ -455,6 +654,122 @@ export const Home = () => {
           .text-side { text-align: center; padding: 100px 5% 40px; align-items: center; }
           .contact-info-side, .contact-form-side { padding: 40px 25px; }
           .section-title { font-size: 2.2rem; }
+        }
+
+        .testimonials-section {
+          padding: 100px 0;
+          background-color: #0c0c0c;
+        }
+        .testimonial-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 40px;
+          border-radius: 15px;
+          height: 100%;
+          transition: all 0.3s ease;
+          display: flex;
+          flex-direction: column;
+        }
+        .testimonial-card:hover {
+          background: rgba(197, 164, 126, 0.05);
+          border-color: rgba(197, 164, 126, 0.2);
+          transform: translateY(-5px);
+        }
+        .featured-testimonial {
+          border-color: rgba(197, 164, 126, 0.3);
+          background: rgba(197, 164, 126, 0.02);
+        }
+        .stars {
+          color: #c5a47e;
+          margin-bottom: 20px;
+          letter-spacing: 2px;
+        }
+        .testimonial-text {
+          font-family: 'Montserrat', sans-serif;
+          font-style: italic;
+          color: #ccc;
+          line-height: 1.7;
+          margin-bottom: 30px;
+          flex-grow: 1;
+        }
+        .guest-info {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+        .guest-avatar {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid #c5a47e;
+        }
+        .guest-name {
+          font-family: 'Playfair Display', serif;
+          margin: 0;
+          color: #fff;
+        }
+        .guest-title {
+          font-family: 'Montserrat', sans-serif;
+          font-size: 0.75rem;
+          color: #c5a47e;
+          margin: 0;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        /* --- GALLERY & SOCIAL VIBE SECTION --- */
+        .gallery-vibe-section {
+          background-color: #0c0c0c;
+          position: relative;
+          z-index: 1;
+        }
+
+        .gallery-item {
+          position: relative;
+          border: 1px solid rgba(255,255,255,0.05);
+          transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .gallery-item:hover {
+          transform: translateY(-5px);
+          border-color: rgba(197, 164, 126, 0.3);
+          z-index: 2;
+        }
+
+        .large-item { height: 510px; }
+        .small-item { height: 250px; }
+
+        .galeria-img {
+          filter: grayscale(20%);
+          transition: filter 0.5s ease, transform 0.5s ease;
+        }
+        .gallery-item:hover .galeria-img {
+          filter: grayscale(0%);
+          transform: scale(1.05);
+        }
+
+        .img-overlay {
+          background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+        }
+        .gallery-item:hover .img-overlay {
+          opacity: 1;
+        }
+
+        .galeria-header h2 {
+          font-family: 'Playfair Display', serif;
+          font-size: 3rem;
+          margin-bottom: 20px;
+        }
+        .galeria-header .sub-text {
+          font-family: 'Montserrat', sans-serif;
+          font-weight: 300;
+        }
+
+        @media (max-width: 991px) {
+          .large-item, .small-item { height: 300px; }
+          .galeria-grid { margin-top: 30px; }
         }
       `}</style>
     </div>

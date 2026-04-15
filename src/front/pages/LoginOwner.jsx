@@ -49,7 +49,7 @@ export const LoginOwner = () => {
 
     return (
         <div className="login-hero-wrapper">
-            {/* Overlay para oscurecer la imagen de fondo */}
+            
             <div className="background-overlay"></div>
             
             <div className="login-box-container">

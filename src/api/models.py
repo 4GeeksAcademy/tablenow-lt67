@@ -86,13 +86,8 @@ class Restaurante(db.Model):
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
     latitud: Mapped[str] = mapped_column(String(200), nullable=True)
     longitud: Mapped[str] = mapped_column(String(200), nullable=True)
-
-    # --- NUEVOS CAMPOS PARA IA Y CATEGORIZACIÓN ---
     category: Mapped[str] = mapped_column(String(200), nullable=True, default="General")
     tags: Mapped[str] = mapped_column(String(500), nullable=True, default="Estándar")
-
-    # --- NUEVOS CAMPOS DE HORARIO ---
-    # Guardaremos en formato "HH:mm" (ej: "08:00", "22:30")
     opening_time: Mapped[str] = mapped_column(String(10), nullable=True, default="09:00")
     closing_time: Mapped[str] = mapped_column(String(10), nullable=True, default="22:00")
 
@@ -109,8 +104,8 @@ class Restaurante(db.Model):
             "longitud": self.longitud,
             "category": self.category,
             "tags": self.tags,
-            "opening_time": self.opening_time, # Agregado al serialize
-            "closing_time": self.closing_time, # Agregado al serialize
+            "opening_time": self.opening_time, 
+            "closing_time": self.closing_time, 
             "count_hostess": 0,
             "count_tables": 0
         }
@@ -122,10 +117,8 @@ class Menu(db.Model):
     categoria: Mapped[str] = mapped_column(String(80))
     precio: Mapped[float] = mapped_column(db.Float, nullable=False)
     disponible: Mapped[bool] = mapped_column(Boolean(), default=True)
-    # --- NUEVOS CAMPOS ---
     foto: Mapped[str] = mapped_column(String(500), nullable=True) 
     descripcion: Mapped[str] = mapped_column(String(255), nullable=True)
-    # ---------------------
     restaurante_id: Mapped[int] = mapped_column(
         db.ForeignKey("restaurante.id", ondelete="CASCADE"))
 
@@ -136,8 +129,8 @@ class Menu(db.Model):
             "categoria": self.categoria,
             "precio": self.precio, 
             "disponible": self.disponible,
-            "foto": self.foto, # Importante añadirlo aquí
-            "descripcion": self.descripcion, # Y aquí
+            "foto": self.foto, 
+            "descripcion": self.descripcion, 
             "restaurante_id": self.restaurante_id
         }
 

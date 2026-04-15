@@ -239,21 +239,20 @@ def update_owner(id):
     try:
         data = request.json
         
-        # 1. Actualizamos datos básicos (si no vienen en el JSON, se queda lo que ya estaba)
+        
         owner.name = data.get("name", owner.name)
         owner.email = data.get("email", owner.email)
         owner.phone = data.get("phone", owner.phone)
 
-        # 2. LA CLAVE: Solo tocamos la contraseña si el usuario envió algo real
-        # .get("password") puede ser None o "" si el usuario no escribió nada
+        
         new_password = data.get("password")
         
         if new_password and str(new_password).strip() != "":
-            # Aquí solo entra si escribiste algo nuevo en el input de password
+            
             owner.password = new_password 
             print(f"Contraseña actualizada para el owner {id}")
         else:
-            # Si no envió nada, NO TOCAMOS owner.password
+            
             print(f"Se mantuvo la contraseña anterior para el owner {id}")
 
         db.session.commit()
@@ -311,10 +310,8 @@ def crear_restaurante():
             longitud=body.get("longitud"), 
             category=body.get("category", "General"),
             tags=body.get("tags", "Estándar"),
-            # --- NUEVOS CAMPOS DE HORARIO ---
             opening_time=body.get("opening_time", "09:00"),
             closing_time=body.get("closing_time", "22:00"),
-            # --------------------------------
             owner_id=int(identity) 
         )
         
@@ -349,11 +346,9 @@ def update_restaurante(id):
         restaurante.longitud = data.get("longitud", restaurante.longitud)
         restaurante.category = data.get("category", restaurante.category)
         restaurante.tags = data.get("tags", restaurante.tags)
-        
-        # --- ACTUALIZACIÓN DE HORARIOS ---
         restaurante.opening_time = data.get("opening_time", restaurante.opening_time)
         restaurante.closing_time = data.get("closing_time", restaurante.closing_time)
-        # ---------------------------------
+        
         
         if "capacidad_total" in data and data["capacidad_total"] not in [None, ""]:
             try:
@@ -988,25 +983,25 @@ def conserje_ia():
         if not pregunta_usuario:
             return jsonify({"msg": "Escribe algo para el conserje"}), 400
         
-        # Obtenemos los restaurantes de la base de datos
+        
         restaurantes = Restaurante.query.all()
         
-        # Formateamos la data con los nombres correctos de tu modelo
+        
         data_para_ia = [
             {
-                "nombre": r.nombre,    # <--- Antes decía r.name (ERROR)
-                "categoria": r.category, # <--- Se queda r.category (Correcto según tu POST)
-                "tags": r.tags         # <--- Se queda r.tags (Correcto según tu POST)
+                "nombre": r.nombre,    
+                "categoria": r.category, 
+                "tags": r.tags         
             } for r in restaurantes
         ]
         
-        # Llamamos al motor de la IA
+        
         respuesta = obtener_recomendacion_conserje(pregunta_usuario, data_para_ia)
         
         return jsonify({"respuesta": respuesta}), 200
         
     except Exception as e:
-        # Esto nos ayudará a ver errores de la API de Gemini en la consola
+        
         print(f"Error en Conserje IA: {str(e)}") 
         return jsonify({"error": str(e)}), 500
 
@@ -1017,15 +1012,15 @@ def conserje_ia():
 @api.route('/stats/<int:restaurante_id>', methods=['GET'])
 def get_restaurant_stats(restaurante_id):
     try:
-        # 1. Buscamos el restaurante
+        
         restaurante = Restaurante.query.get(restaurante_id)
         if not restaurante:
             return jsonify({"error": "Restaurante no encontrado"}), 404
         
-        # Usamos capacidad_total (ajuste previo que ya hicimos)
+        
         aforo_total = restaurante.capacidad_total or 50
         
-        # 2. Buscamos las reservas
+        
         reservas = Reserva.query.filter_by(restaurante_id=restaurante_id).all()
         
         conteo_reservas = {"Lun": 0, "Mar": 0, "Mie": 0, "Jue": 0, "Vie": 0, "Sab": 0, "Dom": 0}
@@ -1034,13 +1029,10 @@ def get_restaurant_stats(restaurante_id):
         for res in reservas:
             fecha_obj = None
             
-            # --- VALIDACIÓN DE FECHA CORREGIDA ---
             if isinstance(res.fecha, (date, datetime)):
                 fecha_obj = res.fecha
             elif isinstance(res.fecha, str):
                 try:
-                    # CORRECCIÓN AQUÍ: Extraemos SOLO la parte "YYYY-MM-DD"
-                    # Reemplazamos la 'T' por espacio (por si viene en formato ISO) y tomamos el primer bloque
                     fecha_limpia = res.fecha.replace('T', ' ').split(' ')[0]
                     fecha_obj = datetime.strptime(fecha_limpia, '%Y-%m-%d')
                 except Exception as e:
@@ -1050,12 +1042,10 @@ def get_restaurant_stats(restaurante_id):
             if fecha_obj:
                 dia_nombre = dias_map.get(fecha_obj.weekday())
                 if dia_nombre:
-                    # CORRECCIÓN AQUÍ: Forzamos a que sea un entero (int) para que sume matemáticamente
-                    # y no concatene textos en caso de que la DB lo devuelva como string
                     personas = int(res.num_personas) if res.num_personas else 1
                     conteo_reservas[dia_nombre] += personas
 
-        # 3. Formateamos para el frontend
+        
         stats_formateadas = []
         dias_ordenados = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
         

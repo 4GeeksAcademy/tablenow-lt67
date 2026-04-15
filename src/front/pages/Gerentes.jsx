@@ -25,7 +25,7 @@ export const Gerentes = () => {
             .then(() => getGerentes());
     };
 
-    // FUNCIÓN PARA FORMATEAR LA FECHA
+   
     const formatDate = (dateString) => {
         if (!dateString) return "Sin fecha";
         const date = new Date(dateString);
@@ -39,7 +39,6 @@ export const Gerentes = () => {
 
     return (
         <div className="gerentes-management-wrapper">
-            {/* Fondo con overlay oscuro coherente con los demás componentes */}
             <div className="background-overlay"></div>
             
             <div className="container py-5 content-relative">

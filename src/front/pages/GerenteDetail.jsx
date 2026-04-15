@@ -18,7 +18,7 @@ function GerenteDetail() {
         </div>
     )
 
-    // Función para formatear la fecha de ISO a algo legible
+    
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
         const options = { year: 'numeric', month: 'long', day: 'numeric' };

@@ -197,7 +197,7 @@ export const CrearRestaurante = () => {
             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.8)'
         },
         input: {
-            background: 'rgba(255, 255, 255, 0.07)',
+            background: 'rgba(255, 255, 255, 0.29)',
             border: '1px solid rgba(197, 164, 126, 0.3)',
             color: '#fff',
             borderRadius: '8px'
