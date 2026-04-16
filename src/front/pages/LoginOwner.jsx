@@ -26,7 +26,7 @@ export const LoginOwner = () => {
 
             if (!resp.ok) {
                 const data = await resp.json();
-                setError(data.msg || "Credenciales incorrectas");
+                setError(data.msg || "Incorrect credentials");
                 return;
             }
 
@@ -43,7 +43,7 @@ export const LoginOwner = () => {
                 navigate("/empleado-dashboard"); 
             }
         } catch (err) {
-            setError("No se pudo conectar con el servidor");
+            setError("Unable to connect to the server");
         }
     };
 

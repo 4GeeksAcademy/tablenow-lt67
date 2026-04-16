@@ -563,10 +563,11 @@ export const Home = () => {
           background-color: #111;
           color: #fff;
           min-height: 100vh;
+          padding-top:60px
         }
 
         /* --- HERO SECTION STYLES --- */
-        .home-container { display: flex; height: 100vh; width: 100%; align-items: center; }
+        .home-container { display: flex; height: 120vh; width: 100%; align-items: center;}
         .text-side { flex: 1; padding: 0 8%; display: flex; flex-direction: column; justify-content: center; }
         .image-side { 
           flex: 1; height: 90vh; background-image: url('${sideImageUrl}'); 

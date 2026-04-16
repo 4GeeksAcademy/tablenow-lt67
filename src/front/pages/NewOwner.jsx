@@ -24,10 +24,10 @@ function NewOwner() {
         fetch(import.meta.env.VITE_BACKEND_URL + "/api/owners", requestOptions)
             .then((response) => {
                 if (response.ok) {
-                    alert("¡Cuenta creada con éxito! Por favor, inicia sesión.");
+                    alert("Account created successfully! Please log in.");
                     navigate("/login-owner");
                 } else {
-                    alert("Error al crear la cuenta");
+                    alert("Error creating account");
                 }
             })
             .catch((error) => console.error(error));
