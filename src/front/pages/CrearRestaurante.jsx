@@ -175,9 +175,8 @@ export const CrearRestaurante = () => {
             position: 'relative'
         },
         overlay: {
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
             backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.9) 100%)',
-            minHeight: '100vh',
+            minHeight: '100%',
             width: '100%',
             position: 'absolute',
             top: 0,

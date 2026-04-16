@@ -7,7 +7,7 @@ export const OwnerDashboard = () => {
     const { store, actions } = useGlobalReducer();
     const navigate = useNavigate();
     
-    // NUEVO: Estado para controlar qué restaurante estamos viendo en el gráfico
+    
     const [restauranteSeleccionado, setRestauranteSeleccionado] = useState(null);
 
     useEffect(() => {
@@ -139,7 +139,7 @@ export const OwnerDashboard = () => {
                         </div>
                     </div>
 
-                    {/* SECCIÓN DE ANALÍTICA: Gráfico de Ocupación */}
+                    {/* SECCIÓN DE ANALÍTICA*/}
                     <div className="col-12 mb-4">
                         {store.restaurants && store.restaurants.length > 0 ? (
                             <div className="card-luxury p-4">

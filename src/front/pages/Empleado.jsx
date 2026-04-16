@@ -142,7 +142,7 @@ const Empleado = () => {
                 )}
             </div>
 
-            {/* MODAL (Estilo Dark) */}
+            {/* MODAL  */}
             <div className="modal fade" id="deleteModal" tabIndex="-1" aria-hidden="true">
                 <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content bg-dark border-0 shadow-lg text-white">

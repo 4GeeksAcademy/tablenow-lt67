@@ -35,7 +35,7 @@ function NewOwner() {
 
     return (
         <div className="new-owner-wrapper">
-            {/* Overlay para coherencia visual */}
+            
             <div className="background-overlay"></div>
 
             <div className="form-container-luxury content-relative">

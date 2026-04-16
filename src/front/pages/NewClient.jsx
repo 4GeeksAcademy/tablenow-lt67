@@ -32,7 +32,7 @@ function NewClient() {
 
     return (
         <div className="new-client-wrapper">
-            {/* El overlay oscuro para que el texto resalte sobre la imagen */}
+            
             <div className="background-overlay"></div>
 
             <div className="form-container-luxury content-relative">

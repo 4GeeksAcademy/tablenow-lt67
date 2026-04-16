@@ -86,7 +86,7 @@ const OcupacionChart = ({ restauranteId }) => {
                 {data.map((entry, index) => (
                     <Cell 
                         key={`cell-${index}`} 
-                        // Gold/Luxury palette based on occupancy
+                        
                         fill={entry.ocupacion > 80 ? "#e63946" : entry.ocupacion > 50 ? "#c5a47e" : "#8a7051"} 
                     />
                 ))}

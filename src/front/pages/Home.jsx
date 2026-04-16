@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { useNavigate } from "react-router-dom";
+import emailjs from "@emailjs/browser"; // 1. Importamos la librería
 
 const sideImageUrl = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop";
 const journeyImageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
@@ -8,7 +9,10 @@ const journeyImageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edca
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
-
+  
+  // 2. Referencia para el formulario y estado de carga
+  const form = useRef();
+  const [isSending, setIsSending] = useState(false);
 
   const loadMessage = async () => {
     try {
@@ -25,13 +29,11 @@ export const Home = () => {
   const loadMenusAndRestaurants = async () => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
-      
       const respMenus = await fetch(backendUrl + "/api/menus");
       if (respMenus.ok) {
         const dataMenus = await respMenus.json();
         dispatch({ type: "set_menus", payload: dataMenus });
       }
-
       const respRestos = await fetch(backendUrl + "/api/restaurants");
       if (respRestos.ok) {
         const dataRestos = await respRestos.json();
@@ -46,6 +48,30 @@ export const Home = () => {
     loadMessage();
     loadMenusAndRestaurants();
   }, []);
+
+  
+  const sendEmail = (e) => {
+    e.preventDefault();
+    setIsSending(true);
+
+    
+    const SERVICE_ID = "service_82zai09"; 
+    const TEMPLATE_ID = "template_cgve0ys";      
+    const PUBLIC_KEY = "cHFTu0TxS2OEjV4qo";
+    
+
+    emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form.current, PUBLIC_KEY)
+      .then((result) => {
+        alert("¡Mensaje enviado con éxito! Nos vemos pronto en TableNow.");
+        form.current.reset();
+      }, (error) => {
+        console.error(error.text);
+        alert("Ocurrió un error. Por favor intenta de nuevo.");
+      })
+      .finally(() => {
+        setIsSending(false);
+      });
+  };
 
   return (
     <div className="home-wrapper">
@@ -226,7 +252,7 @@ export const Home = () => {
         </div>
       </div>
 
-      {/* SECCIÓN: GALLERY & SOCIAL VIBE (RELLENO) */}
+      {/* SECCIÓN: GALLERY & SOCIAL VIBE */}
       <div className="gallery-vibe-section py-5">
         <div className="container">
           <div className="text-center mb-5 galeria-header">
@@ -254,7 +280,7 @@ export const Home = () => {
               </div>
             </div>
 
-            {/* Grid Derecha (4 imágenes pequeñas) */}
+            {/* Grid */}
             <div className="col-lg-6 col-md-12">
               <div className="row g-3">
                 {/* Top Left */}
@@ -375,7 +401,7 @@ export const Home = () => {
         </div>
       </div>
 
-      {/* NUEVA SECCIÓN: CONTACT US */}
+      {/* SECCIÓN CONTACT US */}
       <div className="contact-section">
         <div className="container">
           <div className="contact-box">
@@ -414,33 +440,63 @@ export const Home = () => {
               </div>
 
               <div className="col-lg-7 contact-form-side">
-                <form className="luxury-form">
+                <form ref={form} onSubmit={sendEmail} className="luxury-form">
                   <div className="row">
                     <div className="col-md-6 mb-4">
                       <label className="form-label">Full Name</label>
-                      <input type="text" className="form-control luxury-input" placeholder="John Doe" />
+                      <input 
+                        type="text" 
+                        name="from_name" 
+                        className="form-control luxury-input" 
+                        placeholder="John Doe" 
+                        required 
+                      />
                     </div>
                     <div className="col-md-6 mb-4">
                       <label className="form-label">Email Address</label>
-                      <input type="email" className="form-control luxury-input" placeholder="john@example.com" />
+                      <input 
+                        type="email" 
+                        name="from_email" 
+                        className="form-control luxury-input" 
+                        placeholder="john@example.com" 
+                        required 
+                      />
                     </div>
                   </div>
                   <div className="mb-4">
                     <label className="form-label">Subject</label>
-                    <input type="text" className="form-control luxury-input" placeholder="How can we help?" />
+                    <input 
+                      type="text" 
+                      name="subject" 
+                      className="form-control luxury-input" 
+                      placeholder="How can we help?" 
+                      required 
+                    />
                   </div>
                   <div className="mb-4">
                     <label className="form-label">Message</label>
-                    <textarea className="form-control luxury-input" rows="4" placeholder="Write your message here..."></textarea>
+                    <textarea 
+                      name="message" 
+                      className="form-control luxury-input" 
+                      rows="4" 
+                      placeholder="Write your message here..." 
+                      required
+                    ></textarea>
                   </div>
-                  <button type="button" className="btn btn-luxury btn-fill w-100 mt-2">Send Message</button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-luxury btn-fill w-100 mt-2" 
+                    disabled={isSending}
+                  >
+                    {isSending ? "Sending..." : "Send Message"}
+                  </button>
                 </form>
               </div>
             </div>
           </div>
         </div>
       </div>
-
+    
       {/* FOOTER DE REDES SOCIALES Y LINKS */}
 <footer className="footer-section pt-5 pb-3" style={{ backgroundColor: "#000", borderTop: "1px solid #222", color: "#fff" }}>
   <div className="container">

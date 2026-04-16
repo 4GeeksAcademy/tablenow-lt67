@@ -34,7 +34,7 @@ function NewGerente() {
 
     return (
         <div className="new-gerente-wrapper">
-            {/* Fondo con overlay oscuro */}
+            
             <div className="background-overlay"></div>
 
             <div className="form-container-luxury content-relative">

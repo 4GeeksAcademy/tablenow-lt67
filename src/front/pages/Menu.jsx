@@ -15,7 +15,7 @@ export const Menu = () => {
         foto: ""
     });
 
-    // Functional Logic (Untouched)
+    // Functional Logic 
     const getRestauranteNombre = (id) => {
         if (!store.restaurants) return "Loading...";
         const resto = store.restaurants.find(r => r.id === parseInt(id));

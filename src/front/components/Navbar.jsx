@@ -12,7 +12,7 @@ export const Navbar = () => {
 
     return (
         <nav className={`navbar navbar-expand-lg ${isHome ? 'navbar-dark fixed-top' : 'navbar-dark bg-dark shadow-sm sticky-top'} px-4 py-3 transition-all`}>
-            {/* Dynamic styles for the Navbar */}
+            
             <style>{`
                 .transition-all { transition: all 0.4s ease-in-out; }
                 .navbar-dark { background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); }
@@ -77,18 +77,18 @@ export const Navbar = () => {
                         )
                     ) : (
                         <div className="d-flex align-items-center gap-3">
-                            {/* History */}
+                            
                             <Link to="/sales" className="btn btn-sm btn-outline-custom">
                                 <i className="fas fa-history me-1"></i> History
                             </Link>
 
-                            {/* New Booking (Gold Original) */}
+                            
                             <Link to="/new-booking" className="btn btn-custom-gold btn-sm shadow-sm px-3">
                                 <i className="fas fa-plus me-1"></i> New Booking
                             </Link>
                             
                             <div className="border-start border-light ms-2 ps-3 d-flex align-items-center gap-3">
-                                {/* Dashboard (Gold Oscuro) */}
+                                
                                 <Link 
                                     to="/owner-dashboard" 
                                     className="btn btn-sm fw-bold btn-dashboard-dark"
@@ -97,7 +97,7 @@ export const Navbar = () => {
                                     Dashboard
                                 </Link>
                                 
-                                {/* Logout (Cambiado a Gold #c5a47e) */}
+                                
                                 <button 
                                     className="btn btn-outline-custom btn-sm px-3 shadow-sm btn-pill" 
                                     style={{ transition: 'all 0.3s' }}

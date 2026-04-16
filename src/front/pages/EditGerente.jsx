@@ -31,7 +31,7 @@ function EditGerente() {
 
     return (
         <div className="edit-gerente-wrapper">
-            {/* Fondo con overlay oscuro coherente */}
+            
             <div className="background-overlay"></div>
 
             <div className="form-container-luxury content-relative">

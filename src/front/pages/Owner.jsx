@@ -21,11 +21,11 @@ function Owner() {
 
     return (
         <div className="owner-profile-wrapper">
-            {/* Overlay para oscurecer la imagen de fondo */}
+            
             <div className="background-overlay"></div>
             
             <div className="profile-card">
-                {/* Decoración superior */}
+                
                 <div className="profile-header-accent"></div>
                 
                 <div className="profile-content">

@@ -59,7 +59,7 @@ export const NewBooking = () => {
 
                     <form onSubmit={handleSubmit} className="booking-form">
                         <div className="row g-4">
-                            {/* FECHA Y HORA - Optimizados para visibilidad de iconos */}
+                            {/* FECHA Y HORA */}
                             <div className="col-md-6">
                                 <label className="label-gold">Arrival Date *</label>
                                 <input 

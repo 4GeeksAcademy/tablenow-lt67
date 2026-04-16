@@ -188,9 +188,9 @@ export const ClientDashboard = () => {
                             </div>
                         </div>
                         <div className="col-md-9 text-white">
-                            {/* Cambio a Inglés: ¡Hola! -> Hello! */}
+                            
                             <h2 className="fw-bold mb-1">Hello, <span style={{ color: "#c5a47e" }}>{store.clientInfo?.name || "Client"}</span>!</h2>
-                            {/* Cambio a Inglés: Bienvenido a tu panel personal... */}
+                            
                             <p className="text-white-50">Welcome to your TableNow personal dashboard.</p>
                             
                             <div className="input-group input-group-sm mt-2" style={{ maxWidth: "350px" }}>
@@ -200,7 +200,7 @@ export const ClientDashboard = () => {
                                     placeholder="Image URL..." 
                                     style={{ 
                                         color: "#fff",
-                                        // Aplicamos un color gris claro directo al estilo si no quieres usar CSS externo
+                                        
                                         fontSize: "0.85rem"
                                     }}
                                     value={tempUrl} 
@@ -310,7 +310,7 @@ export const ClientDashboard = () => {
                                     <i className="fas fa-user-friends me-1 small"></i>{reser.num_personas}
                                 </td>
                                 <td className="py-3" style={{ backgroundColor: 'transparent' }}>
-                                    {/* Estados unificados a color #c5a47e */}
+                                    
                                     <span className="badge px-3 py-2 border" style={{ 
                                         backgroundColor: 'rgba(0,0,0,0.4)', 
                                         borderColor: '#c5a47e', 
@@ -405,7 +405,7 @@ export const ClientDashboard = () => {
                     />
                     <div className="position-absolute bottom-0 start-0 w-100 p-3" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.8))" }}>
                         <span className="badge rounded-pill" style={{ backgroundColor: "#c5a47e", color: "#000", fontWeight: "600" }}>
-                            Top Choice
+                               
                         </span>
                     </div>
                 </div>

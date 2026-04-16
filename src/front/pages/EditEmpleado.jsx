@@ -5,7 +5,7 @@ const EditEmpleado = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    // -- ESTADOS (LÓGICA INTACTA) --
+    // -- ESTADOS  --
     const [Name, setName] = useState("");
     const [Email, setEmail] = useState(""); 
     const [Phone, setPhone] = useState("");
@@ -37,7 +37,7 @@ const EditEmpleado = () => {
         fetchData();
     }, [id]);
 
-    // -- HANDLE SUBMIT (LÓGICA INTACTA) --
+    // -- HANDLE SUBMIT  --
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -144,7 +144,7 @@ const EditEmpleado = () => {
                                 <p className="text-secondary small">Update system access and personal details for <span className="gold-text fw-bold">{Name || 'Employee'}</span></p>
                             </div>
 
-                            {/* Formulario (Clases actualizadas para diseño) */}
+                            {/* Formulario  */}
                             <form className="row g-4 needs-validation" noValidate onSubmit={handleSubmit} autoComplete="off">
                                 
                                 {/* NAME */}
@@ -159,7 +159,7 @@ const EditEmpleado = () => {
                                     <input type="email" value={Email} onChange={(e) => setEmail(e.target.value)} className="form-control form-control-custom" id="email" required />
                                 </div>
 
-                                {/* PASSWORD (Con placeholder y diseño unificado) */}
+                                {/* PASSWORD  */}
                                 <div className="col-md-6">
                                     <label className="form-label-gold">Security (New Password)</label>
                                     <input 

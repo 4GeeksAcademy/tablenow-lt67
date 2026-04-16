@@ -54,6 +54,7 @@
 		]
 	},
 	"dependencies": {
+		"@emailjs/browser": "^4.4.1",
 		"@react-google-maps/api": "^2.20.8",
 		"bootstrap-icons": "^1.13.1",
 		"leaflet": "^1.9.4",

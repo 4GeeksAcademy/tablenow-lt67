@@ -10,7 +10,7 @@ const CreateEmpleado = () => {
     const [state, setState] = useState("");
     const [password, setPassword] = useState(""); 
 
-    // -- LÓGICA DE ENVÍO (INTACTA) --
+    // -- LÓGICA DE ENVÍO --
     const handleSubmit = (e) => {
         e.preventDefault();
         const empleado = { name, email, phone, rol, state, password };
@@ -31,7 +31,7 @@ const CreateEmpleado = () => {
         });
     }
 
-    // -- LÓGICA DE RESET (INTACTA) --
+    // -- LÓGICA DE RESET  --
     const handleReset = (e) => {
         e.preventDefault();
         setName(""); setEmail(""); setPhone(""); setRol(""); setState(""); setPassword(""); 
