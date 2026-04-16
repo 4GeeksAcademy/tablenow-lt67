@@ -62,11 +62,11 @@ export const Home = () => {
 
     emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form.current, PUBLIC_KEY)
       .then((result) => {
-        alert("¡Mensaje enviado con éxito! Nos vemos pronto en TableNow.");
+        alert("Message sent successfully! See you soon on TableNow.");
         form.current.reset();
       }, (error) => {
         console.error(error.text);
-        alert("Ocurrió un error. Por favor intenta de nuevo.");
+        alert("An error occurred. Please try again.");
       })
       .finally(() => {
         setIsSending(false);
