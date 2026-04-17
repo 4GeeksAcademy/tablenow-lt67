@@ -951,3 +951,41 @@ def update_client_image():
     
     return jsonify({"msg": "Usuario no encontrado"}), 404
 
+# =========================   
+# RESERVA EMPLEADO
+# =========================
+
+@api.route('/empleado/reservas', methods=['GET'])
+@jwt_required()
+def get_all_reservas():
+    try:
+        reservas = Reserva.query.all()
+        return jsonify([r.serialize() for r in reservas]), 200
+    except Exception as e:
+        return jsonify({"msg": "Error al obtener reservas para empleado", "error": str(e)}), 500
+    
+@api.route('/reserva/pendiente', methods=['GET'])
+@jwt_required()
+def get_reserva_pendiente():
+    reserva_pendiente = Reserva.query.filter_by(estado="pendiente").all()
+    
+    results = [reserva.serialize() for reserva in reserva_pendiente]
+    
+    return jsonify(results), 200
+    
+@api.route('/reserva/<int:booking_id>/estado', methods=['PUT'])
+@jwt_required()
+def update_reserva_estado(booking_id):
+    body = request.get_json()
+    reserva = Reserva.query.get(booking_id)
+
+    if not reserva:
+        return jsonify({"msg": "Reserva no encontrada"}), 404
+    
+    reserva.estado = body.get("estado")
+    db.session.commit()
+    
+    return jsonify({"msg": f"Reserva actualizada a {reserva.estado}"}), 200
+
+
+
