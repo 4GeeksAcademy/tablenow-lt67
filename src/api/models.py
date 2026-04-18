@@ -324,3 +324,33 @@ class Empleado(db.Model):
         "rol": self.rol,
         "state": self.state
     }
+
+class ChatMessage(db.Model):
+    __tablename__ = "chat_message"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    # Contenido del mensaje
+    content: Mapped[str] = mapped_column(String(500), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Identificadores de quién envía y quién recibe
+    sender_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    sender_type: Mapped[str] = mapped_column(String(50), nullable=False) # 'client' o 'owner'
+    
+    receiver_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    receiver_type: Mapped[str] = mapped_column(String(50), nullable=False) # 'client' o 'owner'
+
+    # Para saber a qué restaurante pertenece la conversación (opcional pero recomendado)
+    restaurante_id: Mapped[int] = mapped_column(db.ForeignKey("restaurante.id"), nullable=True)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "content": self.content,
+            "timestamp": self.timestamp.isoformat(),
+            "sender_id": self.sender_id,
+            "sender_type": self.sender_type,
+            "receiver_id": self.receiver_id,
+            "receiver_type": self.receiver_type,
+            "restaurante_id": self.restaurante_id
+        }

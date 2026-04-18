@@ -464,6 +464,37 @@ createNewBooking: async (bookingData) => {
             return false;
         },
 
+        sendMessage: async (messageData) => {
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/messages`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(messageData)
+                });
+                if (!resp.ok) throw new Error("Error enviando mensaje");
+                
+                // Si quieres que se actualice la lista automáticamente al enviar:
+                await actions.getMessages(messageData.sender_type, messageData.sender_id);
+                return true;
+            } catch (error) {
+                console.error("Error en sendMessage", error);
+                return false;
+            }
+        },
+
+        getMessages: async (userType, userId) => {
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/messages/${userType}/${userId}`);
+                if (!resp.ok) throw new Error("Error obteniendo mensajes");
+                const data = await resp.json();
+                dispatch({ type: "set_chat_messages", payload: data });
+                return true;
+            } catch (error) {
+                console.error("Error en getMessages", error);
+                return false;
+            }
+        },
+
         getItemsBySale: async (saleId) => {
             try {
                 const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas/" + saleId);

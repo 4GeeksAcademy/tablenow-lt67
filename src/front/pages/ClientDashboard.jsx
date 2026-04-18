@@ -650,25 +650,11 @@ export const ClientDashboard = () => {
                     </div>
                 </div>
 
-                {/* Tags de "Ideal Para" */}
-                {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).length > 0 && (
-                    <div className="mb-4 text-center">
-                        <p className="small text-uppercase fw-bold mb-2" style={{ color: "#c5a47e", letterSpacing: '1px', fontSize: '0.7rem' }}>Best for:</p>
-                        <div className="d-flex justify-content-center flex-wrap gap-2">
-                            {safeSplit(selectedRest?.tags || selectedRest?.tags_restaurante).map((tag, i) => (
-                                <span key={i} className="small text-white-50 px-2 py-1 rounded border" style={{ backgroundColor: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.1)", fontSize: '0.75rem' }}>
-                                    #{tag}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 {/* Sección de Menú */}
                 <h5 className="fw-bold mb-3 border-bottom pb-2 text-white" style={{ borderBottomColor: "rgba(197, 164, 126, 0.3) !important" }}>
                     <i className="fas fa-utensils me-2" style={{ color: "#c5a47e", fontSize: "0.9rem" }}></i>Our Menu
                 </h5>
-                <div className="list-group list-group-flush pr-2" style={{ maxHeight: "250px", overflowY: "auto", scrollbarWidth: 'thin' }}>
+                <div className="list-group list-group-flush pr-2" style={{ maxHeight: "200px", overflowY: "auto", scrollbarWidth: 'thin' }}>
                     {store.menus && store.menus.filter(m => m.restaurante_id === selectedRest?.id).length > 0 ? (
                         store.menus
                             .filter(item => item.restaurante_id === selectedRest?.id)
@@ -689,14 +675,30 @@ export const ClientDashboard = () => {
                             ))
                     ) : (
                         <div className="text-center py-4">
-                            <p className="text-muted small italic">The chef is still preparing the menu. Check back soon!</p>
+                            <p className="text-muted small italic">The chef is still preparing the menu.</p>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Footer con Botón de Acción Call-to-Action */}
-            <div className="modal-footer border-0 p-4 pt-0">
+            {/* Footer con Botones de Acción */}
+            <div className="modal-footer border-0 p-4 pt-0 d-flex flex-column gap-2">
+                {/* BOTÓN DE CHAT */}
+                <button
+                    className="btn w-100 rounded-pill fw-bold py-2 transition-all d-flex align-items-center justify-content-center"
+                    style={{ 
+                        border: "1px solid #c5a47e", 
+                        color: "#c5a47e", 
+                        backgroundColor: "transparent" 
+                    }}
+                    data-bs-dismiss="modal"
+                    onClick={() => navigate(`/chat/${selectedRest?.id}`)}
+                >
+                    <i className="fas fa-comment-dots me-2"></i>
+                    Ask a Question
+                </button>
+
+                {/* BOTÓN DE RESERVA */}
                 <button
                     className="btn w-100 rounded-pill fw-bold py-3 shadow transition-all"
                     style={{ backgroundColor: "#c5a47e", color: "#000", border: "none" }}

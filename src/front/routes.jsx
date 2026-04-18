@@ -57,7 +57,8 @@ import HostDetails from "./pages/HostDetails";
 import { ClientDashboard } from "./pages/ClientDashboard";
 import { VistaBusqueda } from "./pages/VistaBusqueda.jsx"; 
 
-
+//CHAT
+import { Chat } from "./pages/Chat";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -124,6 +125,9 @@ export const router = createBrowserRouter(
       <Route path="/create-host" element={<NewHost />} />
       <Route path="/view-host/:id" element={<HostDetails />} />
       <Route path="/edit-host/:id" element={<EditHost />} />
+
+      {/* NUEVA RUTA DE CHAT */}
+      <Route element={<Chat />} path="/chat/:restaurantId" />
 
     </Route>
   )

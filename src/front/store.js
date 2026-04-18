@@ -41,6 +41,7 @@ export const initialStore = () => {
     bookings: [],
     menus: [],
     item_ventas: [],
+    chatMessages: [],
     id: 0,
   };
 };
@@ -188,6 +189,12 @@ export default function storeReducer(store, action = {}) {
           todo.id === id ? { ...todo, background: color } : todo,
         ),
       };
+
+      case "set_chat_messages":
+    return {
+        ...store,
+        chatMessages: action.payload
+    };
 
     default:
       return store;

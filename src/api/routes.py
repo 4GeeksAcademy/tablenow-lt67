@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Hostess, Table, Waitlist, Empleado
+from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Hostess, Table, Waitlist, Empleado, ChatMessage
 from flask_cors import CORS
 from datetime import datetime, timedelta, date
 from flask_jwt_extended import create_access_token
@@ -1101,3 +1101,40 @@ def get_restaurant_stats(restaurante_id):
     except Exception as e:
         print(f"Error en stats: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+# ==========================================
+# CHAT
+# ==========================================
+
+@api.route('/messages', methods=['POST'])
+def send_message():
+    body = request.get_json()
+    
+    # Validamos que venga lo necesario
+    if not body or "content" not in body or "sender_id" not in body or "receiver_id" not in body:
+        return jsonify({"msg": "Faltan campos obligatorios"}), 400
+
+    new_message = ChatMessage(
+        content=body['content'],
+        sender_id=body['sender_id'],
+        sender_type=body['sender_type'], # 'client' o 'owner'
+        receiver_id=body['receiver_id'],
+        receiver_type=body['receiver_type'], # 'client' o 'owner'
+        restaurante_id=body.get('restaurante_id') # Es opcional
+    )
+
+    db.session.add(new_message)
+    db.session.commit()
+
+    return jsonify({"msg": "Mensaje enviado", "message": new_message.serialize()}), 201
+
+@api.route('/messages/<string:user_type>/<int:user_id>', methods=['GET'])
+def get_messages(user_type, user_id):
+    # Buscamos mensajes donde el usuario sea el emisor O el receptor
+    messages = ChatMessage.query.filter(
+        ((ChatMessage.sender_id == user_id) & (ChatMessage.sender_type == user_type)) |
+        ((ChatMessage.receiver_id == user_id) & (ChatMessage.receiver_type == user_type))
+    ).order_by(ChatMessage.timestamp.asc()).all()
+
+    results = [msg.serialize() for msg in messages]
+    return jsonify(results), 200
