@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import DateTime, Float, String, ForeignKey, Boolean,Integer,Date
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column,relationship
 from datetime import datetime, timezone
 
 db = SQLAlchemy()
@@ -69,6 +69,8 @@ class Owner(db.Model):
     password: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
+    restaurantes: Mapped[list["Restaurante"]] = relationship(cascade="all, delete-orphan")
+
     def serialize(self):
         return {"id": self.id, "name": self.name, "email": self.email, "phone": self.phone}
 
@@ -82,9 +84,12 @@ class Restaurante(db.Model):
     capacidad_total: Mapped[int] = mapped_column(db.Integer, nullable=True)
     owner_id: Mapped[int] = mapped_column(db.ForeignKey("owner.id"), nullable=False)
     image_url: Mapped[str] = mapped_column(String(500), nullable=True) 
-    # --- NUEVOS CAMPOS ---
     latitud: Mapped[str] = mapped_column(String(200), nullable=True)
     longitud: Mapped[str] = mapped_column(String(200), nullable=True)
+    category: Mapped[str] = mapped_column(String(200), nullable=True, default="General")
+    tags: Mapped[str] = mapped_column(String(500), nullable=True, default="Estándar")
+    opening_time: Mapped[str] = mapped_column(String(10), nullable=True, default="09:00")
+    closing_time: Mapped[str] = mapped_column(String(10), nullable=True, default="22:00")
 
     def serialize(self): 
         return {
@@ -96,7 +101,11 @@ class Restaurante(db.Model):
             "owner_id": self.owner_id,
             "image_url": self.image_url, 
             "latitud": self.latitud,    
-            "longitud": self.longitud,  
+            "longitud": self.longitud,
+            "category": self.category,
+            "tags": self.tags,
+            "opening_time": self.opening_time, 
+            "closing_time": self.closing_time, 
             "count_hostess": 0,
             "count_tables": 0
         }
@@ -108,14 +117,20 @@ class Menu(db.Model):
     categoria: Mapped[str] = mapped_column(String(80))
     precio: Mapped[float] = mapped_column(db.Float, nullable=False)
     disponible: Mapped[bool] = mapped_column(Boolean(), default=True)
+    foto: Mapped[str] = mapped_column(String(500), nullable=True) 
+    descripcion: Mapped[str] = mapped_column(String(255), nullable=True)
     restaurante_id: Mapped[int] = mapped_column(
         db.ForeignKey("restaurante.id", ondelete="CASCADE"))
-    def __repr__(self):
-        return f"{self.nombre}"
+
     def serialize(self):
         return {
-            "id": self.id, "nombre": self.nombre, "categoria": self.categoria,
-            "precio": self.precio, "disponible": self.disponible,
+            "id": self.id, 
+            "nombre": self.nombre, 
+            "categoria": self.categoria,
+            "precio": self.precio, 
+            "disponible": self.disponible,
+            "foto": self.foto, 
+            "descripcion": self.descripcion, 
             "restaurante_id": self.restaurante_id
         }
 
@@ -218,7 +233,7 @@ class Reserva(db.Model):
                 "phone": self.cliente.phone
             } if self.cliente else None
         }
-    
+     
 class Hostess(db.Model):
     __tablename__ = "hostess"
     id: Mapped[int] = mapped_column(primary_key=True)

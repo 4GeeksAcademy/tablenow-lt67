@@ -1,10 +1,11 @@
 from flask import request, jsonify, Blueprint
 from api.models import db, User, Clients, Owner, Gerente, Restaurante, Menu, Venta, ItemVenta, Reserva, Hostess, Table, Waitlist, Empleado
 from flask_cors import CORS
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
+from ai_handler import obtener_recomendacion_conserje
 
 api = Blueprint('api', __name__)
 CORS(api)
@@ -233,14 +234,26 @@ def update_owner(id):
     owner = Owner.query.get(id)
 
     if not owner:
-        return jsonify({"msg": "No encontrado"}), 404
+        return jsonify({"msg": "Owner no encontrado"}), 404
 
     try:
         data = request.json
+        
+        
         owner.name = data.get("name", owner.name)
         owner.email = data.get("email", owner.email)
         owner.phone = data.get("phone", owner.phone)
-        owner.password = data.get("password", owner.password)
+
+        
+        new_password = data.get("password")
+        
+        if new_password and str(new_password).strip() != "":
+            
+            owner.password = new_password 
+            print(f"Contraseña actualizada para el owner {id}")
+        else:
+            
+            print(f"Se mantuvo la contraseña anterior para el owner {id}")
 
         db.session.commit()
         return jsonify(owner.serialize()), 200
@@ -295,6 +308,10 @@ def crear_restaurante():
             image_url=body.get("image_url"),
             latitud=body.get("latitud"),  
             longitud=body.get("longitud"), 
+            category=body.get("category", "General"),
+            tags=body.get("tags", "Estándar"),
+            opening_time=body.get("opening_time", "09:00"),
+            closing_time=body.get("closing_time", "22:00"),
             owner_id=int(identity) 
         )
         
@@ -327,6 +344,11 @@ def update_restaurante(id):
         restaurante.telefono = data.get("telefono", restaurante.telefono)
         restaurante.latitud = data.get("latitud", restaurante.latitud)
         restaurante.longitud = data.get("longitud", restaurante.longitud)
+        restaurante.category = data.get("category", restaurante.category)
+        restaurante.tags = data.get("tags", restaurante.tags)
+        restaurante.opening_time = data.get("opening_time", restaurante.opening_time)
+        restaurante.closing_time = data.get("closing_time", restaurante.closing_time)
+        
         
         if "capacidad_total" in data and data["capacidad_total"] not in [None, ""]:
             try:
@@ -341,7 +363,7 @@ def update_restaurante(id):
         db.session.rollback()
         print(f"DEBUG ERROR: {str(e)}") 
         return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
-    
+
 @api.route('/restaurants/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_restaurante(id):
@@ -383,52 +405,46 @@ def get_menus():
 
 @api.route('/menus', methods=['POST'])
 def create_menu():
-    
     data = request.get_json()
     print(f"DEBUG: Datos recibidos -> {data}") 
     
     if not data:
-        return jsonify({"error": "No se recibió información en el cuerpo de la solicitud"}), 400
+        return jsonify({"error": "No se recibió información"}), 400
 
-    
     restaurante_id = data.get("restaurante_id")
     if not restaurante_id:
-        return jsonify({"error": "Falta el campo obligatorio: restaurante_id"}), 400
+        return jsonify({"error": "Falta restaurante_id"}), 400
 
-    
     restaurante = Restaurante.query.get(restaurante_id)
     if not restaurante:
-        return jsonify({
-            "error": f"El restaurante con ID {restaurante_id} no existe. Revisa los IDs disponibles en /api/restaurants"
-        }), 400 
+        return jsonify({"error": "Restaurante no existe"}), 400 
 
-    
     try:
         nombre = data.get("nombre")
         precio = data.get("precio")
 
         if not nombre or not precio:
-            return jsonify({"error": "Faltan campos obligatorios: nombre o precio"}), 400
+            return jsonify({"error": "Faltan nombre o precio"}), 400
 
         nuevo_menu = Menu(
             nombre=nombre,
             categoria=data.get("categoria"),
             precio=float(precio), 
             restaurante_id=int(restaurante_id),
-            disponible=data.get("disponible", True)
+            disponible=data.get("disponible", True),
+            foto=data.get("foto"), # <-- Campo nuevo
+            descripcion=data.get("descripcion") # <-- Campo nuevo
         )
         
         db.session.add(nuevo_menu)
         db.session.commit()
-        
         return jsonify(nuevo_menu.serialize()), 201
 
     except ValueError:
-        return jsonify({"error": "El precio debe ser un número válido"}), 400
+        return jsonify({"error": "Precio inválido"}), 400
     except Exception as e:
         db.session.rollback() 
-        print(f"--> ERROR CRÍTICO EN POST /MENUS: {str(e)}") 
-        return jsonify({"error": "Error interno del servidor", "details": str(e)}), 500
+        return jsonify({"error": "Error interno", "details": str(e)}), 500
     
 @api.route('/menus/<int:id>', methods=['PUT'])
 def update_menu(id):
@@ -442,14 +458,17 @@ def update_menu(id):
         menu.categoria = data.get("categoria", menu.categoria)
         menu.precio = float(data.get("precio", menu.precio))
         menu.disponible = data.get("disponible", menu.disponible)
-        
         menu.restaurante_id = data.get("restaurante_id", menu.restaurante_id)
+        # --- NUEVOS CAMPOS ---
+        menu.foto = data.get("foto", menu.foto)
+        menu.descripcion = data.get("descripcion", menu.descripcion)
+        # ---------------------
 
         db.session.commit()
         return jsonify(menu.serialize()), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": "Error al actualizar el plato", "error": str(e)}), 500
+        return jsonify({"msg": "Error al actualizar", "error": str(e)}), 500
 
 @api.route('/menus/<int:id>', methods=['DELETE'])
 def delete_menu(id):
@@ -951,9 +970,9 @@ def update_client_image():
     
     return jsonify({"msg": "Usuario no encontrado"}), 404
 
-# =========================   
-# RESERVA EMPLEADO
-# =========================
+# ==========================================
+# RESERVA EMPLEADO 
+# ==========================================
 
 @api.route('/empleado/reservas', methods=['GET'])
 @jwt_required()
@@ -968,9 +987,7 @@ def get_all_reservas():
 @jwt_required()
 def get_reserva_pendiente():
     reserva_pendiente = Reserva.query.filter_by(estado="pendiente").all()
-    
     results = [reserva.serialize() for reserva in reserva_pendiente]
-    
     return jsonify(results), 200
     
 @api.route('/reserva/<int:booking_id>/estado', methods=['PUT'])
@@ -984,8 +1001,103 @@ def update_reserva_estado(booking_id):
     
     reserva.estado = body.get("estado")
     db.session.commit()
-    
     return jsonify({"msg": f"Reserva actualizada a {reserva.estado}"}), 200
 
+# =========================   
+# IA
+# =========================
 
+@api.route('/conserje', methods=['POST'])
+def conserje_ia():
+    try:
+        body = request.get_json()
+        pregunta_usuario = body.get("query")
+        
+        if not pregunta_usuario:
+            return jsonify({"msg": "Escribe algo para el conserje"}), 400
+        
+        
+        restaurantes = Restaurante.query.all()
+        
+        
+        data_para_ia = [
+            {
+                "nombre": r.nombre,    
+                "categoria": r.category, 
+                "tags": r.tags         
+            } for r in restaurantes
+        ]
+        
+        
+        respuesta = obtener_recomendacion_conserje(pregunta_usuario, data_para_ia)
+        
+        return jsonify({"respuesta": respuesta}), 200
+        
+    except Exception as e:
+        
+        print(f"Error en Conserje IA: {str(e)}") 
+        return jsonify({"error": str(e)}), 500
 
+# ==========================================
+# ESTADÍSTICAS PARA EL GRÁFICO (FASE 3)
+# ==========================================
+
+@api.route('/stats/<int:restaurante_id>', methods=['GET'])
+def get_restaurant_stats(restaurante_id):
+    try:
+        
+        restaurante = Restaurante.query.get(restaurante_id)
+        if not restaurante:
+            return jsonify({"error": "Restaurante no encontrado"}), 404
+        
+        
+        aforo_total = restaurante.capacidad_total or 50
+        
+        
+        reservas = Reserva.query.filter_by(restaurante_id=restaurante_id).all()
+        
+        conteo_reservas = {"Lun": 0, "Mar": 0, "Mie": 0, "Jue": 0, "Vie": 0, "Sab": 0, "Dom": 0}
+        dias_map = {0: "Lun", 1: "Mar", 2: "Mie", 3: "Jue", 4: "Vie", 5: "Sab", 6: "Dom"}
+
+        for res in reservas:
+            fecha_obj = None
+            
+            if isinstance(res.fecha, (date, datetime)):
+                fecha_obj = res.fecha
+            elif isinstance(res.fecha, str):
+                try:
+                    fecha_limpia = res.fecha.replace('T', ' ').split(' ')[0]
+                    fecha_obj = datetime.strptime(fecha_limpia, '%Y-%m-%d')
+                except Exception as e:
+                    print(f"Error ignorado en fecha '{res.fecha}': {e}")
+                    continue 
+            
+            if fecha_obj:
+                dia_nombre = dias_map.get(fecha_obj.weekday())
+                if dia_nombre:
+                    personas = int(res.num_personas) if res.num_personas else 1
+                    conteo_reservas[dia_nombre] += personas
+
+        
+        stats_formateadas = []
+        dias_ordenados = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
+        
+        for dia in dias_ordenados:
+            personas = conteo_reservas[dia]
+            porcentaje = round((personas / aforo_total) * 100) if aforo_total > 0 else 0
+            stats_formateadas.append({
+                "dia": dia, 
+                "personas": personas, 
+                "capacidad_restante": max(0, aforo_total - personas),
+                "ocupacion": porcentaje 
+            })
+
+        return jsonify({
+            "aforo_maximo": aforo_total,
+            "semana": stats_formateadas,
+            "esta_abierto": True 
+        }), 200
+
+    except Exception as e:
+        print(f"Error en stats: {str(e)}")
+        return jsonify({"error": str(e)}), 500

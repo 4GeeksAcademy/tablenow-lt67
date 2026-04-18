@@ -1,6 +1,6 @@
 import React from "react";
-import { Outlet } from "react-router-dom"; // Importamos Outlet
-import "leaflet/dist/leaflet.css"; // <--- AQUÍ LO PEGAS
+import { Outlet } from "react-router-dom"; 
+import "leaflet/dist/leaflet.css"; 
 import ScrollToTop from "../components/ScrollToTop.jsx";
 import { Navbar } from "../components/Navbar.jsx";
 import { Footer } from "../components/Footer.jsx"; 
