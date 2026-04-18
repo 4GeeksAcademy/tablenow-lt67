@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import 'bootstrap-icons/font/bootstrap-icons.css'
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const EmpleadoDashboard = () => {
     const [reservas, setReservas] = useState([]);
@@ -20,30 +20,39 @@ const EmpleadoDashboard = () => {
     });
 
     const reservasFiltradas = reservas.filter((res) =>
-        res.cliente.name.toLowerCase().includes(busqueda.toLowerCase())
+        res.cliente?.name?.toLowerCase().includes(busqueda.toLowerCase())
     );
 
     useEffect(() => {
-        fetch(import.meta.env.VITE_BACKEND_URL + "api/reserva/pendiente", {
+        const token = localStorage.getItem("tokenOwner") || localStorage.getItem("token");
+
+        fetch(import.meta.env.VITE_BACKEND_URL + "/api/reserva/pendiente", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("tokenOwner")}`
+                "Authorization": `Bearer ${token}`
             },
         })
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: No se pudo obtener la información`);
+                }
+                return response.json();
+            })
             .then((data) => {
-                setReservas(data);
+                setReservas(Array.isArray(data) ? data : []);
             })
             .catch((error) => console.error("Error al cargar reservas:", error));
     }, []);
 
     const handleStatusUpdate = (reservaId, nuevoEstado) => {
-        fetch(`${import.meta.env.VITE_BACKEND_URL}api/reserva/${reservaId}/estado`, {
+        const token = localStorage.getItem("tokenOwner") || localStorage.getItem("token");
+
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/reserva/${reservaId}/estado`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("tokenOwner")}`
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({ estado: nuevoEstado }),
         })
@@ -123,7 +132,7 @@ const EmpleadoDashboard = () => {
                                                 <span className="fw-bold fs-5" style={{ color: estiloElite.dorado }}>#{res.id}</span>
                                             </div>
                                             <span className="badge" style={{ backgroundColor: res.estado === 'pendiente' ? '#332b00' : '#064e3b', color: res.estado === 'pendiente' ? '#fbbf24' : '#34d399' }}>
-                                                {res.estado.toUpperCase()}
+                                                {res.estado === 'pendiente' ? 'PENDING' : res.estado.toUpperCase()}
                                             </span>
                                         </div>
 
@@ -134,7 +143,7 @@ const EmpleadoDashboard = () => {
                                                 <i className="fas fa-clock me-1"></i> {res.hora}
                                             </div>
                                             <div className="col-6 small" style={{ color: estiloElite.textoGris }}>
-                                                <i class="bi bi-calendar-fill"></i> {res.fecha}
+                                                <i className="bi bi-calendar-fill me-1"></i> {res.fecha}
                                             </div>
                                             <div className="col-6 small" style={{ color: estiloElite.textoGris }}>
                                                 <i className="fas fa-chair me-1"></i> Table {res.id_mesa}
@@ -143,7 +152,7 @@ const EmpleadoDashboard = () => {
                                                 <i className="fas fa-user-friends me-1"></i> {res.num_personas} pers.
                                             </div>
                                             <div className="col-6 small" style={{ color: estiloElite.textoGris }}>
-                                                <i className="fas fa-user me-1"></i> {res.cliente.name}
+                                                <i className="fas fa-user me-1"></i> {res.cliente?.name}
                                             </div>
                                         </div>
 
@@ -166,7 +175,6 @@ const EmpleadoDashboard = () => {
                                                         >
                                                             Decline
                                                         </button>
-
                                                     </div>
                                                 </div>
                                             </div>
@@ -177,7 +185,7 @@ const EmpleadoDashboard = () => {
                         ))
                     ) : (
                         <div className="col-12 text-center py-5">
-                            <i class="bi bi-check2-square fs-1 mb-8" style={{ color: estiloElite.dorado }}></i>
+                            <i className="bi bi-check2-square fs-1 mb-3" style={{ color: estiloElite.dorado }}></i>
                             <p style={{ color: estiloElite.textoGris }}>No hay más reservas pendientes por el momento.</p>
                         </div>
                     )}
@@ -187,4 +195,4 @@ const EmpleadoDashboard = () => {
     );
 };
 
-export default EmpleadoDashboard;
+export default EmpleadoDashboard; 
