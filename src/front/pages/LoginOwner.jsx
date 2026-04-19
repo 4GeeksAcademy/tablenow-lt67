@@ -33,12 +33,15 @@ export const LoginOwner = () => {
             const data = await resp.json();
             
             if (role === "owner") {
+                localStorage.setItem("token", data.token); 
                 dispatch({ type: 'login_owner', payload: { token: data.token, user: data.owner } });
                 navigate("/owner-dashboard");
             } else if (role === "client") {
+                localStorage.setItem("token", data.token);
                 dispatch({ type: 'login_client', payload: { token: data.token, user: data.client } });
                 navigate("/client-dashboard"); 
             } else {
+                localStorage.setItem("token", data.token); 
                 dispatch({ type: 'login_empleado', payload: { token: data.token, user: data.empleado } });
                 navigate("/empleado-dashboard"); 
             }

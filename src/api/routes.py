@@ -1009,7 +1009,7 @@ def update_reserva_estado(booking_id):
 
 @api.route('/conserje', methods=['POST'])
 def conserje_ia():
-    try:
+    try: 
         body = request.get_json()
         pregunta_usuario = body.get("query")
         
@@ -1110,17 +1110,16 @@ def get_restaurant_stats(restaurante_id):
 def send_message():
     body = request.get_json()
     
-    # Validamos que venga lo necesario
     if not body or "content" not in body or "sender_id" not in body or "receiver_id" not in body:
         return jsonify({"msg": "Faltan campos obligatorios"}), 400
 
     new_message = ChatMessage(
         content=body['content'],
         sender_id=body['sender_id'],
-        sender_type=body['sender_type'], # 'client' o 'owner'
+        sender_type=body['sender_type'], 
         receiver_id=body['receiver_id'],
-        receiver_type=body['receiver_type'], # 'client' o 'owner'
-        restaurante_id=body.get('restaurante_id') # Es opcional
+        receiver_type=body['receiver_type'],
+        restaurante_id=body.get('restaurante_id') 
     )
 
     db.session.add(new_message)
@@ -1130,7 +1129,6 @@ def send_message():
 
 @api.route('/messages/<string:user_type>/<int:user_id>', methods=['GET'])
 def get_messages(user_type, user_id):
-    # Buscamos mensajes donde el usuario sea el emisor O el receptor
     messages = ChatMessage.query.filter(
         ((ChatMessage.sender_id == user_id) & (ChatMessage.sender_type == user_type)) |
         ((ChatMessage.receiver_id == user_id) & (ChatMessage.receiver_type == user_type))
@@ -1138,3 +1136,19 @@ def get_messages(user_type, user_id):
 
     results = [msg.serialize() for msg in messages]
     return jsonify(results), 200
+
+@api.route('/messages/<string:user_type>/<int:user_id>', methods=['DELETE'])
+def delete_messages(user_type, user_id):
+    messages = ChatMessage.query.filter(
+        ((ChatMessage.sender_id == user_id) & (ChatMessage.sender_type == user_type)) |
+        ((ChatMessage.receiver_id == user_id) & (ChatMessage.receiver_type == user_type))
+    ).all()
+
+    if not messages:
+        return jsonify({"msg": "No hay mensajes para borrar"}), 404
+
+    for msg in messages:
+        db.session.delete(msg)
+    
+    db.session.commit()
+    return jsonify({"msg": "Historial de chat borrado correctamente"}), 200

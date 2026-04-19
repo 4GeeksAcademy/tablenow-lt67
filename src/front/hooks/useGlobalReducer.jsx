@@ -495,6 +495,28 @@ createNewBooking: async (bookingData) => {
             }
         },
 
+        clearChatMessages: async (userType, userId) => {
+    try {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.BACKEND_URL;
+        
+        const response = await fetch(`${backendUrl}/api/messages/${userType}/${userId}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (response.ok) {
+            dispatch({
+                type: "set_chat_messages",
+                payload: []
+            });
+            return true;
+        }
+    } catch (error) {
+        console.error("Error borrando mensajes:", error);
+    }
+    return false;
+},
+
         getItemsBySale: async (saleId) => {
             try {
                 const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/item_ventas/" + saleId);

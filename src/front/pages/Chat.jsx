@@ -1,60 +1,66 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer";
 
 export const Chat = () => {
     const { store, actions } = useGlobalReducer();
     const { restaurantId } = useParams(); 
+    const navigate = useNavigate();
     const [text, setText] = useState("");
-    const [mode, setMode] = useState("manual"); // 'manual', 'polling', 'socket'
+    const [mode, setMode] = useState("polling"); 
     const scrollRef = useRef(null);
 
-    // ==========================================
-    // 1. DETERMINAR IDENTIDAD (SÚPER CORREGIDO)
-    // ==========================================
+    const goldColor = "#c5a47e";
+
     const isOwner = !!store.tokenOwner;
     const userType = isOwner ? "owner" : "client";
 
-    // BUSCAMOS EL ID DEL EMISOR: 
-    // Priorizamos ownerInfo que es donde lo guarda tu dispatch según useGlobalReducer
     const userId = isOwner 
-        ? (store.ownerInfo?.id || store.owner?.id) 
-        : (store.user?.id || store.clientInfo?.id);
+    ? (store.ownerInfo?.id || store.owner?.id || store.user?.id || store.restaurants?.[0]?.owner_id) 
+    : (store.clientInfo?.id || store.user?.id);
 
-    // DETERMINAMOS EL RECEPTOR:
     const receiverType = isOwner ? "client" : "owner";
 
-    // Lógica para receiverId:
-    // Si soy owner, busco al cliente en activeChatClient o al último que escribió
     const lastClientMsg = store.chatMessages?.find(m => m.sender_type === "client");
     
     const receiverId = isOwner 
         ? (store.activeChatClient || lastClientMsg?.sender_id || 1) 
         : (restaurantId || 1);
 
-    // ==========================================
-    // 2. FUNCIÓN DE CARGA (FETCH)
-    // ==========================================
     const fetchMessages = () => {
         if (userId) {
             actions.getMessages(userType, userId);
-        } else {
-            console.warn("⚠️ No se puede cargar mensajes: userId es undefined");
         }
     };
 
-    // Carga inicial al detectar el userId
-    useEffect(() => {
-        if (userId) fetchMessages();
-    }, [userId]);
+    const formatLocalTime = (utcDateString) => {
+        if (!utcDateString) return "Just now";
+        const date = new Date(utcDateString.endsWith('Z') ? utcDateString : utcDateString + 'Z');
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
-    // ==========================================
-    // 3. POLLING (TIMER CADA 2 SEGUNDOS)
-    // ==========================================
+    const handleClearChat = async () => {
+        if (window.confirm("Are you sure? This will permanently delete the chat history.")) {
+            const success = await actions.clearChatMessages(userType, userId);
+            if (success) {
+                alert("Chat cleared successfully");
+            } else {
+                alert("Could not clear chat or it was already empty.");
+            }
+        }
+    };
+
+    const handleBackNavigation = () => {
+        if (isOwner) {
+            navigate("/owner-dashboard");
+        } else {
+            navigate("/client-dashboard");
+        }
+    };
+
     useEffect(() => {
         let interval = null;
         if (mode === "polling") {
-            console.log("⏱️ Polling activado");
             interval = setInterval(() => {
                 fetchMessages();
             }, 2000);
@@ -71,22 +77,13 @@ export const Chat = () => {
         }
     }, [store.chatMessages]);
 
-    // ==========================================
-    // 5. MANEJO DE ENVÍO
-    // ==========================================
+
     const handleSend = async (e) => {
         e.preventDefault();
         if (!text.trim()) return;
 
-        // Validación de seguridad para evitar el error 400
         if (!userId || !receiverId) {
-            console.error("❌ ERROR CRÍTICO: Faltan IDs para enviar el mensaje", {
-                userId,
-                receiverId,
-                userType,
-                ownerInfo: store.ownerInfo
-            });
-            alert("Error: No se pudo identificar al usuario. Revisa la consola.");
+            console.error("❌ Missing IDs", { userId, receiverId });
             return;
         }
 
@@ -103,57 +100,88 @@ export const Chat = () => {
     };
 
     return (
-        <div className="container-fluid min-vh-100 bg-black text-white p-3 p-md-5">
+        <div className="container-fluid min-vh-100 p-3 p-md-5" 
+             style={{ 
+                 backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop")', 
+                 backgroundSize: "cover", 
+                 backgroundPosition: "center",
+                 backgroundColor: "rgba(0,0,0,0.85)",
+                 backgroundBlendMode: "darken"
+             }}>
+            
+            <style>
+                {`
+                    .custom-placeholder::placeholder {
+                        color: ${goldColor} !important;
+                        opacity: 0.7;
+                    }
+                `}
+            </style>
+
             <div className="row justify-content-center">
                 <div className="col-12 col-lg-8">
                     
-                    {/* SELECTOR DE MODO */}
-                    <div className="d-flex justify-content-center mb-4 bg-dark p-2 rounded-3 border border-secondary">
-                        <span className="me-3 align-self-center text-secondary small">MODO:</span>
+                    <div className="d-flex flex-column flex-md-row justify-content-between mb-4 gap-3">
                         <button 
-                            className={`btn btn-sm mx-1 ${mode === 'manual' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                            onClick={() => setMode('manual')}
+                            className="btn btn-outline-light border-0 d-flex align-items-center"
+                            onClick={handleBackNavigation}
+                            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
                         >
-                            👆 Manual
+                            <i className="fas fa-arrow-left me-2"></i> 
+                            Back to Dashboard
                         </button>
-                        <button 
-                            className={`btn btn-sm mx-1 ${mode === 'polling' ? 'btn-warning' : 'btn-outline-secondary'}`}
-                            onClick={() => setMode('polling')}
-                        >
-                            ⏱️ Polling (2s)
-                        </button>
-                        <button 
-                            className={`btn btn-sm mx-1 ${mode === 'socket' ? 'btn-info' : 'btn-outline-secondary'}`}
-                            onClick={() => setMode('socket')}
-                        >
-                            ⚡ Socket.IO
-                        </button>
+
+                        <div className="d-flex bg-dark p-2 rounded-3 border border-secondary shadow">
+                            <span className="me-3 align-self-center text-white small fw-bold">MODE:</span>
+                            
+                            <button className={`btn btn-sm mx-1 ${mode === 'manual' ? 'btn-primary' : 'btn-outline-light text-white'}`} onClick={() => setMode('manual')}>👆 Manual</button>
+                            
+                            {isOwner && (
+                                <>
+                                    <button className={`btn btn-sm mx-1 ${mode === 'polling' ? 'btn-warning text-dark' : 'btn-outline-light text-white'}`} onClick={() => setMode('polling')}>⏱️ Polling</button>
+                                    <button className={`btn btn-sm mx-1 ${mode === 'socket' ? 'btn-info' : 'btn-outline-light text-white'}`} onClick={() => setMode('socket')}>⚡ Socket</button>
+                                </>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="card bg-dark border-secondary shadow-lg overflow-hidden" style={{ borderRadius: "20px" }}>
-                        {/* HEADER DEL CHAT */}
-                        <div className="card-header bg-dark border-secondary p-3 d-flex justify-content-between align-items-center">
-                            <div className="d-flex align-items-center">
-                                <div className="bg-primary rounded-circle d-flex justify-content-center align-items-center me-3" style={{ width: "45px", height: "45px" }}>
-                                    <i className={`fas ${isOwner ? "fa-user-shield" : "fa-utensils"}`}></i>
+                    <div className="card bg-dark border-0 shadow-lg overflow-hidden" style={{ borderRadius: "20px", backgroundColor: "rgba(20, 20, 20, 0.95) !important" }}>
+                        
+                        {/* CHAT HEADER */}
+                        <div className="card-header border-secondary p-3 d-flex justify-content-between align-items-center" style={{ borderBottom: `1px solid ${goldColor}` }}>
+                            <div className="d-flex align-items-center text-white">
+                                <div className="rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" 
+                                     style={{ width: "50px", height: "50px", backgroundColor: goldColor }}>
+                                    <i className={`fas ${isOwner ? "fa-user-shield" : "fa-utensils"} text-dark fs-5`}></i>
                                 </div>
                                 <div>
-                                    <h6 className="mb-0">{isOwner ? `Respondiendo como Dueño (ID: ${userId})` : "Chat con el Restaurante"}</h6>
-                                    <small className="text-success">● En línea</small>
+                                    <h6 className="mb-0 fw-bold" style={{ color: "white" }}>
+                                        {isOwner ? `Owner Chat` : "Chat with Restaurant"}
+                                    </h6>
+                                    <small className="text-success fw-bold">● Online</small>
                                 </div>
                             </div>
 
-                            {mode === "manual" && (
-                                <button className="btn btn-outline-info btn-sm" onClick={fetchMessages}>
-                                    <i className="fas fa-sync-alt me-2"></i> Actualizar
+                            <div className="btn-group">
+                                <button className="btn btn-sm me-2 text-white shadow-sm" 
+                                        onClick={handleClearChat} 
+                                        style={{ backgroundColor: goldColor, borderRadius: "8px" }}
+                                        title="Clear history">
+                                    <i className="fas fa-trash-alt me-1"></i> <span className="d-none d-md-inline">Clear</span>
                                 </button>
-                            )}
+                                <button className="btn btn-sm text-white shadow-sm" 
+                                        onClick={fetchMessages}
+                                        style={{ backgroundColor: goldColor, borderRadius: "8px" }}
+                                        title="Refresh">
+                                    <i className="fas fa-sync-alt me-1"></i> <span className="d-none d-md-inline">Refresh</span>
+                                </button>
+                            </div>
                         </div>
 
-                        {/* CUERPO DEL CHAT */}
+                        {/* CHAT BODY */}
                         <div 
                             className="card-body p-4 custom-scrollbar" 
-                            style={{ height: "450px", overflowY: "auto", background: "linear-gradient(180deg, #1a1a1a 0%, #000 100%)" }}
+                            style={{ height: "480px", overflowY: "auto", background: "rgba(0,0,0,0.4)" }}
                             ref={scrollRef}
                         >
                             {store.chatMessages && store.chatMessages.length > 0 ? (
@@ -162,46 +190,46 @@ export const Chat = () => {
                                     return (
                                         <div key={index} className={`d-flex mb-4 ${isMe ? "justify-content-end" : "justify-content-start"}`}>
                                             <div 
-                                                className={`p-3 position-relative ${isMe ? "bg-primary text-white" : "bg-secondary text-white"}`}
+                                                className={`p-3 position-relative shadow-sm`}
                                                 style={{ 
                                                     maxWidth: "75%", 
                                                     borderRadius: isMe ? "20px 20px 0px 20px" : "20px 20px 20px 0px",
-                                                    boxShadow: "0 4px 15px rgba(0,0,0,0.3)"
+                                                    backgroundColor: isMe ? goldColor : "#333",
+                                                    color: isMe ? "#000" : "#fff"
                                                 }}
                                             >
-                                                <p className="mb-1">{msg.content}</p>
-                                                <div className="text-end" style={{ fontSize: "0.65rem", opacity: 0.7 }}>
-                                                    {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recién"}
-                                                    {isMe && <i className="fas fa-check-double ms-1 text-info"></i>}
+                                                <p className="mb-1 fw-medium">{msg.content}</p>
+                                                <div className="text-end" style={{ fontSize: "0.7rem", opacity: 0.8 }}>
+                                                    {formatLocalTime(msg.timestamp)}
+                                                    {isMe && <i className="fas fa-check-double ms-1"></i>}
                                                 </div>
                                             </div>
                                         </div>
                                     );
                                 })
                             ) : (
-                                <div className="text-center mt-5 text-muted">
-                                    <i className="fas fa-comments fa-3x mb-3"></i>
-                                    <p>No hay mensajes todavía...</p>
+                                <div className="text-center mt-5" style={{ color: goldColor }}>
+                                    <i className="fas fa-comments fa-3x mb-3 opacity-50"></i>
+                                    <p className="text-white fs-5">No messages yet...</p>
+                                    <small className="text-secondary">Start the conversation!</small>
                                 </div>
                             )}
                         </div>
 
-                        {/* INPUT DE MENSAJE */}
-                        <div className="card-footer bg-dark border-secondary p-3">
+                        {/* MESSAGE INPUT */}
+                        <div className="card-footer bg-dark border-0 p-3">
                             <form onSubmit={handleSend} className="input-group">
                                 <input
                                     type="text"
-                                    className="form-control bg-black text-white border-secondary border-end-0 py-3 ps-4"
-                                    placeholder="Escribe un mensaje..."
-                                    style={{ borderRadius: "30px 0 0 30px" }}
+                                    className="form-control bg-black text-white border-secondary border-end-0 py-3 ps-4 custom-placeholder"
+                                    placeholder="Type your message here..."
+                                    style={{ borderRadius: "30px 0 0 30px", border: "1px solid #444" }}
                                     value={text}
                                     onChange={(e) => setText(e.target.value)}
                                 />
-                                <button 
-                                    className="btn btn-primary px-4 py-3 border-start-0" 
-                                    type="submit"
-                                    style={{ borderRadius: "0 30px 30px 0" }}
-                                >
+                                <button className="btn px-4 py-3 border-start-0" 
+                                        type="submit" 
+                                        style={{ borderRadius: "0 30px 30px 0", backgroundColor: goldColor, color: "white" }}>
                                     <i className="fas fa-paper-plane"></i>
                                 </button>
                             </form>
