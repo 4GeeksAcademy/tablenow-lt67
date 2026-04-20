@@ -139,31 +139,28 @@ export const OwnerDashboard = () => {
                         </div>
                     </div>
 
-                    {/* NUEVA SECCIÓN: CHAT Y SOPORTE AL CLIENTE */}
-    <div className="col-md-6 col-lg-3">
-        <div className="card-luxury h-100 hover-lift transition" style={{ borderBottom: "3px solid #c5a47e" }}>
-            <div className="card-body p-4 d-flex flex-column">
-                <div className="d-flex align-items-center mb-3">
-                    <div className="icon-box-gold p-2 rounded-3 me-3" style={{ background: "rgba(197, 164, 126, 0.2)" }}>
-                        <i className="fas fa-comments fa-xl"></i>
-                    </div>
-                    <h5 className="card-title mb-0 fw-bold text-white tracking-wide">Messages</h5>
-                </div>
-                <p className="text-muted-gold small mb-4">Direct communication with your clients in real-time.</p>
-                
-                <div className="mt-auto d-grid gap-2">
-                    <button 
-                        className="btn-gold-solid w-100 shadow-sm text-center d-flex align-items-center justify-content-center"
-                        onClick={() => navigate(`/chat/${restauranteSeleccionado}`)}
-                        disabled={!restauranteSeleccionado}
-                    >
-                        <i className="fas fa-comment-dots me-2"></i>
-                        Open Chat
-                    </button>
-                    <small className="text-center text-gold opacity-75 mt-1" style={{ fontSize: '0.7rem' }}>
-                        {restauranteSeleccionado ? "Connected to selected location" : "Select a location below"}
-                    </small>
-                </div>
+                   {/* NUEVA UBICACIÓN: BARRA DE MENSAJES LARGA (Más estética) */}
+    <div className="col-12 mb-2">
+        <div className="card-luxury d-flex align-items-center p-4 border-accent-gold" style={{ background: "rgba(197, 164, 126, 0.05)" }}>
+            <div className="icon-box-gold text-gold rounded-circle p-3 me-3 flex-shrink-0" style={{ background: "rgba(197, 164, 126, 0.2)" }}>
+                <i className="fas fa-comments fa-lg"></i>
+            </div>
+            <div>
+                <h5 className="mb-1 text-white fw-bold">Customer Support & Messages</h5>
+                <p className="mb-0 text-muted-gold small">
+                    {restauranteSeleccionado ? "Direct communication with clients at your selected location." : "Select a location below to start chatting."}
+                </p>
+            </div>
+            <div className="ms-auto d-flex align-items-center">
+                {!restauranteSeleccionado && <span className="text-gold small me-3 opacity-75">Select a location first</span>}
+                <button 
+                    className="btn-gold-solid shadow-sm flex-shrink-0"
+                    onClick={() => navigate(`/chat/${restauranteSeleccionado}`)}
+                    disabled={!restauranteSeleccionado}
+                    style={{ minWidth: "160px" }}
+                >
+                    <i className="fas fa-comment-dots me-2"></i>Open Chat
+                </button>
             </div>
         </div>
     </div>
