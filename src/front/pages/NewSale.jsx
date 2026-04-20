@@ -74,11 +74,11 @@ export const NewSale = () => {
             const data = await resp.json();
             dispatch({ type: "add_sale", payload: data });
 
-            alert("¡Venta creada con éxito!");
+            alert("¡Sale created successfully!");
             navigate("/sales"); 
         } catch (error) {
             console.error("Error:", error);
-            alert("No se pudo guardar la venta.");
+            alert("The sale could not be saved.");
         }
     };
 

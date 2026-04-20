@@ -27,7 +27,7 @@ export const Booking = () => {
     }, [selectedRestaurantId]);
 
     const handleDelete = async (id) => {
-        if (window.confirm("¿Estás seguro de que deseas eliminar esta reserva?")) {
+        if (window.confirm("¿Are you sure you want to delete this reservation?")) {
             await actions.deleteBooking(id);
         }
     };

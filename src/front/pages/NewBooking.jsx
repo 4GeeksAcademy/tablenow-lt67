@@ -37,10 +37,10 @@ export const NewBooking = () => {
         e.preventDefault();
         const success = await actions.createNewBooking(formData);
         if (success) {
-            alert("¡Reserva creada con éxito!");
+            alert("¡Reservation created successfully!");
             navigate("/booking");
         } else {
-            alert("Error al guardar la reserva. Revisa los datos.");
+            alert("Error saving reservation. Please check the details.");
         }
     };
 
